@@ -287,7 +287,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   )
 }
 
-/** Batch AutoMix analysis with progress and cancellation. */
+/** Batch InjeKt analysis with progress and cancellation. */
 function AnalysisSection() {
   const [done, setDone] = useState(0)
   const [total, setTotal] = useState(0)
@@ -341,9 +341,9 @@ function AnalysisSection() {
 
   return (
     <Section
-      title="AutoMix analysis"
+      title="InjeKt analysis"
       icon={<Sparkles size={16} />}
-      description="AutoMix needs each track's tempo, key, energy and intro/outro points. Analysis happens automatically for whatever is about to play, but you can do it in bulk so every transition is ready from the first play. Each track is streamed once at a low bitrate; nothing is written to your server."
+      description="InjeKt needs each track's tempo, key, energy and intro/outro points. Analysis happens automatically for whatever is about to play, but you can do it in bulk so every transition is ready from the first play. Each track is streamed once at a low bitrate; nothing is written to your server."
     >
       <div className="stats" style={{ marginTop: 6 }}>
         <Stat value={analysed} label="Analysed" />

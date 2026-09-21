@@ -1,4 +1,4 @@
-import { planTransition } from '@/audio/automix'
+import { planTransition } from '@/audio/injekt'
 import { ANALYSES } from './stubs/stub-db'
 import { CURRENT } from './stubs/stub-settings'
 import type { TrackAnalysis } from '@/audio/analysis'
@@ -24,11 +24,11 @@ function analysis(id: string, o: Partial<TrackAnalysis>): TrackAnalysis {
 }
 const song = (id: string, duration = 240): Song => ({ id, title: id, duration })
 
-function reset() { ANALYSES.clear(); Object.assign(CURRENT, { automixEnabled: true, crossfadeEnabled: true, crossfadeSeconds: 6, automixBeatMatch: true, automixBassSwap: true, automixHarmonic: true, automixMaxTempoShift: 8, automixBars: 8, automixSkipIntro: true, gapless: true, crossfadeCurve: 'equalPower' }) }
+function reset() { ANALYSES.clear(); Object.assign(CURRENT, { injektEnabled: true, crossfadeEnabled: true, crossfadeSeconds: 6, injektBeatMatch: true, injektBassSwap: true, injektHarmonic: true, injektMaxTempoShift: 8, injektBars: 8, injektSkipIntro: true, gapless: true, crossfadeCurve: 'equalPower' }) }
 
 async function main() {
-  console.log('\n== Plain crossfade (AutoMix off) ==')
-  reset(); CURRENT.automixEnabled = false
+  console.log('\n== Plain crossfade (InjeKt off) ==')
+  reset(); CURRENT.injektEnabled = false
   let p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 200 })
   assert('type is crossfade', p.type === 'crossfade', `-> ${p.type}`)
   assert('uses the configured length', Math.abs(p.duration - 6) < 0.01, `-> ${p.duration}s`)
@@ -36,18 +36,18 @@ async function main() {
   assert('no tempo change', p.incomingRate === 1)
 
   console.log('\n== Crossfade off + gapless ==')
-  reset(); CURRENT.automixEnabled = false; CURRENT.crossfadeEnabled = false
+  reset(); CURRENT.injektEnabled = false; CURRENT.crossfadeEnabled = false
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 200 })
   assert('type is gapless', p.type === 'gapless', `-> ${p.type}`)
   assert('overlap is negligible', p.duration < 0.3, `-> ${p.duration}s`)
 
   console.log('\n== Crossfade off + gapless off ==')
-  reset(); CURRENT.automixEnabled = false; CURRENT.crossfadeEnabled = false; CURRENT.gapless = false
+  reset(); CURRENT.injektEnabled = false; CURRENT.crossfadeEnabled = false; CURRENT.gapless = false
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 200 })
   assert('type is cut', p.type === 'cut', `-> ${p.type}`)
   assert('no overlap', p.duration === 0)
 
-  console.log('\n== AutoMix: close tempos, compatible keys -> beat-matched blend ==')
+  console.log('\n== InjeKt: close tempos, compatible keys -> beat-matched blend ==')
   reset()
   analysis('a', { bpm: 124, camelot: '8A', energy: 0.6, outroStart: 205, outroDownbeat: 203.2258 })
   analysis('b', { bpm: 126, camelot: '9A', energy: 0.62, introEnd: 12 })
@@ -67,21 +67,21 @@ async function main() {
   assert('skips the intro of the next track', p.inStartOffset >= 12, `-> ${p.inStartOffset.toFixed(2)}s`)
   assert('tempo is released afterwards', p.tempoRelease > 0, `-> ${p.tempoRelease.toFixed(1)}s`)
 
-  console.log('\n== AutoMix: far apart tempos -> no stretch ==')
+  console.log('\n== InjeKt: far apart tempos -> no stretch ==')
   reset()
   analysis('a', { bpm: 90, camelot: '8A' }); analysis('b', { bpm: 145, camelot: '8A' })
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
   assert('no beat-match attempted', p.incomingRate === 1, `-> rate ${p.incomingRate}`)
   assert('falls back to a plain crossfade', p.type === 'crossfade', `-> ${p.type}`)
 
-  console.log('\n== AutoMix: half-time relationship is matched ==')
+  console.log('\n== InjeKt: half-time relationship is matched ==')
   reset()
   analysis('a', { bpm: 140, camelot: '8A' }); analysis('b', { bpm: 70, camelot: '8A' })
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
   assert('70bpm treated as double-time of 140', Math.abs(p.incomingRate - 1) < 1e-6, `-> rate ${p.incomingRate.toFixed(4)}`)
   assert('blends rather than crossfades', p.type === 'blend', `-> ${p.type}`)
 
-  console.log('\n== AutoMix: clashing keys -> filter sweep ==')
+  console.log('\n== InjeKt: clashing keys -> filter sweep ==')
   reset()
   analysis('a', { bpm: 124, camelot: '1A' }); analysis('b', { bpm: 125, camelot: '7B' })
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
@@ -90,7 +90,7 @@ async function main() {
   assert('shortened to 4 bars', p.duration <= 4 * 4 * 60 / 124 + 0.05, `-> ${p.duration.toFixed(2)}s`)
   assert('sharp curve', p.curve === 'sharp', `-> ${p.curve}`)
 
-  console.log('\n== AutoMix: big energy jump shortens the blend ==')
+  console.log('\n== InjeKt: big energy jump shortens the blend ==')
   reset()
   analysis('a', { bpm: 120, energy: 0.15, camelot: '8A' }); analysis('b', { bpm: 121, energy: 0.9, camelot: '8A' })
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
@@ -128,11 +128,11 @@ async function main() {
   assert('no crash, gapless fallback', p.type === 'gapless', `-> ${p.type}`)
 
   console.log('\n== Tempo shift limit is respected ==')
-  reset(); CURRENT.automixMaxTempoShift = 2
+  reset(); CURRENT.injektMaxTempoShift = 2
   analysis('a', { bpm: 120, camelot: '8A' }); analysis('b', { bpm: 126, camelot: '8A' })
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
   assert('5% shift rejected when limit is 2%', p.incomingRate === 1, `-> rate ${p.incomingRate}`)
-  CURRENT.automixMaxTempoShift = 8
+  CURRENT.injektMaxTempoShift = 8
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
   assert('5% shift accepted when limit is 8%', Math.abs(p.incomingRate - 120 / 126) < 1e-6, `-> rate ${p.incomingRate.toFixed(4)}`)
 

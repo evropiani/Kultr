@@ -4,7 +4,7 @@ import { maybeClient } from '@/api/subsonic'
 import { addHistory, patchSong } from '@/db'
 import { engine, type EngineMode, type PlaybackState } from '@/audio/engine'
 import { analyseTrack } from '@/audio/analysis'
-import { buildAutoQueue, planTransition, type TransitionPlan } from '@/audio/automix'
+import { buildAutoQueue, planTransition, type TransitionPlan } from '@/audio/injekt'
 import { settings, useSettings } from './settings'
 import { useToast } from './ui'
 
@@ -204,7 +204,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       if (
         state.crossfadeEnabled !== previous.crossfadeEnabled ||
         state.crossfadeSeconds !== previous.crossfadeSeconds ||
-        state.automixEnabled !== previous.automixEnabled
+        state.injektEnabled !== previous.injektEnabled
       ) {
         // A pending plan was built with the old settings; rebuild it.
         engine.clearPendingTransition()
@@ -249,7 +249,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     else if (state.repeat === 'all') nextIdx = 0
 
     if (nextIdx === null) {
-      if (settings().automixAutoQueue) {
+      if (settings().injektAutoQueue) {
         const added = await extendQueue(state)
         if (added) {
           nextIdx = get().index + 1
@@ -489,7 +489,7 @@ function onTrackStarted(state: PlayerState): void {
   }
 
   // Warm up the analysis for what is coming so the next transition is ready.
-  if (settings().automixEnabled && settings().automixAnalyseAhead) {
+  if (settings().injektEnabled && settings().injektAnalyseAhead) {
     const next = usePlayer.getState().peekNext()
     if (next) void analyseTrack(next)
     void analyseTrack(song)
@@ -519,7 +519,7 @@ async function prepareNextTransition(): Promise<void> {
     const state = usePlayer.getState()
     let next = state.peekNext()
 
-    if (!next && settings().automixAutoQueue) {
+    if (!next && settings().injektAutoQueue) {
       const added = await extendQueue(state)
       if (added) next = usePlayer.getState().peekNext()
     }

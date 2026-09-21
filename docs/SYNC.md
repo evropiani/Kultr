@@ -89,7 +89,7 @@ Everything lives in IndexedDB under the origin you loaded Kultr from.
 | Store | Contents |
 |---|---|
 | `songs`, `albums`, `artists`, `playlists`, `genres` | The library mirror |
-| `analysis` | AutoMix measurements, one row per analysed track |
+| `analysis` | InjeKt measurements, one row per analysed track |
 | `offline` | Audio files you explicitly saved, as blobs |
 | `history` | What you played, when, and for how long |
 | `meta` | Sync state |
@@ -118,8 +118,36 @@ counts live there and come back on the next sync.
 ## Offline
 
 The library mirror makes *browsing* work offline. Playing offline additionally
-needs the audio, which you save per track: **track menu → Save for offline**.
-Saved tracks appear under **Offline** in the sidebar.
+needs the audio, which you download with the **Sync offline** button. There is
+one on every album, artist, playlist, genre and favourites page, on the Songs
+and Albums and Artists pages (where it follows the current filter), and on the
+Offline page itself for the entire library.
+
+It is incremental. The button tells you how many tracks are actually missing,
+and pressing it again when nothing is missing does nothing and says so. What
+counts as "already downloaded" depends on where downloads go: a record in the
+browser, or an actual file still present in your folder — so deleting files
+yourself is noticed and they are fetched again next time.
+
+You can also tick tracks (shift-click for a range) and download, delete or
+queue the selection in one action, or drag an album onto the **Sync offline**
+drop target.
+
+### Where downloads go
+
+**Settings → Offline → Download location.**
+
+- **This browser** — works everywhere. The files live in IndexedDB and only
+  Kultr can reach them, and the browser may evict them if storage runs short.
+- **A folder** — you pick a folder once and files land there named
+  `Artist - Album - 01 Title [id].ext`, so anything else on your machine can
+  play them too. Chromium browsers only; Firefox and Safari have no way to
+  grant a web page access to a folder.
+
+A web page cannot be given an arbitrary path — it can only write where someone
+has explicitly pointed it through a file dialog. That is why this is a picker
+rather than a text field. If no location has been chosen the first download
+asks.
 
 With **Prefer offline copies** on (the default), a saved track always plays from
 the browser rather than streaming — which is also nice on a metered connection

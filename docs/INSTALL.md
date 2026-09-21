@@ -320,7 +320,7 @@ docker run -d \
   ghcr.io/evropiani/kultr:latest
 ```
 
-A note on the device doing the *listening*: AutoMix analysis runs in the
+A note on the device doing the *listening*: InjeKt analysis runs in the
 browser on whatever device you are using, not on the server. A Pi serving the
 app is fine; analysing a large library from a low-powered browser is the slow
 part. Analysis is cached per browser, so it is a one-time cost each place you

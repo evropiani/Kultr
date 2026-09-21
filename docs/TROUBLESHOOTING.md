@@ -100,7 +100,7 @@ Transcode format** to `mp3` or `opus` and Navidrome will convert on the fly.
 Kultr is in compatibility mode because it cannot read the audio data. There is
 a note under **Settings → Audio** confirming which mode is active. The fix is
 same-origin audio — see [CORS.md](CORS.md). Playback and crossfade are
-unaffected; the EQ, the visualizer and AutoMix's bass swap are.
+unaffected; the EQ, the visualizer and InjeKt's bass swap are.
 
 ### Volume jumps between tracks
 
@@ -111,7 +111,7 @@ tags there is nothing to level with — tag your library with a tool like
 
 ---
 
-## Crossfade and AutoMix
+## Crossfade and InjeKt
 
 ### Crossfade is not happening
 
@@ -121,9 +121,9 @@ tags there is nothing to level with — tag your library with a tool like
 - Skipping manually uses a short fade (or none), not the full crossfade —
   that is **Also fade when you skip**.
 
-### AutoMix is not beat-matching
+### InjeKt is not beat-matching
 
-Open the **AutoMix** tab in the full-screen player; it says exactly why.
+Open the **InjeKt** tab in the full-screen player; it says exactly why.
 
 - **"Not analysed yet"** → it will analyse just-in-time, or press **Analyse
   now**. For the whole library: **Sync → Analyse missing**.

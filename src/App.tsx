@@ -5,6 +5,9 @@ import { PlayerBar } from '@/components/PlayerBar'
 import { NowPlaying } from '@/components/NowPlaying'
 import { QueuePanel } from '@/components/QueuePanel'
 import { AddToPlaylistModal } from '@/components/AddToPlaylist'
+import { SelectionBar } from '@/components/SelectionBar'
+import { DropZone } from '@/components/DropZone'
+import { OfflineDestinationPrompt } from '@/components/Offline'
 import { ShortcutsModal, useKeyboardShortcuts } from '@/components/Shortcuts'
 import { Spinner } from '@/components/ui'
 import { Login } from '@/routes/Login'
@@ -20,6 +23,8 @@ import { useAuth } from '@/store/auth'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
+import { useOffline } from '@/store/offline'
+import { useSelection } from '@/store/selection'
 
 /** Keep the document's data-* attributes in step with the settings store. */
 function useThemeEffects(): void {
@@ -70,6 +75,7 @@ function useBootstrap(): void {
 
     void (async () => {
       const connected = await auth.reconnect()
+      void useOffline.getState().refresh()
       usePlayer.getState().init()
       await usePlayer.getState().restoreSession()
       if (!connected) return
@@ -133,9 +139,11 @@ function Shell() {
     }
   }, [])
 
-  // Every navigation starts at the top of the page.
+  // Every navigation starts at the top of the page, and drops any selection —
+  // a tick box left checked on a page you have left is a trap.
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 })
+    useSelection.getState().clear()
   }, [location.pathname])
 
   const flush = /^\/(album|artist|playlist)\//.test(location.pathname)
@@ -170,6 +178,7 @@ function Shell() {
       </main>
       <PlayerBar />
       <QueuePanel />
+      <SelectionBar />
     </div>
   )
 }
@@ -195,7 +204,9 @@ export function App() {
       </Routes>
       <NowPlaying />
       <AddToPlaylistModal />
+      <OfflineDestinationPrompt />
       <ShortcutsModal />
+      <DropZone />
       <Toasts />
     </>
   )

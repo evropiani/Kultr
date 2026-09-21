@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Info, Server, ShieldCheck, User } from 'lucide-react'
 import { useAuth } from '@/store/auth'
 import { hostLabel } from '@/store/auth'
@@ -14,6 +14,10 @@ import { Spinner, Switch } from '@/components/ui'
  */
 export function Login() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  // Reached from Settings → Add a server, so do not bounce back just because
+  // another server is already connected.
+  const adding = params.get('add') === '1'
   const auth = useAuth()
   const lockedServer = import.meta.env.VITE_LOCK_SERVER === '1'
   const presetServer = import.meta.env.VITE_NAVIDROME_URL ?? ''
@@ -27,8 +31,8 @@ export function Login() {
   const [plainAuth, setPlainAuth] = useState(false)
 
   useEffect(() => {
-    if (auth.status === 'connected') navigate('/', { replace: true })
-  }, [auth.status, navigate])
+    if (!adding && auth.status === 'connected') navigate('/', { replace: true })
+  }, [adding, auth.status, navigate])
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -52,9 +56,9 @@ export function Login() {
           <div>
             <h1 style={{ textAlign: 'center', fontSize: 26 }}>Kultr</h1>
             <p className="login__tagline">
-              A liquid glass front end for your Navidrome server.
+              {adding ? 'Add another Navidrome server.' : 'A liquid glass front end for your Navidrome server.'}
               <br />
-              Crossfade, AutoMix, and your whole library mirrored locally.
+              Crossfade, InjeKt, and your whole library mirrored locally.
             </p>
           </div>
         </div>

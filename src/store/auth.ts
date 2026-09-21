@@ -6,6 +6,13 @@ import type { Credentials, ServerInfo } from '@/api/types'
 export interface ServerProfile extends Credentials {
   id: string
   label: string
+  /**
+   * A server you keep but are not using right now. Disabled servers stay in
+   * the list with their credentials intact; they just cannot be connected to
+   * until you switch them back on. Older saved profiles predate this field and
+   * are treated as enabled.
+   */
+  enabled?: boolean
 }
 
 const SESSION_KEY = 'kultr.session'
@@ -57,6 +64,8 @@ export interface AuthState {
   reconnect: () => Promise<boolean>
   switchProfile: (id: string) => Promise<boolean>
   removeProfile: (id: string) => void
+  setProfileEnabled: (id: string, enabled: boolean) => void
+  renameProfile: (id: string, label: string) => void
   logout: (options?: { forget?: boolean }) => void
   activeProfile: () => ServerProfile | null
 }
@@ -93,11 +102,13 @@ export const useAuth = create<AuthState>()(
         try {
           const info = await client.ping()
           const id = makeId(client.baseUrl, creds.username)
+          const existing = get().profiles.find((entry) => entry.id === id)
           const profile: ServerProfile = {
             ...creds,
             serverUrl: client.baseUrl,
             id,
-            label: input.label?.trim() || hostLabel(client.baseUrl),
+            label: input.label?.trim() || existing?.label || hostLabel(client.baseUrl),
+            enabled: true,
           }
           const remember = input.remember ?? get().remember
           if (!remember) writeSessionSecret(id, creds.password)
@@ -121,6 +132,10 @@ export const useAuth = create<AuthState>()(
 
       async reconnect() {
         const profile = get().activeProfile()
+        if (profile?.enabled === false) {
+          set({ status: 'idle', error: null })
+          return false
+        }
         if (!profile) {
           set({ status: 'idle' })
           return false
@@ -147,8 +162,33 @@ export const useAuth = create<AuthState>()(
       async switchProfile(id) {
         const profile = get().profiles.find((p) => p.id === id)
         if (!profile) return false
+        if (profile.enabled === false) {
+          set({ error: `${profile.label} is switched off. Turn it on in Settings first.` })
+          return false
+        }
         set({ activeId: id })
         return get().reconnect()
+      },
+
+      setProfileEnabled(id, enabled) {
+        set((state) => ({
+          profiles: state.profiles.map((profile) =>
+            profile.id === id ? { ...profile, enabled } : profile,
+          ),
+        }))
+        // Switching off the server you are connected to disconnects you.
+        if (!enabled && get().activeId === id) {
+          setClient(null)
+          set({ activeId: null, status: 'idle', serverInfo: null })
+        }
+      },
+
+      renameProfile(id, label) {
+        set((state) => ({
+          profiles: state.profiles.map((profile) =>
+            profile.id === id ? { ...profile, label: label.trim() || profile.label } : profile,
+          ),
+        }))
       },
 
       removeProfile(id) {

@@ -29,7 +29,12 @@ export interface OfflineTrack {
   size: number
   contentType: string
   savedAt: number
-  blob: Blob
+  /** Where the audio actually lives. Older records predate this and are 'browser'. */
+  destination?: 'browser' | 'folder'
+  /** Set when stored inside the browser. */
+  blob?: Blob
+  /** Set when written to a folder the person chose. */
+  fileName?: string
 }
 
 export interface SyncState {
@@ -335,6 +340,15 @@ export async function offlineIds(): Promise<string[]> {
 export async function offlineUsage(): Promise<{ count: number; bytes: number }> {
   const all = await (await db()).getAll('offline')
   return { count: all.length, bytes: all.reduce((sum, item) => sum + (item.size || 0), 0) }
+}
+
+export async function allOffline(): Promise<OfflineTrack[]> {
+  return (await db()).getAll('offline')
+}
+
+/** Which of these ids already have audio stored. */
+export async function offlineIdSet(): Promise<Set<string>> {
+  return new Set((await (await db()).getAllKeys('offline')) as string[])
 }
 
 // ---------------------------------------------------------------- analysis --

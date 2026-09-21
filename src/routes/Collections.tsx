@@ -28,9 +28,12 @@ import { createPlaylistWith, removeOffline } from '@/lib/actions'
 import { usePlayer } from '@/store/player'
 import { useSync } from '@/store/sync'
 import { useToast } from '@/store/ui'
+import { useOffline } from '@/store/offline'
+import { useSettings } from '@/store/settings'
 import { Grid, AlbumCard, PlaylistCard } from '@/components/Cards'
 import { TrackList } from '@/components/TrackList'
 import { Art, Empty, Modal, SkeletonGrid, Spinner } from '@/components/ui'
+import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
 
 /* --------------------------------------------------------------- playlists -- */
 
@@ -215,6 +218,8 @@ export function PlaylistPage() {
               <Shuffle size={15} />
               Shuffle
             </button>
+            <OfflineButton songs={songs} label={data.name} className="pill pill-lg" />
+            <RemoveOfflineButton songs={songs} />
             <button className="pill pill-lg" onClick={() => setConfirmDelete(true)}>
               <Trash2 size={15} />
               Delete
@@ -291,6 +296,8 @@ export function Favourites() {
             <Play size={14} fill="currentColor" />
             Play favourites
           </button>
+          <OfflineButton songs={data.songs} label="Favourites" />
+          <RemoveOfflineButton songs={data.songs} />
         </div>
       </div>
 
@@ -330,19 +337,24 @@ export function Favourites() {
 export function Downloads() {
   const [usage, setUsage] = useState({ count: 0, bytes: 0 })
   const [songs, setSongs] = useState<Song[]>([])
+  const [library, setLibrary] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
+  const offlineIdSet = useOffline((state) => state.ids)
+  const destination = useSettings((state) => state.offlineDestination)
+  const folderName = useSettings((state) => state.offlineFolderName)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [ids, stats] = await Promise.all([offlineIds(), offlineUsage()])
+    const [ids, stats, everything] = await Promise.all([offlineIds(), offlineUsage(), allSongs()])
     setSongs(await getSongs(ids))
+    setLibrary(everything)
     setUsage(stats)
     setLoading(false)
   }, [])
 
   useEffect(() => {
     void load()
-  }, [load])
+  }, [load, offlineIdSet])
 
   const quota = useAsync(
     async () => {
@@ -364,15 +376,23 @@ export function Downloads() {
         </div>
         <div className="page-actions">
           <button
-            className="pill pill-accent"
+            className="pill"
             disabled={!songs.length}
             onClick={() => void usePlayer.getState().playNow(songs, 0, 'Offline')}
           >
             <Play size={14} fill="currentColor" />
             Play offline tracks
           </button>
+          <OfflineButton songs={library} label="Your whole library" className="pill pill-accent" />
         </div>
       </div>
+
+      <p className="row__hint" style={{ marginBottom: 16 }}>
+        {destination === 'folder'
+          ? `Downloads go to the folder “${folderName || 'not chosen yet'}”. Change it in Settings → Offline.`
+          : 'Downloads are stored inside this browser. Settings → Offline can point them at a real folder instead.'}
+        {' '}Syncing again only fetches tracks you do not already have.
+      </p>
 
       {quota.data?.quota ? (
         <p className="row__hint" style={{ marginBottom: 16 }}>

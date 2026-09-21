@@ -32,7 +32,8 @@ const getEngineTime = () => engine.currentTime
 export function PlayerBar() {
   const player = usePlayer()
   const song = player.current()
-  const { volume, muted, automixEnabled, crossfadeEnabled, crossfadeSeconds } = useSettings()
+  const { volume, muted, injektEnabled, crossfadeEnabled, crossfadeSeconds } = useSettings()
+  const setSetting = useSettings((state) => state.set)
   const setNowPlaying = useUi((state) => state.setNowPlaying)
   const setQueue = useUi((state) => state.setQueue)
   const queueOpen = useUi((state) => state.queueOpen)
@@ -73,7 +74,7 @@ export function PlayerBar() {
   const playing = player.playback === 'playing'
   const duration = player.duration || song.duration || 0
   const overlap =
-    player.lastPlan && (automixEnabled || crossfadeEnabled)
+    player.lastPlan && (injektEnabled || crossfadeEnabled)
       ? { start: player.lastPlan.startAt, duration: player.lastPlan.duration }
       : crossfadeEnabled && duration > crossfadeSeconds
         ? { start: duration - crossfadeSeconds, duration: crossfadeSeconds }
@@ -150,6 +151,20 @@ export function PlayerBar() {
       </div>
 
       <div className="player__right">
+        <button
+          className="iconbtn"
+          data-active={injektEnabled}
+          aria-label={injektEnabled ? 'Turn InjeKt off' : 'Turn InjeKt on'}
+          aria-pressed={injektEnabled}
+          title={
+            injektEnabled
+              ? 'InjeKt is on — transitions are beat-matched and key-aware'
+              : 'InjeKt is off — plain crossfade between tracks'
+          }
+          onClick={() => setSetting('injektEnabled', !injektEnabled)}
+        >
+          <Sparkles size={17} />
+        </button>
         <SleepTimerMenu>
           <Timer size={16} />
         </SleepTimerMenu>

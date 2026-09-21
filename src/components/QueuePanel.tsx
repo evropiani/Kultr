@@ -12,7 +12,7 @@ export function QueuePanel() {
   const open = useUi((state) => state.queueOpen)
   const setQueue = useUi((state) => state.setQueue)
   const player = usePlayer()
-  const automixAutoQueue = useSettings((state) => state.automixAutoQueue)
+  const injektAutoQueue = useSettings((state) => state.injektAutoQueue)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const ref = useDismiss<HTMLElement>(open, () => setQueue(false))
@@ -49,7 +49,7 @@ export function QueuePanel() {
 
         <div className="queue__label">
           Up next
-          {automixAutoQueue ? (
+          {injektAutoQueue ? (
             <span className="badge" data-tone="accent" style={{ marginLeft: 8, height: 18 }}>
               <Sparkles size={10} />
               auto-extends
@@ -59,8 +59,8 @@ export function QueuePanel() {
 
         {upcoming.length === 0 ? (
           <p className="row__hint" style={{ padding: '6px 10px' }}>
-            {automixAutoQueue
-              ? 'Nothing queued — AutoMix will pick tracks that mix well with this one when it ends.'
+            {injektAutoQueue
+              ? 'Nothing queued — InjeKt will pick tracks that mix well with this one when it ends.'
               : 'Nothing queued. Turn on “Keep playing similar music” in Settings to have Kultr continue for you.'}
           </p>
         ) : (

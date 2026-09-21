@@ -9,13 +9,13 @@ import { useSettings } from '@/store/settings'
 import { Badge, Spinner } from './ui'
 
 /**
- * Shows what AutoMix knows about the current and next track, and exactly how
+ * Shows what InjeKt knows about the current and next track, and exactly how
  * it intends to move between them. Handy for tuning, and it makes the feature
  * legible instead of magic.
  */
-export function AutoMixPanel() {
+export function InjektPanel() {
   const player = usePlayer()
-  const { automixEnabled, automixBars, automixMaxTempoShift } = useSettings()
+  const { injektEnabled, injektBars, injektMaxTempoShift } = useSettings()
   const current = player.current()
   const next = player.peekNext()
   const plan = player.lastPlan
@@ -45,28 +45,28 @@ export function AutoMixPanel() {
     setBusy(false)
   }
 
-  if (!automixEnabled) {
+  if (!injektEnabled) {
     return (
       <p className="row__hint" style={{ padding: 12 }}>
-        AutoMix is off. Turn it on in Settings → Playback to get beat-matched, key-aware transitions
+        InjeKt is off. Turn it on in Settings → Playback to get beat-matched, key-aware transitions
         instead of a plain crossfade.
       </p>
     )
   }
 
   return (
-    <div className="automix">
-      <div className="automix__row">
+    <div className="injekt">
+      <div className="injekt__row">
         <span>Now playing</span>
-        <span className="automix__value">{current?.title ?? '—'}</span>
+        <span className="injekt__value">{current?.title ?? '—'}</span>
       </div>
       <TrackFacts analysis={analysisA} onAnalyse={() => void analyse(current)} busy={busy} />
 
       <div className="hairline" />
 
-      <div className="automix__row">
+      <div className="injekt__row">
         <span>Up next</span>
-        <span className="automix__value">{next?.title ?? 'End of queue'}</span>
+        <span className="injekt__value">{next?.title ?? 'End of queue'}</span>
       </div>
       <TrackFacts analysis={analysisB} onAnalyse={() => void analyse(next)} busy={busy} />
 
@@ -74,39 +74,39 @@ export function AutoMixPanel() {
 
       {plan ? (
         <>
-          <div className="automix__row">
+          <div className="injekt__row">
             <span>Transition</span>
-            <span className="automix__value">
+            <span className="injekt__value">
               <Badge tone="accent">
                 <Sparkles size={11} />
                 {plan.type}
               </Badge>
             </span>
           </div>
-          <div className="automix__row">
+          <div className="injekt__row">
             <span>Starts at</span>
-            <span className="automix__value">{formatTime(plan.startAt)}</span>
+            <span className="injekt__value">{formatTime(plan.startAt)}</span>
           </div>
-          <div className="automix__row">
+          <div className="injekt__row">
             <span>Overlap</span>
-            <span className="automix__value">{plan.duration.toFixed(1)}s</span>
+            <span className="injekt__value">{plan.duration.toFixed(1)}s</span>
           </div>
-          <div className="automix__row">
+          <div className="injekt__row">
             <span>Next track enters at</span>
-            <span className="automix__value">{formatTime(plan.inStartOffset)}</span>
+            <span className="injekt__value">{formatTime(plan.inStartOffset)}</span>
           </div>
-          <div className="automix__row">
+          <div className="injekt__row">
             <span>Tempo nudge</span>
-            <span className="automix__value">
+            <span className="injekt__value">
               {plan.incomingRate === 1 ? 'none' : `${((plan.incomingRate - 1) * 100).toFixed(1)}%`}
             </span>
           </div>
-          <div className="automix__row">
+          <div className="injekt__row">
             <span>Bass swap</span>
-            <span className="automix__value">{plan.bassSwap ? 'yes' : 'no'}</span>
+            <span className="injekt__value">{plan.bassSwap ? 'yes' : 'no'}</span>
           </div>
 
-          <div className="automix__viz" aria-hidden="true">
+          <div className="injekt__viz" aria-hidden="true">
             <div className="a" style={{ width: '62%' }} />
             <div className="b" style={{ width: '48%' }} />
             <div className="label">
@@ -120,7 +120,7 @@ export function AutoMixPanel() {
       ) : (
         <p className="row__hint">
           The transition is planned about {35} seconds before the end of the track. Settings currently
-          allow a {automixMaxTempoShift}% tempo shift over {automixBars} bars.
+          allow a {injektMaxTempoShift}% tempo shift over {injektBars} bars.
         </p>
       )}
     </div>
@@ -138,7 +138,7 @@ function TrackFacts({
 }) {
   if (!analysis) {
     return (
-      <div className="automix__row">
+      <div className="injekt__row">
         <span className="row__hint" style={{ flex: 1 }}>
           Not analysed yet.
         </span>
@@ -151,7 +151,7 @@ function TrackFacts({
   }
 
   return (
-    <div className="automix__row" style={{ flexWrap: 'wrap', gap: 6, justifyContent: 'flex-start' }}>
+    <div className="injekt__row" style={{ flexWrap: 'wrap', gap: 6, justifyContent: 'flex-start' }}>
       <Badge>{analysis.bpm.toFixed(0)} BPM</Badge>
       <Badge>
         {analysis.keyName} · {analysis.camelot}

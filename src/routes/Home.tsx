@@ -7,7 +7,7 @@ import { useAsync } from '@/lib/hooks'
 import { formatCount, formatRelative } from '@/lib/format'
 import { usePlayer } from '@/store/player'
 import { useSync } from '@/store/sync'
-import { buildAutoQueue } from '@/audio/automix'
+import { buildAutoQueue } from '@/audio/injekt'
 import { AlbumCard, Grid } from '@/components/Cards'
 import { Empty, SkeletonGrid } from '@/components/ui'
 import { TrackList } from '@/components/TrackList'
@@ -93,11 +93,11 @@ export function Home() {
     void usePlayer.getState().playNow(picks, 0, 'Shuffle all')
   }
 
-  const startAutoMix = async () => {
+  const startInjeKt = async () => {
     if (!data.songs.length) return
     const seed = data.songs[Math.floor(Math.random() * data.songs.length)]
     const rest = await buildAutoQueue(seed, { count: 24 })
-    void usePlayer.getState().playNow([seed, ...rest], 0, 'AutoMix radio')
+    void usePlayer.getState().playNow([seed, ...rest], 0, 'InjeKt radio')
   }
 
   return (
@@ -115,9 +115,9 @@ export function Home() {
             <Shuffle size={14} />
             Shuffle all
           </button>
-          <button className="pill pill-accent" onClick={() => void startAutoMix()}>
+          <button className="pill pill-accent" onClick={() => void startInjeKt()}>
             <Sparkles size={14} />
-            Start an AutoMix set
+            Start an InjeKt set
           </button>
         </div>
       </div>

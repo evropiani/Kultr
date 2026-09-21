@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Blend,
+  FolderDown,
   Gauge,
+  Pencil,
   Info,
   Keyboard,
   LogOut,
   Palette,
+  Plus,
   Server,
   SlidersHorizontal,
   Sparkles,
@@ -14,6 +17,13 @@ import {
   Volume2,
 } from 'lucide-react'
 import { destroyDatabase } from '@/db'
+import {
+  clearDownloadFolder,
+  pickDownloadFolder,
+  supportsFolderDownloads,
+} from '@/lib/filesystem'
+import { formatBytes } from '@/lib/format'
+import { useOffline } from '@/store/offline'
 import { engine } from '@/audio/engine'
 import { useAuth } from '@/store/auth'
 import {
@@ -24,6 +34,7 @@ import {
   type CrossfadeCurve,
   type GlassLevel,
   type GridSize,
+  type OfflineDestination,
   type ReplayGainMode,
   type ThemeMode,
 } from '@/store/settings'
@@ -35,7 +46,13 @@ export function Settings() {
   const auth = useAuth()
   const navigate = useNavigate()
   const setShortcuts = useUi((state) => state.setShortcuts)
+  const offline = useOffline()
   const [confirmReset, setConfirmReset] = useState(false)
+
+  useEffect(() => {
+    void offline.refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="settings">
@@ -132,7 +149,7 @@ export function Settings() {
       <Section
         title="Crossfade"
         icon={<Blend size={16} />}
-        description="Overlap the end of one track with the start of the next. AutoMix overrides these numbers when it is switched on and knows both tracks."
+        description="Overlap the end of one track with the start of the next. InjeKt overrides these numbers when it is switched on and knows both tracks."
       >
         <Row label="Crossfade between tracks">
           <Switch
@@ -190,17 +207,17 @@ export function Settings() {
         </Row>
       </Section>
 
-      {/* ---------------------------------------------------------- automix */}
+      {/* ---------------------------------------------------------- injekt */}
       <Section
-        title="AutoMix"
+        title="InjeKt"
         icon={<Sparkles size={16} />}
         description="Kultr analyses each track's tempo, key, energy and structure, then mixes like a DJ would: it starts the blend at the outro, beat-matches the incoming track, swaps the basslines over and skips long intros. Everything degrades to a normal crossfade when two tracks simply do not fit."
       >
-        <Row label="Enable AutoMix">
+        <Row label="Enable InjeKt">
           <Switch
-            checked={settings.automixEnabled}
-            onChange={(value) => settings.set('automixEnabled', value)}
-            label="Enable AutoMix"
+            checked={settings.injektEnabled}
+            onChange={(value) => settings.set('injektEnabled', value)}
+            label="Enable InjeKt"
           />
         </Row>
         <Row
@@ -208,8 +225,8 @@ export function Settings() {
           hint="Time-stretches the incoming track so the beats line up, then eases it back to its own tempo."
         >
           <Switch
-            checked={settings.automixBeatMatch}
-            onChange={(value) => settings.set('automixBeatMatch', value)}
+            checked={settings.injektBeatMatch}
+            onChange={(value) => settings.set('injektBeatMatch', value)}
             label="Beat-match"
           />
         </Row>
@@ -223,8 +240,8 @@ export function Settings() {
             min={0}
             max={20}
             step={0.5}
-            value={settings.automixMaxTempoShift}
-            onChange={(value) => settings.set('automixMaxTempoShift', value)}
+            value={settings.injektMaxTempoShift}
+            onChange={(value) => settings.set('injektMaxTempoShift', value)}
             format={(value) => `${value.toFixed(1)} %`}
           />
         </Row>
@@ -234,8 +251,8 @@ export function Settings() {
             min={2}
             max={32}
             step={2}
-            value={settings.automixBars}
-            onChange={(value) => settings.set('automixBars', value)}
+            value={settings.injektBars}
+            onChange={(value) => settings.set('injektBars', value)}
             format={(value) => `${value} bars`}
           />
         </Row>
@@ -244,8 +261,8 @@ export function Settings() {
           hint="Rolls the outgoing bass off before the incoming bass comes up, so two kick drums never fight. Needs Web Audio mode."
         >
           <Switch
-            checked={settings.automixBassSwap}
-            onChange={(value) => settings.set('automixBassSwap', value)}
+            checked={settings.injektBassSwap}
+            onChange={(value) => settings.set('injektBassSwap', value)}
             label="Bass swap"
           />
         </Row>
@@ -254,15 +271,15 @@ export function Settings() {
           hint="Uses the detected musical key. When two keys clash, the outgoing track is filtered out instead of blended."
         >
           <Switch
-            checked={settings.automixHarmonic}
-            onChange={(value) => settings.set('automixHarmonic', value)}
+            checked={settings.injektHarmonic}
+            onChange={(value) => settings.set('injektHarmonic', value)}
             label="Harmonic mixing"
           />
         </Row>
         <Row label="Skip long intros" hint="Brings the next track in at its first real downbeat.">
           <Switch
-            checked={settings.automixSkipIntro}
-            onChange={(value) => settings.set('automixSkipIntro', value)}
+            checked={settings.injektSkipIntro}
+            onChange={(value) => settings.set('injektSkipIntro', value)}
             label="Skip long intros"
           />
         </Row>
@@ -271,8 +288,8 @@ export function Settings() {
           hint="When the queue runs out, Kultr continues with tracks that match the current one by tempo, key and energy."
         >
           <Switch
-            checked={settings.automixAutoQueue}
-            onChange={(value) => settings.set('automixAutoQueue', value)}
+            checked={settings.injektAutoQueue}
+            onChange={(value) => settings.set('injektAutoQueue', value)}
             label="Keep playing similar music"
           />
         </Row>
@@ -281,8 +298,8 @@ export function Settings() {
           hint="Analyses the next track while the current one plays, so the first transition is already ready."
         >
           <Switch
-            checked={settings.automixAnalyseAhead}
-            onChange={(value) => settings.set('automixAnalyseAhead', value)}
+            checked={settings.injektAnalyseAhead}
+            onChange={(value) => settings.set('injektAnalyseAhead', value)}
             label="Analyse ahead"
           />
         </Row>
@@ -344,7 +361,7 @@ export function Settings() {
         </Row>
         <Row
           label="Transcode format"
-          hint="Leave empty to let the server decide. Useful if your browser cannot play the original format."
+          hint="Leave empty to let the server decide. Useful if your browser cannot play the original format. FLAC and ALAC stay lossless, so they are large — and your server has to be set up to produce them."
         >
           <select
             className="field"
@@ -356,12 +373,14 @@ export function Settings() {
             <option value="mp3">MP3</option>
             <option value="opus">Opus</option>
             <option value="aac">AAC</option>
+            <option value="flac">FLAC (lossless)</option>
+            <option value="alac">ALAC (lossless)</option>
             <option value="raw">Raw (no transcoding)</option>
           </select>
         </Row>
         <Row
           label="Audio engine"
-          hint={`Currently running in ${engine.mode === 'webaudio' ? 'Web Audio' : 'compatibility'} mode. Web Audio enables the equaliser, visualizer and the AutoMix bass swap, but needs the audio to be readable cross-origin. Changing this takes effect after a reload.`}
+          hint={`Currently running in ${engine.mode === 'webaudio' ? 'Web Audio' : 'compatibility'} mode. Web Audio enables the equaliser, visualizer and the InjeKt bass swap, but needs the audio to be readable cross-origin. Changing this takes effect after a reload.`}
         >
           <Segmented<AudioEngineMode>
             value={settings.audioEngine}
@@ -385,13 +404,6 @@ export function Settings() {
             checked={settings.resumeOnStart}
             onChange={(value) => settings.set('resumeOnStart', value)}
             label="Resume on start"
-          />
-        </Row>
-        <Row label="Prefer offline copies" hint="Plays a downloaded file instead of streaming when one exists.">
-          <Switch
-            checked={settings.offlineFirst}
-            onChange={(value) => settings.set('offlineFirst', value)}
-            label="Prefer offline copies"
           />
         </Row>
       </Section>
@@ -480,6 +492,117 @@ export function Settings() {
         </Row>
       </Section>
 
+
+      {/* --------------------------------------------------------- offline */}
+      <Section
+        title="Offline"
+        icon={<FolderDown size={16} />}
+        description="Where “Sync offline” puts the audio. Syncing is incremental — running it again only fetches tracks you do not already have."
+      >
+        <Row
+          label="Download location"
+          hint={
+            settings.offlineDestination === 'folder'
+              ? settings.offlineFolderName
+                ? `Saving to “${settings.offlineFolderName}”. Files are named Artist - Album - Track, so other players can read them.`
+                : 'No folder chosen yet — you will be asked the first time you download.'
+              : 'Stored inside this browser. Works everywhere, but only Kultr can reach the files and the browser may evict them if space runs short.'
+          }
+        >
+          <Segmented<OfflineDestination>
+            value={settings.offlineDestination}
+            onChange={async (value) => {
+              if (value === 'folder') {
+                if (!supportsFolderDownloads()) {
+                  useToast
+                    .getState()
+                    .show(
+                      'This browser cannot write to a folder. Chrome, Edge and other Chromium browsers can.',
+                      'warning',
+                    )
+                  return
+                }
+                const picked = await pickDownloadFolder().catch(() => null)
+                if (!picked) return
+                settings.merge({
+                  offlineDestination: 'folder',
+                  offlineFolderName: picked.name,
+                  offlineDestinationChosen: true,
+                })
+              } else {
+                settings.merge({ offlineDestination: 'browser', offlineDestinationChosen: true })
+              }
+            }}
+            options={[
+              { value: 'browser', label: 'This browser' },
+              { value: 'folder', label: 'A folder' },
+            ]}
+          />
+        </Row>
+
+        {settings.offlineDestination === 'folder' ? (
+          <Row
+            label="Folder"
+            hint="Browsers only allow writing where you have explicitly pointed the app, so the folder is chosen with a picker rather than typed as a path."
+          >
+            <button
+              className="pill"
+              onClick={async () => {
+                const picked = await pickDownloadFolder().catch(() => null)
+                if (picked) settings.merge({ offlineFolderName: picked.name })
+              }}
+            >
+              <FolderDown size={14} />
+              {settings.offlineFolderName || 'Choose a folder…'}
+            </button>
+            {settings.offlineFolderName ? (
+              <button
+                className="pill"
+                aria-label="Forget this folder"
+                onClick={async () => {
+                  await clearDownloadFolder()
+                  settings.merge({ offlineFolderName: '' })
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            ) : null}
+          </Row>
+        ) : null}
+
+        <Row
+          label="Parallel downloads"
+          hint="How many tracks to fetch at once. Lower it if your server struggles."
+          stack
+        >
+          <SliderRow
+            label="Parallel downloads"
+            min={1}
+            max={8}
+            step={1}
+            value={settings.offlineConcurrency}
+            onChange={(value) => settings.set('offlineConcurrency', value)}
+            format={(value) => `${value}`}
+          />
+        </Row>
+
+        <Row
+          label="Stored right now"
+          hint="Manage individual tracks on the Offline page in the sidebar."
+        >
+          <span className="value" style={{ minWidth: 160 }}>
+            {offline.usage.count.toLocaleString()} track(s) · {formatBytes(offline.usage.bytes)}
+          </span>
+        </Row>
+        <Row label="Prefer offline copies" hint="Play a downloaded file instead of streaming when one exists.">
+          <Switch
+            checked={settings.offlineFirst}
+            onChange={(value) => settings.set('offlineFirst', value)}
+            label="Prefer offline copies"
+          />
+        </Row>
+      </Section>
+
       {/* ------------------------------------------------------- interface */}
       <Section title="Interface" icon={<Gauge size={16} />}>
         <Row label="Show lyrics tab">
@@ -510,29 +633,77 @@ export function Settings() {
       </Section>
 
       {/* --------------------------------------------------------- account */}
-      <Section title="Server and account" icon={<Server size={16} />}>
-        {auth.profiles.map((profile) => (
-          <Row
-            key={profile.id}
-            label={profile.label}
-            hint={`${profile.username} · ${profile.serverUrl || 'same origin'}${
-              profile.id === auth.activeId ? ' · connected' : ''
-            }`}
+      <Section
+        title="Servers"
+        icon={<Server size={16} />}
+        description="Add as many Navidrome servers as you like. Switching servers swaps the library, queue and downloads for that server's own. Turning one off keeps it in the list without connecting to it."
+        actions={
+          <button
+            className="pill pill-accent"
+            onClick={() => navigate('/login?add=1')}
           >
-            {profile.id === auth.activeId ? (
-              <span className="badge" data-tone="success">
-                Active
-              </span>
-            ) : (
-              <button className="pill" onClick={() => void auth.switchProfile(profile.id)}>
-                Switch
+            <Plus size={14} />
+            Add a server
+          </button>
+        }
+      >
+        {auth.profiles.length === 0 ? (
+          <p className="row__hint">No servers saved yet.</p>
+        ) : null}
+
+        {auth.profiles.map((profile) => {
+          const active = profile.id === auth.activeId
+          const enabled = profile.enabled !== false
+          return (
+            <Row
+              key={profile.id}
+              label={profile.label}
+              hint={`${profile.username} · ${profile.serverUrl || 'same origin as this page'}${
+                active ? ' · connected' : enabled ? '' : ' · switched off'
+              }`}
+            >
+              <Switch
+                checked={enabled}
+                onChange={(value) => auth.setProfileEnabled(profile.id, value)}
+                label={`Enable ${profile.label}`}
+              />
+              {active ? (
+                <span className="badge" data-tone="success">
+                  Active
+                </span>
+              ) : (
+                <button
+                  className="pill"
+                  disabled={!enabled}
+                  title={enabled ? 'Connect to this server' : 'Switch it on first'}
+                  onClick={() => void auth.switchProfile(profile.id)}
+                >
+                  Connect
+                </button>
+              )}
+              <button
+                className="pill pill-icon"
+                aria-label={`Rename ${profile.label}`}
+                title="Rename"
+                onClick={() => {
+                  const next = window.prompt('Name for this server', profile.label)
+                  if (next !== null) auth.renameProfile(profile.id, next)
+                }}
+              >
+                <Pencil size={14} />
               </button>
-            )}
-            <button className="pill" onClick={() => auth.removeProfile(profile.id)}>
-              <Trash2 size={14} />
-            </button>
-          </Row>
-        ))}
+              <button
+                className="pill pill-icon"
+                aria-label={`Forget ${profile.label}`}
+                title="Forget this server"
+                onClick={() => auth.removeProfile(profile.id)}
+              >
+                <Trash2 size={14} />
+              </button>
+            </Row>
+          )
+        })}
+
         <Row label="Sign out" hint="Forgets the password for this session and returns to the login screen.">
           <button
             className="pill"
@@ -553,7 +724,17 @@ export function Settings() {
         </Row>
       </Section>
 
-      <Section title="About" icon={<Info size={16} />}>
+      <Section
+        title="About"
+        icon={<Info size={16} />}
+        description="Kultr was vibecoded with Claude Code — designed, written, tested and deployed by prompting Anthropic's CLI rather than by hand. The whole thing, from the tempo detection to the reverse proxy, came out of that conversation."
+      >
+        <Row label="Built with" hint="Anthropic's agentic coding tool.">
+          <a className="pill" href="https://claude.ai/code" target="_blank" rel="noreferrer">
+            <Sparkles size={14} />
+            Claude Code
+          </a>
+        </Row>
         <Row label="Version">
           <span className="value" style={{ minWidth: 120 }}>{__KULTR_VERSION__}</span>
         </Row>
@@ -596,7 +777,7 @@ export function Settings() {
       >
         <p className="row__hint">
           This wipes the local library mirror, your settings, saved servers, offline downloads and
-          AutoMix analysis from this browser. Nothing on your Navidrome server is touched.
+          InjeKt analysis from this browser. Nothing on your Navidrome server is touched.
         </p>
       </Modal>
     </div>

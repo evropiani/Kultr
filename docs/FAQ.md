@@ -46,18 +46,22 @@ A full sync is one request per album, six at a time. A few thousand albums
 takes a minute or two. Afterwards, **Check for updates** is a handful of
 requests. Details and numbers in [SYNC.md](SYNC.md).
 
-### Is AutoMix really like Apple Music's?
+### What is InjeKt?
 
-It is built to do the same job — beat-matched, musically-timed transitions
-rather than a dumb fade — using the same ideas: tempo and beat detection, key
-matching, energy, and blending at the outro. It is an independent
-implementation, so it will not make identical choices. It also shows you its
-working, which Apple's does not: the AutoMix tab tells you both tracks' tempo
-and key and exactly what it decided.
+Kultr's mixing engine, and the reason the K is capitalised. It measures every
+track — tempo, beat grid, musical key, energy, where the intro ends and the
+outro starts — and then *injects* the next track into the current one at a
+point that works musically: beat-matched, on a downbeat, with the basslines
+swapped over so two kick drums never fight.
 
-See [AUTOMIX.md](AUTOMIX.md).
+Unlike a plain crossfade it is not a fixed number of seconds. A pair of tracks
+that sit well together gets a long blend; a pair that clash get a short one, or
+a filter sweep instead. It also shows its working — the InjeKt tab tells you
+both tracks' tempo and key and exactly what it decided and why.
 
-### Does AutoMix send my music anywhere?
+See [INJEKT.md](INJEKT.md).
+
+### Does InjeKt send my music anywhere?
 
 No. Analysis decodes the audio in your browser and the results stay in your
 browser. Nothing is uploaded and nothing is written to your server.
@@ -66,7 +70,7 @@ browser. Nothing is uploaded and nothing is written to your server.
 
 Kultr is in compatibility mode, which happens when the browser cannot read the
 audio data — a cross-origin restriction. Playback and crossfade work; the EQ,
-visualizer and AutoMix bass swap need Web Audio. [CORS.md](CORS.md) explains
+visualizer and InjeKt bass swap need Web Audio. [CORS.md](CORS.md) explains
 the fix.
 
 ### Does it work with Airsonic / Gonic / Ampache / other servers?
@@ -104,7 +108,7 @@ in a tagger; deletion belongs nowhere near a music player.
 Streaming is streaming. Two things are Kultr-specific:
 
 - During a crossfade two tracks stream at once, briefly.
-- AutoMix analysis streams each track once at 96 kbps. On a metered connection,
+- InjeKt analysis streams each track once at 96 kbps. On a metered connection,
   turn off **Analyse ahead** and do the analysis at home.
 
 The blur effects cost GPU. Set **Glass** to **Frosted** or **Solid** on a

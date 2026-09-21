@@ -3,7 +3,7 @@
  * Tiny test runner.
  *
  * Kultr's testable core is pure TypeScript with no DOM in sight (signal
- * analysis and the AutoMix planner), so rather than pulling in a whole test
+ * analysis and the InjeKt planner), so rather than pulling in a whole test
  * framework we bundle each suite with the esbuild that ships inside Vite and
  * run it on Node.
  *
@@ -22,7 +22,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '..')
 const out = mkdtempSync(join(tmpdir(), 'kultr-tests-'))
 
-const SUITES = ['dsp.test.ts', 'automix.test.ts']
+const SUITES = ['dsp.test.ts', 'injekt.test.ts']
 
 const alias = {
   '@/db': join(here, 'stubs/stub-db.ts'),

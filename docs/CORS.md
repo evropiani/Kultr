@@ -31,7 +31,7 @@ own origin, the browser lets Web Audio read the samples. That is what powers:
 
 - the **10-band equaliser**
 - the **visualizer**
-- AutoMix's **bass swap** (the low-shelf filters on each deck)
+- InjeKt's **bass swap** (the low-shelf filters on each deck)
 
 Cross-origin audio without CORS headers is played but not readable, so
 `MediaElementSource` outputs silence. Kultr detects that — it watches for the

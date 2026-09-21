@@ -10,6 +10,7 @@ import { useSync } from '@/store/sync'
 import { AlbumCard, ArtistCard, Grid } from '@/components/Cards'
 import { TrackList } from '@/components/TrackList'
 import { Empty, Segmented, SkeletonGrid } from '@/components/ui'
+import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
 
 /** Render a long list a chunk at a time, growing as the user scrolls. */
 function useIncremental<T>(items: T[], step = 120) {
@@ -64,6 +65,7 @@ type AlbumSort = 'name' | 'artist' | 'year' | 'added' | 'plays'
 export function Albums() {
   const lastCheck = useSync((state) => state.state.lastCheck)
   const { data: albums, loading } = useAsync(async () => allAlbums(), [lastCheck], [] as Album[])
+  const { data: library } = useAsync(async () => allSongs(), [lastCheck], [] as Song[])
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<AlbumSort>('name')
   const search = useDebounced(query, 200)
@@ -94,6 +96,13 @@ export function Albums() {
     return list
   }, [albums, search, sort])
 
+  // Tracks belonging to whatever the filter currently shows, so the offline
+  // button follows the filter rather than always meaning "everything".
+  const filteredSongs = useMemo(() => {
+    const ids = new Set(filtered.map((album) => album.id))
+    return library.filter((song) => song.albumId && ids.has(song.albumId))
+  }, [filtered, library])
+
   const { visible, sentinel, hasMore } = useIncremental(filtered)
 
   return (
@@ -102,6 +111,10 @@ export function Albums() {
         <div className="page-head__title">
           <h1>Albums</h1>
           <span className="page-head__sub">{formatCount(filtered.length, 'album')}</span>
+        </div>
+        <div className="page-actions">
+          <OfflineButton songs={filteredSongs} label="These albums" />
+          <RemoveOfflineButton songs={filteredSongs} />
         </div>
       </div>
 
@@ -144,6 +157,7 @@ export function Albums() {
 export function Artists() {
   const lastCheck = useSync((state) => state.state.lastCheck)
   const { data: artists, loading } = useAsync(async () => allArtists(), [lastCheck], [] as Artist[])
+  const { data: library } = useAsync(async () => allSongs(), [lastCheck], [] as Song[])
   const [query, setQuery] = useState('')
   const search = useDebounced(query, 200)
 
@@ -156,6 +170,11 @@ export function Artists() {
     return list
   }, [artists, search])
 
+  const filteredSongs = useMemo(() => {
+    const ids = new Set(filtered.map((artist) => artist.id))
+    return library.filter((song) => song.artistId && ids.has(song.artistId))
+  }, [filtered, library])
+
   const { visible, sentinel, hasMore } = useIncremental(filtered)
 
   return (
@@ -164,6 +183,10 @@ export function Artists() {
         <div className="page-head__title">
           <h1>Artists</h1>
           <span className="page-head__sub">{formatCount(filtered.length, 'artist')}</span>
+        </div>
+        <div className="page-actions">
+          <OfflineButton songs={filteredSongs} label="These artists" />
+          <RemoveOfflineButton songs={filteredSongs} />
         </div>
       </div>
       <FilterBar value={query} onChange={setQuery} placeholder="Filter artists…" />
@@ -232,6 +255,7 @@ export function Songs() {
             <Play size={14} fill="currentColor" />
             Play all
           </button>
+          <OfflineButton songs={filtered} label="Your songs" />
         </div>
       </div>
 
@@ -330,6 +354,8 @@ export function GenrePage() {
             <Play size={14} fill="currentColor" />
             Play
           </button>
+          <OfflineButton songs={songs} label={genre} />
+          <RemoveOfflineButton songs={songs} />
         </div>
       </div>
 

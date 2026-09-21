@@ -1,5 +1,5 @@
 /**
- * Pure-JS signal analysis used by AutoMix.
+ * Pure-JS signal analysis used by InjeKt.
  *
  * Everything here works on a mono Float32Array and has no DOM dependencies, so
  * it can run inside a Web Worker. The goal is not musicological perfection —
@@ -210,7 +210,7 @@ export interface TempoResult {
    *
    * Even a 0.3% tempo error puts a grid fitted at 0:00 a whole beat out by
    * 4:00, and the mix-out point is exactly where being out matters. So we fit
-   * the phase twice and let AutoMix use whichever anchor is closer to the
+   * the phase twice and let InjeKt use whichever anchor is closer to the
    * point it is snapping.
    */
   outroDownbeat: number

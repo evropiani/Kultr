@@ -11,8 +11,9 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
+  PanelRightClose,
+  PanelRightOpen,
   Sparkles,
-  Waves,
 } from 'lucide-react'
 import { engine } from '@/audio/engine'
 import { artUrl } from '@/lib/artwork'
@@ -25,9 +26,9 @@ import { Art } from './ui'
 import { Scrubber } from './Scrubber'
 import { Lyrics } from './Lyrics'
 import { Visualizer } from './Visualizer'
-import { AutoMixPanel } from './AutoMixPanel'
+import { InjektPanel } from './InjektPanel'
 
-type Tab = 'queue' | 'lyrics' | 'automix' | 'visual'
+type Tab = 'queue' | 'lyrics' | 'injekt' | 'visual'
 
 const getEngineTime = () => engine.currentTime
 
@@ -36,8 +37,15 @@ export function NowPlaying() {
   const setNowPlaying = useUi((state) => state.setNowPlaying)
   const player = usePlayer()
   const song = player.current()
-  const { showLyrics, showVisualizer, crossfadeEnabled, crossfadeSeconds, automixEnabled } =
-    useSettings()
+  const {
+    showLyrics,
+    showVisualizer,
+    crossfadeEnabled,
+    crossfadeSeconds,
+    injektEnabled,
+    showPlayerPanel,
+  } = useSettings()
+  const setSetting = useSettings((state) => state.set)
   const [tab, setTab] = useState<Tab>('queue')
   const [starred, setStarred] = useState(Boolean(song?.starred))
 
@@ -54,7 +62,7 @@ export function NowPlaying() {
   const tabs: { id: Tab; label: string; hidden?: boolean }[] = [
     { id: 'queue', label: 'Up next' },
     { id: 'lyrics', label: 'Lyrics', hidden: !showLyrics },
-    { id: 'automix', label: 'AutoMix' },
+    { id: 'injekt', label: 'InjeKt' },
     { id: 'visual', label: 'Visualizer', hidden: !showVisualizer },
   ]
 
@@ -72,15 +80,32 @@ export function NowPlaying() {
             {player.transition.plan.label}
           </span>
         ) : null}
-        {automixEnabled ? (
-          <span className="badge">
-            <Waves size={11} />
-            AutoMix on
-          </span>
-        ) : null}
+        <button
+          className="pill"
+          data-active={injektEnabled}
+          aria-pressed={injektEnabled}
+          title={
+            injektEnabled
+              ? 'InjeKt is on — transitions are beat-matched and key-aware'
+              : 'InjeKt is off — plain crossfade between tracks'
+          }
+          onClick={() => setSetting('injektEnabled', !injektEnabled)}
+        >
+          <Sparkles size={13} />
+          InjeKt {injektEnabled ? 'on' : 'off'}
+        </button>
+        <button
+          className="iconbtn"
+          aria-label={showPlayerPanel ? 'Hide the side panel' : 'Show the side panel'}
+          aria-pressed={showPlayerPanel}
+          title={showPlayerPanel ? 'Hide the side panel' : 'Show the side panel'}
+          onClick={() => setSetting('showPlayerPanel', !showPlayerPanel)}
+        >
+          {showPlayerPanel ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+        </button>
       </div>
 
-      <div className="npv__body">
+      <div className="npv__body" data-panel={showPlayerPanel}>
         <div className="npv__left">
           <div className="npv__art" data-playing={playing}>
             <Art src={artUrl(song, 900)} alt={song.album ?? song.title} />
@@ -167,6 +192,7 @@ export function NowPlaying() {
           </div>
         </div>
 
+        {showPlayerPanel ? (
         <div className="npv__right">
           <div className="npv__tabs">
             {tabs
@@ -186,7 +212,7 @@ export function NowPlaying() {
           <div className="npv__pane glass">
             {tab === 'queue' ? <UpNext /> : null}
             {tab === 'lyrics' ? <Lyrics song={song} /> : null}
-            {tab === 'automix' ? <AutoMixPanel /> : null}
+            {tab === 'injekt' ? <InjektPanel /> : null}
             {tab === 'visual' ? (
               <div style={{ display: 'grid', gap: 14 }}>
                 <Visualizer height={180} />
@@ -197,6 +223,7 @@ export function NowPlaying() {
             ) : null}
           </div>
         </div>
+        ) : null}
       </div>
     </div>
   )

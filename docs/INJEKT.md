@@ -1,8 +1,12 @@
-# AutoMix
+# InjeKt
 
-AutoMix is Kultr's answer to Apple Music's DJ-style transitions: instead of a
-fixed crossfade that fades out wherever the track happens to be, it works out
-what each track *is* and plans a musical transition between the two.
+InjeKt is Kultr's mixing engine. Instead of a fixed crossfade that fades out
+wherever the track happens to be, it works out what each track *is* — tempo,
+key, energy, structure — and plans a musical transition between the two, the
+way a DJ would.
+
+The name is the point: it *injects* one track into another rather than laying
+one on top of the other.
 
 Everything runs in your browser. Nothing is sent anywhere, nothing is written
 to your server, and no external service is consulted.
@@ -93,18 +97,18 @@ twenty seconds of pad. Capped at 45 seconds in.
 | `gapless` | Crossfade off, gapless on | Next track starts the instant this one ends |
 | `cut` | Both off | One after the other |
 
-Open the **AutoMix** tab in the full-screen player while something is playing
+Open the **InjeKt** tab in the full-screen player while something is playing
 and you can see the measurements for both tracks and exactly what was decided.
 
 ---
 
 ## Settings
 
-**Settings → AutoMix**
+**Settings → InjeKt**
 
 | Setting | Default | Notes |
 |---|---|---|
-| Enable AutoMix | on | Off falls back to plain crossfade |
+| Enable InjeKt | on | Off falls back to plain crossfade |
 | Beat-match | on | Time-stretch the incoming track onto the beat |
 | Maximum tempo shift | 8% | Above ~8% stretching starts to be audible |
 | Transition length | 8 bars | Shortened automatically when tracks clash |
@@ -121,7 +125,7 @@ and you can see the measurements for both tracks and exactly what was decided.
 - **Club** — max shift 10%, 16 bars, bass swap on, skip intros on. Long
   beat-matched blends, as aggressive as it gets without sounding stretched.
 - **Radio** — beat-match off, 4 bars. Quick tidy transitions, no stretching.
-- **Album listening** — AutoMix off, crossfade off, gapless on. Nothing gets in
+- **Album listening** — InjeKt off, crossfade off, gapless on. Nothing gets in
   the way of the record.
 
 ---
@@ -145,7 +149,7 @@ shuffles among the best few so a session does not become repetitive.
 
 ## Analysing in bulk
 
-**Sync → AutoMix analysis → Analyse missing.**
+**Sync → InjeKt analysis → Analyse missing.**
 
 Two tracks at a time, each streamed once at 96 kbps and decoded to mono at
 22 kHz. The FFT work runs in a Web Worker, so the UI stays responsive and
@@ -191,7 +195,7 @@ npm test
 tempos, verifies the beat grid is accurate at both the start and the end of a
 four-minute track, and checks key detection and intro/outro detection.
 
-`tests/automix.test.ts` drives the planner with hand-written analysis data and
+`tests/injekt.test.ts` drives the planner with hand-written analysis data and
 asserts the decisions: that close tempos produce a beat-matched blend with the
 right stretch ratio, that clashing keys produce a sweep, that a plan is never
 scheduled in the past, that a plan pushed forward keeps its bar alignment, that

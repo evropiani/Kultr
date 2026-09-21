@@ -6,7 +6,7 @@ import { analyseTrack, type TrackAnalysis } from './analysis'
 import { camelotDistance } from './dsp'
 
 /**
- * AutoMix — Kultr's answer to Apple Music's DJ-style transitions.
+ * InjeKt — Kultr's DJ-style transition engine.
  *
  * Given the track that is playing and the track that comes next, the planner
  * decides *where* to start the blend, *how long* it should last, whether the
@@ -37,7 +37,7 @@ export interface TransitionPlan {
   curve: CrossfadeCurve
   /** Short label for the UI, e.g. "Beat-matched · 124 → 126 BPM · 8 bars". */
   label: string
-  /** Longer explanation, shown in the AutoMix panel. */
+  /** Longer explanation, shown in the InjeKt panel. */
   reason: string
 }
 
@@ -139,7 +139,7 @@ export interface PlanContext {
 /**
  * Build the transition from `current` to `next`.
  *
- * Analysis is only awaited for AutoMix; with AutoMix off this returns
+ * Analysis is only awaited for InjeKt; with InjeKt off this returns
  * synchronously-shaped plans without touching the network.
  */
 export async function planTransition(
@@ -152,14 +152,14 @@ export async function planTransition(
 
   if (durationA <= 0) return gaplessPlan(durationA)
 
-  if (!s.automixEnabled) {
+  if (!s.injektEnabled) {
     if (!s.crossfadeEnabled || s.crossfadeSeconds <= 0) {
       return s.gapless ? gaplessPlan(durationA) : hardCutPlan(durationA)
     }
     return crossfadePlan(durationA, s.crossfadeSeconds, s.crossfadeCurve)
   }
 
-  // AutoMix needs to know both tracks. Analysis is cached, so this is usually
+  // InjeKt needs to know both tracks. Analysis is cached, so this is usually
   // instant; the first time it costs one low-bitrate fetch per track.
   let analysisA: TrackAnalysis | null = null
   let analysisB: TrackAnalysis | null = null
@@ -195,16 +195,16 @@ export async function planTransition(
     }
   }
 
-  const maxShift = s.automixMaxTempoShift / 100
+  const maxShift = s.injektMaxTempoShift / 100
   const confident = analysisA.bpmConfidence >= 0.2 && analysisB.bpmConfidence >= 0.2
-  const beatMatch = s.automixBeatMatch && confident && bestShift <= maxShift
+  const beatMatch = s.injektBeatMatch && confident && bestShift <= maxShift
 
   const keyDistance = camelotDistance(analysisA.camelot, analysisB.camelot)
-  const harmonicClash = s.automixHarmonic && keyDistance > 2
+  const harmonicClash = s.injektHarmonic && keyDistance > 2
   const energyDelta = Math.abs(analysisA.energy - analysisB.energy)
 
   // A calm blend gets long bars; a jarring pair gets a short, decisive one.
-  let bars = s.automixBars
+  let bars = s.injektBars
   if (energyDelta > 0.35) bars = Math.min(bars, 4)
   if (harmonicClash) bars = Math.min(bars, 4)
   if (!beatMatch) bars = Math.min(bars, 4)
@@ -233,7 +233,7 @@ export async function planTransition(
 
   // Where the next track comes in: skip a long intro, land on a downbeat.
   let inStartOffset = 0
-  if (s.automixSkipIntro && analysisB.introEnd > 2.5) {
+  if (s.injektSkipIntro && analysisB.introEnd > 2.5) {
     inStartOffset = Math.min(analysisB.introEnd, 45)
   }
   if (beatMatch) {
@@ -258,8 +258,8 @@ export async function planTransition(
   if (inStartOffset > 1) details.push(`intro skipped to ${inStartOffset.toFixed(1)}s`)
 
   const label = beatMatch
-    ? `AutoMix · ${bpmA.toFixed(0)}→${matchedBpm.toFixed(0)} BPM · ${bars} bars`
-    : `AutoMix · ${duration.toFixed(1)}s ${harmonicClash ? 'sweep' : 'blend'}`
+    ? `InjeKt · ${bpmA.toFixed(0)}→${matchedBpm.toFixed(0)} BPM · ${bars} bars`
+    : `InjeKt · ${duration.toFixed(1)}s ${harmonicClash ? 'sweep' : 'blend'}`
 
   return {
     type,
@@ -268,7 +268,7 @@ export async function planTransition(
     inStartOffset,
     incomingRate,
     tempoRelease: beatMatch ? clamp((60 / bpmB) * 4 * 8, 4, 30) : 0,
-    bassSwap: s.automixBassSwap && (type === 'blend' || type === 'sweep'),
+    bassSwap: s.injektBassSwap && (type === 'blend' || type === 'sweep'),
     sweep: type === 'sweep',
     curve: type === 'sweep' ? 'sharp' : 'equalPower',
     label,
@@ -280,8 +280,8 @@ export async function planTransition(
 
 /**
  * How well `candidate` follows `from`, 0..1. Used to keep the flow going when
- * the queue runs out — the same idea as Apple Music's autoplay, but scored on
- * our own analysis so the next track actually mixes.
+ * the queue runs out. Candidates are scored on our own analysis, so the next
+ * track is one that will actually mix.
  */
 export function affinity(from: TrackAnalysis, candidate: TrackAnalysis): number {
   const tempoRatio = from.bpm > 0 && candidate.bpm > 0 ? candidate.bpm / from.bpm : 1

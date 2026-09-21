@@ -7,6 +7,8 @@ export type CrossfadeCurve = 'equalPower' | 'linear' | 'smooth' | 'sharp'
 export type ReplayGainMode = 'off' | 'track' | 'album'
 export type AudioEngineMode = 'auto' | 'webaudio' | 'element'
 export type GridSize = 'small' | 'medium' | 'large'
+/** Where "save for offline" puts the audio. */
+export type OfflineDestination = 'browser' | 'folder'
 
 export const EQ_BANDS = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000] as const
 
@@ -57,16 +59,24 @@ export interface SettingsState {
   eqGains: number[]
   eqPreamp: number
 
-  // ---- automix
-  automixEnabled: boolean
-  automixBeatMatch: boolean
-  automixBassSwap: boolean
-  automixHarmonic: boolean
-  automixMaxTempoShift: number
-  automixBars: number
-  automixSkipIntro: boolean
-  automixAutoQueue: boolean
-  automixAnalyseAhead: boolean
+  // ---- injekt
+  injektEnabled: boolean
+  injektBeatMatch: boolean
+  injektBassSwap: boolean
+  injektHarmonic: boolean
+  injektMaxTempoShift: number
+  injektBars: number
+  injektSkipIntro: boolean
+  injektAutoQueue: boolean
+  injektAnalyseAhead: boolean
+
+  // ---- offline
+  offlineDestination: OfflineDestination
+  /** Display name of the chosen folder; the handle itself lives in IndexedDB. */
+  offlineFolderName: string
+  offlineConcurrency: number
+  /** Whether the person has been asked where downloads should go. */
+  offlineDestinationChosen: boolean
 
   // ---- library
   autoSyncOnStart: boolean
@@ -77,6 +87,8 @@ export interface SettingsState {
   // ---- misc
   showLyrics: boolean
   showVisualizer: boolean
+  /** Right-hand pane of the full-screen player. */
+  showPlayerPanel: boolean
   discordLikeRichPresence: boolean
   keyboardShortcuts: boolean
   hasSeenWelcome: boolean
@@ -119,15 +131,20 @@ export const DEFAULT_SETTINGS = {
   eqGains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   eqPreamp: 0,
 
-  automixEnabled: true,
-  automixBeatMatch: true,
-  automixBassSwap: true,
-  automixHarmonic: true,
-  automixMaxTempoShift: 8,
-  automixBars: 8,
-  automixSkipIntro: true,
-  automixAutoQueue: true,
-  automixAnalyseAhead: true,
+  injektEnabled: true,
+  injektBeatMatch: true,
+  injektBassSwap: true,
+  injektHarmonic: true,
+  injektMaxTempoShift: 8,
+  injektBars: 8,
+  injektSkipIntro: true,
+  injektAutoQueue: true,
+  injektAnalyseAhead: true,
+
+  offlineDestination: 'browser' as OfflineDestination,
+  offlineFolderName: '',
+  offlineConcurrency: 3,
+  offlineDestinationChosen: false,
 
   autoSyncOnStart: true,
   autoSyncMinutes: 60,
@@ -136,6 +153,7 @@ export const DEFAULT_SETTINGS = {
 
   showLyrics: true,
   showVisualizer: true,
+  showPlayerPanel: true,
   discordLikeRichPresence: false,
   keyboardShortcuts: true,
   hasSeenWelcome: false,
@@ -153,13 +171,25 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'kultr.settings',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         const { set: _set, merge: _merge, applyEqPreset: _apply, reset: _reset, ...rest } = state
         return rest as SettingsState
       },
-      migrate: (persisted) => ({ ...DEFAULT_SETTINGS, ...(persisted as object) }) as SettingsState,
+      migrate: (persisted) => {
+        // v2 → v3 renamed every automix* key to injekt*. Without this, anyone
+        // who had already tuned the mixer would silently get the defaults back.
+        const old = { ...(persisted as Record<string, unknown>) }
+        for (const key of Object.keys(old)) {
+          if (key.startsWith('automix')) {
+            const renamed = 'injekt' + key.slice('automix'.length)
+            if (!(renamed in old)) old[renamed] = old[key]
+            delete old[key]
+          }
+        }
+        return { ...DEFAULT_SETTINGS, ...old } as SettingsState
+      },
     },
   ),
 )

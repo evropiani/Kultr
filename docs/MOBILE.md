@@ -52,7 +52,7 @@ The parts that were hard to build do not touch the DOM:
 | Module | Depends on |
 |---|---|
 | `audio/dsp.ts` | Nothing. Takes a `Float32Array`, returns numbers. |
-| `audio/automix.ts` | The analysis shape and a settings object. |
+| `audio/injekt.ts` | The analysis shape and a settings object. |
 | `sync/engine.ts` | The API client and a storage interface. |
 | `api/subsonic.ts` | `fetch` and `crypto.getRandomValues`. |
 | `lib/md5.ts` | Nothing. |

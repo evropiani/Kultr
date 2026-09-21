@@ -18,7 +18,7 @@ Leave the server field blank on the login screen — the dev server forwards
 |---|---|
 | `npm run dev` | Dev server with hot reload |
 | `npm run typecheck` | TypeScript, strict, no emit |
-| `npm test` | DSP and AutoMix planner suites |
+| `npm test` | DSP and InjeKt planner suites |
 | `npm run check` | Both of the above |
 | `npm run build` | Typecheck, then build to `dist/` |
 | `npm run serve` | Serve `dist/`, optionally proxying Navidrome |
@@ -32,7 +32,7 @@ src/
   api/          Subsonic client and response types
   audio/        Playback and analysis — the interesting part
     engine.ts       Two-deck player: crossfade, EQ, ReplayGain
-    automix.ts      Transition planner and queue continuation
+    injekt.ts      Transition planner and queue continuation
     analysis.ts     Orchestration, caching, worker pool
     analysis.worker.ts
     dsp.ts          FFT, tempo, key, structure — pure, no DOM
@@ -122,7 +122,7 @@ bundles each suite with the esbuild inside Vite and runs it on Node.
 asserts on the numbers. MD5 is cross-checked against Node's `crypto` for every
 input length.
 
-`tests/automix.test.ts` tests the planner, which normally reaches for IndexedDB,
+`tests/injekt.test.ts` tests the planner, which normally reaches for IndexedDB,
 the settings store and the Subsonic client. Those three modules are aliased to
 `tests/stubs/`, letting a suite hand the planner exact analysis data and assert
 on the plan it produces.

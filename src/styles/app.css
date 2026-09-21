@@ -370,6 +370,11 @@
   padding: 10px;
   border-radius: var(--r-lg);
   cursor: pointer;
+  /* A grid item defaults to min-width:auto, so a nowrap subtitle like
+     "Nocturne Machine · 2004" sets a min-content floor wider than the track.
+     The card then overflows its column and collides with its neighbours —
+     visible at the small grid size, where the track is narrowest. */
+  min-width: 0;
   transition:
     background-color var(--dur) var(--ease-out),
     transform var(--dur) var(--ease-spring);
@@ -423,6 +428,9 @@
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+.card > * {
+  min-width: 0;
+}
 .card__title {
   font-size: 13.5px;
   font-weight: 600;
@@ -462,7 +470,7 @@
 }
 .trackrow {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(0, 0.7fr) 84px auto;
+  grid-template-columns: 24px 34px minmax(0, 1fr) minmax(0, 0.7fr) 84px auto;
   align-items: center;
   gap: 14px;
   height: 52px;
@@ -577,7 +585,7 @@
 
 .tracks__header {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(0, 0.7fr) 84px auto;
+  grid-template-columns: 24px 34px minmax(0, 1fr) minmax(0, 0.7fr) 84px auto;
   gap: 14px;
   align-items: center;
   height: 34px;
@@ -606,7 +614,7 @@
 @media (max-width: 900px) {
   .trackrow,
   .tracks__header {
-    grid-template-columns: 30px minmax(0, 1fr) 62px auto;
+    grid-template-columns: 24px 30px minmax(0, 1fr) 62px auto;
   }
   .trackrow__album,
   .tracks__header .col-album {
@@ -856,6 +864,12 @@
   color: var(--ink-3);
   font-weight: 650;
 }
+.npv__body[data-panel='false'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.npv__body[data-panel='false'] .npv__art {
+  width: min(58vh, 84vw);
+}
 .npv__body {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
@@ -986,48 +1000,48 @@
   border-radius: var(--r-md);
 }
 
-/* AutoMix readout. */
-.automix {
+/* InjeKt readout. */
+.injekt {
   display: grid;
   gap: 12px;
 }
-.automix__row {
+.injekt__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   font-size: 13px;
 }
-.automix__row span:first-child {
+.injekt__row span:first-child {
   color: var(--ink-3);
 }
-.automix__value {
+.injekt__value {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
-.automix__viz {
+.injekt__viz {
   height: 54px;
   border-radius: var(--r-md);
   background: var(--glass-tint);
   position: relative;
   overflow: hidden;
 }
-.automix__viz .a,
-.automix__viz .b {
+.injekt__viz .a,
+.injekt__viz .b {
   position: absolute;
   top: 0;
   bottom: 0;
   opacity: 0.55;
 }
-.automix__viz .a {
+.injekt__viz .a {
   left: 0;
   background: linear-gradient(90deg, var(--ink-4), transparent);
 }
-.automix__viz .b {
+.injekt__viz .b {
   right: 0;
   background: linear-gradient(270deg, var(--accent), transparent);
 }
-.automix__viz .label {
+.injekt__viz .label {
   position: absolute;
   inset: auto 10px 8px;
   font-size: 11px;
@@ -1726,5 +1740,188 @@
   }
   .player__center {
     min-width: 0;
+  }
+}
+
+/* ------------------------------------------------------- selection + drag */
+
+.selbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--player-h) + var(--safe-bottom) + 22px);
+  transform: translateX(-50%);
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--r-pill);
+  max-width: calc(100vw - 24px);
+  animation: toast-in var(--dur) var(--ease-spring);
+}
+.selbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.selbar__actions::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tick box used in track rows and on cards. */
+.checkbox {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1.5px solid var(--ink-4);
+  background: rgb(0 0 0 / 0.25);
+  color: transparent;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-spring);
+}
+.checkbox:hover {
+  border-color: var(--accent);
+}
+.checkbox[data-checked='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.checkbox:active {
+  transform: scale(0.88);
+}
+
+.card__check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.card:hover .card__check,
+.card__check[data-checked='true'],
+.card:focus-within .card__check {
+  opacity: 1;
+}
+.card[data-selected='true'] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.6);
+}
+.trackrow[data-selected='true'] {
+  background: var(--accent-soft);
+}
+.trackrow > .checkbox {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.trackrow:hover > .checkbox,
+.trackrow:focus-within > .checkbox,
+.trackrow[data-selected='true'] > .checkbox {
+  opacity: 1;
+}
+.trackrow[draggable='true'] {
+  cursor: grab;
+}
+.trackrow[draggable='true']:active {
+  cursor: grabbing;
+}
+
+/* Something is being dragged. */
+.dropzone {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 65;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 18px 16px calc(18px + var(--safe-bottom));
+  background: linear-gradient(to top, rgb(0 0 0 / 0.7), transparent);
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-spring);
+  pointer-events: none;
+}
+:root[data-theme='light'] .dropzone {
+  background: linear-gradient(to top, rgb(236 238 244 / 0.8), transparent);
+}
+.dropzone[data-open='true'] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.dropzone__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.dropzone__targets {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.dropzone__target {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 130px;
+  padding: 14px 10px;
+  border-radius: var(--r-lg);
+  color: var(--ink-2);
+  text-align: center;
+  transition:
+    transform var(--dur-fast) var(--ease-spring),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.dropzone__target strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+.dropzone__target small {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  line-height: 1.35;
+}
+.dropzone__target[data-over='true'] {
+  transform: translateY(-6px) scale(1.04);
+  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.8);
+  color: var(--accent);
+}
+.dropzone__target[data-tone='accent'][data-over='true'] {
+  background: var(--accent-soft);
+}
+.dropzone__target[data-tone='danger'][data-over='true'] {
+  border-color: rgb(255 95 87 / 0.8);
+  color: var(--danger);
+}
+.dropzone__target * {
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  .dropzone__target {
+    width: 104px;
+    padding: 10px 8px;
+  }
+  .dropzone__target small {
+    display: none;
+  }
+  .selbar {
+    bottom: calc(var(--player-h) + var(--safe-bottom) + 70px);
   }
 }

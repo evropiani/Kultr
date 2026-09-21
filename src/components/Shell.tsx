@@ -35,6 +35,7 @@ import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { useToast, useUi } from '@/store/ui'
 import { Menu, useMenu, type MenuItem } from './ui'
+import { OfflineProgressBar } from './Offline'
 
 /* ------------------------------------------------------------------ backdrop */
 
@@ -172,6 +173,7 @@ export function Sidebar() {
         <NavItem to="/settings" label="Settings" icon={SettingsIcon} />
 
         <div className="sidebar__footer">
+          <OfflineProgressBar />
           <div className="sidebar__server">
             <span className="dot" data-state={status === 'connected' ? 'ok' : status} />
             <span style={{ minWidth: 0 }}>

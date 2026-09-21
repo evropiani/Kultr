@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  Check,
   Clock,
   Download,
+  FolderDown,
   Heart,
   HardDrive,
   ListPlus,
@@ -16,18 +18,15 @@ import type { Song } from '@/api/types'
 import { artUrl } from '@/lib/artwork'
 import { formatTime, sortKey } from '@/lib/format'
 import { useVirtualWindow } from '@/lib/hooks'
-import {
-  downloadForOffline,
-  removeOffline,
-  saveToDisk,
-  shareSong,
-  toggleStarSong,
-} from '@/lib/actions'
+import { saveToDisk, shareSong, toggleStarSong } from '@/lib/actions'
 import { usePlayer } from '@/store/player'
+import { useOffline } from '@/store/offline'
+import { useSelection } from '@/store/selection'
 import { analyseTrack } from '@/audio/analysis'
 import { useToast } from '@/store/ui'
 import { Art, Menu, useMenu, type MenuItem } from './ui'
 import { usePlaylistPicker } from './AddToPlaylist'
+import { draggableProps } from './DropZone'
 
 export type SortField = 'none' | 'title' | 'artist' | 'album' | 'duration' | 'year' | 'added' | 'plays'
 
@@ -59,6 +58,9 @@ export function TrackList({
 }: TrackListProps) {
   const [sort, setSort] = useState<{ field: SortField; desc: boolean }>({ field: 'none', desc: false })
   const containerRef = useRef<HTMLDivElement>(null)
+  const selectMany = useSelection((state) => state.selectMany)
+  const deselectMany = useSelection((state) => state.deselectMany)
+  const selected = useSelection((state) => state.selected)
 
   const sorted = useMemo(() => {
     if (sort.field === 'none') return songs
@@ -113,15 +115,24 @@ export function TrackList({
     return <p className="row__hint" style={{ padding: '18px 12px' }}>{emptyMessage ?? 'No tracks here yet.'}</p>
   }
 
+  const allSelected = sorted.length > 0 && sorted.every((song) => selected.includes(song.id))
+  const someSelected = sorted.some((song) => selected.includes(song.id))
+
   const header = (
     <div className="tracks__header">
+      <button
+        className="checkbox"
+        role="checkbox"
+        aria-checked={allSelected}
+        aria-label={allSelected ? 'Deselect all' : 'Select all'}
+        data-checked={allSelected || someSelected}
+        onClick={() => (allSelected ? deselectMany(sorted) : selectMany(sorted))}
+      >
+        <Check size={12} strokeWidth={3.5} />
+      </button>
       <span>#</span>
       <span>
-        {sortable ? (
-          <button onClick={() => toggleSort('title')}>Title</button>
-        ) : (
-          'Title'
-        )}
+        {sortable ? <button onClick={() => toggleSort('title')}>Title</button> : 'Title'}
       </span>
       <span className="col-album">
         {hideAlbum ? (
@@ -149,22 +160,28 @@ export function TrackList({
     </div>
   )
 
+  const rows = visible.map((song, index) => {
+    const position = virtualise ? start + index : index
+    return (
+      <TrackRow
+        key={`${song.id}-${position}`}
+        song={song}
+        position={position}
+        visibleList={sorted}
+        numbering={numbering}
+        showArt={showArt}
+        hideAlbum={hideAlbum}
+        onPlay={() => playFrom(position)}
+        onRemove={onRemove ? () => onRemove(song, position) : undefined}
+      />
+    )
+  })
+
   if (!virtualise) {
     return (
       <div className="tracks">
         {header}
-        {visible.map((song, index) => (
-          <TrackRow
-            key={`${song.id}-${index}`}
-            song={song}
-            position={index}
-            numbering={numbering}
-            showArt={showArt}
-            hideAlbum={hideAlbum}
-            onPlay={() => playFrom(index)}
-            onRemove={onRemove ? () => onRemove(song, index) : undefined}
-          />
-        ))}
+        {rows}
       </div>
     )
   }
@@ -174,20 +191,7 @@ export function TrackList({
       {header}
       <div ref={containerRef} style={{ maxHeight: '62vh', overflow: 'auto' }}>
         <div style={{ height: totalHeight, position: 'relative' }}>
-          <div style={{ transform: `translateY(${offsetTop}px)` }}>
-            {visible.map((song, index) => (
-              <TrackRow
-                key={`${song.id}-${start + index}`}
-                song={song}
-                position={start + index}
-                numbering={numbering}
-                showArt={showArt}
-                hideAlbum={hideAlbum}
-                onPlay={() => playFrom(start + index)}
-                onRemove={onRemove ? () => onRemove(song, start + index) : undefined}
-              />
-            ))}
-          </div>
+          <div style={{ transform: `translateY(${offsetTop}px)` }}>{rows}</div>
         </div>
       </div>
     </div>
@@ -197,6 +201,7 @@ export function TrackList({
 function TrackRow({
   song,
   position,
+  visibleList,
   numbering,
   showArt,
   hideAlbum,
@@ -205,6 +210,7 @@ function TrackRow({
 }: {
   song: Song
   position: number
+  visibleList: Song[]
   numbering: 'track' | 'index' | 'none'
   showArt: boolean
   hideAlbum?: boolean
@@ -216,6 +222,13 @@ function TrackRow({
   const [starred, setStarred] = useState(Boolean(song.starred))
   const menu = useMenu()
   const isCurrent = currentId === song.id
+
+  const isSelected = useSelection((state) => state.selected.includes(song.id))
+  const toggleSelect = useSelection((state) => state.toggle)
+  const offlineIds = useOffline((state) => state.ids)
+  const download = useOffline((state) => state.download)
+  const removeOffline = useOffline((state) => state.remove)
+  const isOffline = offlineIds.has(song.id)
 
   const items: MenuItem[] = [
     {
@@ -240,7 +253,7 @@ function TrackRow({
       onSelect: async () => setStarred(await toggleStarSong(song)),
     },
     {
-      label: 'Analyse for AutoMix',
+      label: 'Analyse for InjeKt',
       icon: <Sparkles size={15} />,
       separatorBefore: true,
       onSelect: async () => {
@@ -256,18 +269,19 @@ function TrackRow({
           )
       },
     },
+    isOffline
+      ? {
+          label: 'Remove download',
+          icon: <Trash2 size={15} />,
+          onSelect: () => void removeOffline([song.id]),
+        }
+      : {
+          label: 'Sync offline',
+          icon: <FolderDown size={15} />,
+          onSelect: () => void download([song], song.title),
+        },
     {
-      label: 'Save for offline',
-      icon: <HardDrive size={15} />,
-      onSelect: () => void downloadForOffline(song),
-    },
-    {
-      label: 'Remove from offline',
-      icon: <Trash2 size={15} />,
-      onSelect: () => void removeOffline(song),
-    },
-    {
-      label: 'Download file',
+      label: 'Save file to disk',
       icon: <Download size={15} />,
       onSelect: () => saveToDisk(song),
       separatorBefore: true,
@@ -287,13 +301,36 @@ function TrackRow({
 
   const number = numbering === 'track' ? song.track ?? position + 1 : position + 1
 
+  // Dragging a selected row carries the whole selection; an unselected one
+  // carries just itself, which is what people expect from a file manager.
+  const dragPayload = () => {
+    const state = useSelection.getState()
+    return state.selected.includes(song.id) ? state.selectedSongs() : [song]
+  }
+
   return (
     <div
       className="trackrow"
       data-current={isCurrent}
+      data-selected={isSelected}
       onDoubleClick={onPlay}
       onContextMenu={menu.open}
+      {...draggableProps(song.title, 'songs', dragPayload)}
     >
+      <button
+        className="checkbox"
+        role="checkbox"
+        aria-checked={isSelected}
+        aria-label={`Select ${song.title}`}
+        data-checked={isSelected}
+        onClick={(event) => {
+          event.stopPropagation()
+          toggleSelect(song, { range: visibleList, shift: event.shiftKey })
+        }}
+      >
+        <Check size={12} strokeWidth={3.5} />
+      </button>
+
       <div className="trackrow__index" style={{ position: 'relative' }}>
         {isCurrent ? (
           <span className="playingbars" data-paused={playback !== 'playing'}>
@@ -347,6 +384,11 @@ function TrackRow({
       </span>
 
       <span className="trackrow__badges">
+        {isOffline ? (
+          <span title="Stored offline" style={{ display: 'inline-flex', color: 'var(--success)' }}>
+            <HardDrive size={12} />
+          </span>
+        ) : null}
         <button
           className="iconbtn"
           data-active={starred}

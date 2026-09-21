@@ -9,11 +9,12 @@ import { formatCount, formatDuration } from '@/lib/format'
 import { useAsync } from '@/lib/hooks'
 import { toggleStarAlbum, toggleStarArtist } from '@/lib/actions'
 import { usePlayer } from '@/store/player'
-import { buildAutoQueue } from '@/audio/automix'
+import { buildAutoQueue } from '@/audio/injekt'
 import { AlbumCard, ArtistCard, Grid } from '@/components/Cards'
 import { TrackList } from '@/components/TrackList'
 import { Art, Empty, Spinner } from '@/components/ui'
 import { usePlaylistPicker } from '@/components/AddToPlaylist'
+import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
 
 /* ------------------------------------------------------------------- album -- */
 
@@ -119,6 +120,8 @@ export function AlbumPage() {
               <ListPlus size={15} />
               Add to playlist
             </button>
+            <OfflineButton songs={data.songs} label={album.name} className="pill pill-lg" />
+            <RemoveOfflineButton songs={data.songs} />
           </div>
         </div>
       </header>
@@ -262,6 +265,8 @@ export function ArtistPage() {
               <Heart size={15} fill={starred ? 'currentColor' : 'none'} />
               {starred ? 'Following' : 'Follow'}
             </button>
+            <OfflineButton songs={data.songs} label={artist.name} className="pill pill-lg" />
+            <RemoveOfflineButton songs={data.songs} />
           </div>
         </div>
       </header>

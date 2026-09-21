@@ -1,14 +1,15 @@
 import type { Song } from '@/api/types'
 import { getClient } from '@/api/subsonic'
 import { getOffline } from '@/db'
+import { getStoredFolder, readFromFolder } from '@/lib/filesystem'
 import { EQ_BANDS, settings, type CrossfadeCurve } from '@/store/settings'
 import { getAudioContext, isWebAudioSupported, unlockAudio } from './context'
-import type { TransitionPlan } from './automix'
+import type { TransitionPlan } from './injekt'
 
 /**
  * Two-deck audio engine.
  *
- * Deck A and deck B are real <audio> elements. Whenever crossfade or AutoMix is
+ * Deck A and deck B are real <audio> elements. Whenever crossfade or InjeKt is
  * active the next track is loaded on the idle deck and both play at once for
  * the length of the transition, each through its own gain (and, in Web Audio
  * mode, its own low-shelf and high-pass filter so we can swap basslines and
@@ -17,7 +18,7 @@ import type { TransitionPlan } from './automix'
  * If Web Audio is unavailable — or the audio turns out not to be CORS-readable,
  * which silences MediaElementSource — the engine drops to "element" mode and
  * crossfades with plain element volume instead. Everything still works; only
- * the EQ, visualizer and bass-swap parts of AutoMix go away.
+ * the EQ, visualizer and bass-swap parts of InjeKt go away.
  */
 
 export type EngineMode = 'webaudio' | 'element'
@@ -319,9 +320,18 @@ export class AudioEngine {
     if (settings().offlineFirst) {
       try {
         const offline = await getOffline(song.id)
-        if (offline) {
+        if (offline?.blob) {
           const objectUrl = URL.createObjectURL(offline.blob)
           return { url: objectUrl, objectUrl }
+        }
+        if (offline?.fileName) {
+          // Stored in the folder the person chose rather than in the browser.
+          const folder = await getStoredFolder()
+          const file = folder ? await readFromFolder(folder, offline.fileName) : null
+          if (file) {
+            const objectUrl = URL.createObjectURL(file)
+            return { url: objectUrl, objectUrl }
+          }
         }
       } catch {
         /* fall through to streaming */
@@ -523,7 +533,7 @@ export class AudioEngine {
 
   // ------------------------------------------------------------ transitions --
 
-  /** Hand the engine a plan produced by the AutoMix planner. */
+  /** Hand the engine a plan produced by the InjeKt planner. */
   setPendingTransition(song: Song, plan: TransitionPlan): void {
     this.pending = { song, plan }
     if (plan.type === 'gapless' || plan.duration > 0) {
@@ -818,7 +828,7 @@ export class AudioEngine {
 
     this.callbacks.onModeChange(
       'element',
-      'Your server does not send CORS headers for audio, so Kultr switched to compatibility mode. Crossfade still works; the equaliser, visualizer and AutoMix bass-swap do not. Putting Kultr and Navidrome behind one reverse proxy fixes this.',
+      'Your server does not send CORS headers for audio, so Kultr switched to compatibility mode. Crossfade still works; the equaliser, visualizer and InjeKt bass-swap do not. Putting Kultr and Navidrome behind one reverse proxy fixes this.',
     )
 
     if (song) await this.play(song, { startAt: position, autoplay: wasPlaying })

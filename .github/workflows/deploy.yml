@@ -6,10 +6,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    # `main` is the real one. The working branch is here too so the site can be
-    # published and tested before merging — drop it once that is no longer
-    # useful.
-    branches: [main, 'claude/**']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
