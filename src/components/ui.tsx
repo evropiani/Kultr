@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
@@ -329,22 +329,6 @@ export function Badge({
   return (
     <span className="badge" data-tone={tone}>
       {children}
-    </span>
-  )
-}
-
-/** Small marquee for long titles that do not fit. */
-export function Ellipsis({ text, className }: { text: string; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const [overflows, setOverflows] = useState(false)
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    setOverflows(element.scrollWidth > element.clientWidth + 1)
-  }, [text])
-  return (
-    <span ref={ref} className={className} title={overflows ? text : undefined}>
-      {text}
     </span>
   )
 }

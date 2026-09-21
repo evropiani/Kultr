@@ -102,10 +102,6 @@ function liftForUi([r, g, b]: [number, number, number]): [number, number, number
   ]
 }
 
-export function rgbToCss([r, g, b]: [number, number, number], alpha = 1): string {
-  return alpha >= 1 ? `rgb(${r} ${g} ${b})` : `rgb(${r} ${g} ${b} / ${alpha})`
-}
-
 export function hexToRgb(hex: string): [number, number, number] | null {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
   if (!match) return null

@@ -4,7 +4,6 @@ import type { Song } from '@/api/types'
 import { formatBytes } from '@/lib/format'
 import { supportsFolderDownloads } from '@/lib/filesystem'
 import { countPending, useOffline } from '@/store/offline'
-import { useSettings } from '@/store/settings'
 import { Modal } from './ui'
 
 /**
@@ -163,20 +162,5 @@ export function RemoveOfflineButton({ songs }: { songs: Song[] }) {
       <Trash2 size={14} />
       Remove downloads
     </button>
-  )
-}
-
-/** Small tick shown on rows whose audio is stored locally. */
-export function OfflineDot({ songId }: { songId: string }) {
-  const ids = useOffline((state) => state.ids)
-  const settingsName = useSettings((state) => state.offlineFolderName)
-  if (!ids.has(songId)) return null
-  return (
-    <span
-      title={settingsName ? `Downloaded to ${settingsName}` : 'Downloaded to this browser'}
-      style={{ display: 'inline-flex', color: 'var(--success)' }}
-    >
-      <HardDrive size={12} />
-    </span>
   )
 }

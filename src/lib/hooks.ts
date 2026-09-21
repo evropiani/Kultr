@@ -47,18 +47,6 @@ export function useDebounced<T>(value: T, delayMs = 250): T {
   return debounced
 }
 
-export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
-  useEffect(() => {
-    const list = window.matchMedia(query)
-    const onChange = () => setMatches(list.matches)
-    list.addEventListener('change', onChange)
-    setMatches(list.matches)
-    return () => list.removeEventListener('change', onChange)
-  }, [query])
-  return matches
-}
-
 /** Close on Escape and on clicks outside the element. */
 export function useDismiss<T extends HTMLElement>(
   open: boolean,

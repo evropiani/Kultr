@@ -24,7 +24,7 @@ import {
 import { artUrl } from '@/lib/artwork'
 import { formatBytes, formatCount, formatDuration } from '@/lib/format'
 import { useAsync } from '@/lib/hooks'
-import { createPlaylistWith, removeOffline } from '@/lib/actions'
+import { createPlaylistWith } from '@/lib/actions'
 import { usePlayer } from '@/store/player'
 import { useSync } from '@/store/sync'
 import { useToast } from '@/store/ui'
@@ -340,6 +340,7 @@ export function Downloads() {
   const [library, setLibrary] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
   const offlineIdSet = useOffline((state) => state.ids)
+  const removeFromOffline = useOffline((state) => state.remove)
   const destination = useSettings((state) => state.offlineDestination)
   const folderName = useSettings((state) => state.offlineFolderName)
 
@@ -414,7 +415,9 @@ export function Downloads() {
           songs={songs}
           source="Offline"
           onRemove={async (song) => {
-            await removeOffline(song)
+            // Goes through the offline store so the file on disk is deleted
+            // too, not just the bookkeeping row.
+            await removeFromOffline([song.id])
             void load()
           }}
         />

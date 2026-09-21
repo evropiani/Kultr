@@ -1,13 +1,6 @@
 import { getClient, maybeClient, describeError } from '@/api/subsonic'
 import type { Album, Artist, Song } from '@/api/types'
-import {
-  deleteOffline,
-  getOffline,
-  patchAlbum,
-  patchArtist,
-  patchSong,
-  saveOffline,
-} from '@/db'
+import { patchAlbum, patchArtist, patchSong } from '@/db'
 import { usePlayer } from '@/store/player'
 import { useToast } from '@/store/ui'
 
@@ -72,49 +65,6 @@ export async function toggleStarArtist(artist: Artist): Promise<boolean> {
     useToast.getState().show(describeError(err), 'error')
     return starred
   }
-}
-
-export async function rateSong(song: Song, rating: number): Promise<void> {
-  try {
-    await getClient().setRating(song.id, rating)
-    await patchSong(song.id, { userRating: rating })
-    patchQueue(song.id, { userRating: rating })
-  } catch (err) {
-    useToast.getState().show(describeError(err), 'error')
-  }
-}
-
-/** Download a track into IndexedDB so it plays without the server. */
-export async function downloadForOffline(song: Song): Promise<boolean> {
-  const client = maybeClient()
-  if (!client) return false
-  try {
-    const existing = await getOffline(song.id)
-    if (existing) {
-      useToast.getState().show(`“${song.title}” is already available offline.`, 'info')
-      return true
-    }
-    const response = await fetch(client.downloadUrl(song.id), { credentials: 'omit' })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const blob = await response.blob()
-    await saveOffline({
-      songId: song.id,
-      size: blob.size,
-      contentType: blob.type || song.contentType || 'audio/mpeg',
-      savedAt: Date.now(),
-      blob,
-    })
-    useToast.getState().show(`“${song.title}” saved for offline playback.`, 'success')
-    return true
-  } catch (err) {
-    useToast.getState().show(`Could not download: ${describeError(err)}`, 'error')
-    return false
-  }
-}
-
-export async function removeOffline(song: Song): Promise<void> {
-  await deleteOffline(song.id)
-  useToast.getState().show(`Removed “${song.title}” from offline storage.`, 'info')
 }
 
 /** Save the original file to the user's disk. */

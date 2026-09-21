@@ -49,13 +49,6 @@ export function formatRelative(timestamp: number | null | undefined): string {
   return new Date(timestamp).toLocaleDateString()
 }
 
-export function formatDate(value: string | undefined): string {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
 /** "The Beatles" sorts under B, like every other music app. */
 export function sortKey(name: string | undefined): string {
   if (!name) return ''
