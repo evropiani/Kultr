@@ -24,6 +24,15 @@
       }
       html[data-theme='light'] #kultr-boot { color: rgba(0, 0, 0, 0.45); }
       #kultr-boot span { animation: kultr-pulse 1.6s ease-in-out infinite; }
+      #kultr-boot[data-error] {
+        display: block; place-items: initial; padding-top: 12vh; overflow: auto;
+        color: rgba(255, 255, 255, 0.82); letter-spacing: normal;
+      }
+      html[data-theme='light'] #kultr-boot[data-error] { color: rgba(0, 0, 0, 0.78); }
+      #kultr-boot[data-error] code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em;
+        padding: 1px 5px; border-radius: 5px; background: rgba(128, 128, 128, 0.22);
+      }
       @keyframes kultr-pulse { 0%, 100% { opacity: 0.35 } 50% { opacity: 0.9 } }
       @media (prefers-reduced-motion: reduce) { #kultr-boot span { animation: none } }
     </style>
@@ -37,6 +46,41 @@
         }
         document.documentElement.dataset.theme = t;
       } catch (e) { /* first run, defaults are fine */ }
+
+      // Boot watchdog.
+      //
+      // If the bundle never executes, the splash below would pulse forever and
+      // tell you nothing. That is a miserable way to find out your host is
+      // misconfigured, so after a few seconds we say what went wrong instead.
+      //
+      // The usual cause: a static host serving the repository source rather
+      // than a build, in which case this page still points at /src/main.tsx —
+      // TypeScript, which no browser can run.
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var boot = document.getElementById('kultr-boot');
+          var root = document.getElementById('root');
+          if (!boot || (root && root.childElementCount > 0)) return;
+
+          var unbuilt = !!document.querySelector('script[src$=".tsx"], script[src$=".ts"]');
+          var why = unbuilt
+            ? 'This page is the <strong>source</strong> of Kultr, not a build of it. It is asking the browser for <code>/src/main.tsx</code>, which is TypeScript — browsers cannot run that.'
+            : 'The app bundle did not load. It may have failed to download, or the page is being served from the wrong path.';
+          var fix = unbuilt
+            ? 'On GitHub Pages: <strong>Settings → Pages → Build and deployment → Source → GitHub Actions</strong>. That runs the build workflow, which publishes the compiled app. “Deploy from a branch” publishes the repository as-is, which is what you are seeing.'
+            : 'Check the browser console for the failing request, and that the app was built with the right base path (<code>KULTR_BASE</code>).';
+
+          boot.innerHTML =
+            '<div style="max-width:620px;margin:0 auto;padding:28px;text-align:left;line-height:1.65;font-size:14px">' +
+            '<div style="font-size:26px;font-weight:800;letter-spacing:-0.02em;margin-bottom:6px">Kultr did not start</div>' +
+            '<p style="margin:0 0 14px">' + why + '</p>' +
+            '<p style="margin:0 0 14px">' + fix + '</p>' +
+            '<p style="margin:0;opacity:0.75">Full instructions: ' +
+            '<a style="color:inherit" href="https://github.com/evropiani/Kultr/blob/main/docs/INSTALL.md">docs/INSTALL.md</a>' +
+            '</p></div>';
+          boot.setAttribute('data-error', '');
+        }, 8000);
+      });
     </script>
   </head>
   <body>

@@ -6,7 +6,10 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # `main` is the real one. The working branch is here too so the site can be
+    # published and tested before merging — drop it once that is no longer
+    # useful.
+    branches: [main, 'claude/**']
   workflow_dispatch:
 
 permissions:
@@ -41,6 +44,13 @@ jobs:
 
       - uses: actions/configure-pages@v5
         id: pages
+        with:
+          # Best effort at switching Pages to the "GitHub Actions" source. A
+          # repository left on "Deploy from a branch" publishes this repo
+          # verbatim — unbuilt TypeScript that no browser can run. If this
+          # cannot change it, the deploy step below fails loudly, which beats
+          # silently serving a broken page.
+          enablement: true
 
       - name: Work out the public base path
         id: base
