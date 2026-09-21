@@ -1,0 +1,83 @@
+name: Deploy to GitHub Pages
+
+# Publishes the live demo at https://evropiani.github.io/Kultr/ so people can
+# try Kultr before installing anything. The demo is just the client — it holds
+# no music and no credentials; visitors point it at their own Navidrome.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; always finish the one in flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck and test
+        run: |
+          npm run typecheck
+          npm test
+
+      - uses: actions/configure-pages@v5
+        id: pages
+
+      - name: Work out the public base path
+        id: base
+        run: |
+          # A project site lives under /<repo>/, a user site at /. Normalise
+          # whatever configure-pages reports into a value with one trailing
+          # slash, which is what Vite wants.
+          BASE="${{ steps.pages.outputs.base_path }}"
+          [ -z "$BASE" ] && BASE="/"
+          case "$BASE" in */) ;; *) BASE="$BASE/" ;; esac
+          echo "Building for base path: $BASE"
+          echo "value=$BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        env:
+          KULTR_BASE: ${{ steps.base.outputs.value }}
+        run: npm run build:only
+
+      - name: Add SPA fallback and disable Jekyll
+        run: |
+          # GitHub Pages has no rewrite rules, so a deep link like
+          # /Kultr/album/xyz would 404. Serving the app as the 404 page makes
+          # the router pick the URL up instead.
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

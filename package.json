@@ -1,0 +1,44 @@
+{
+  "name": "kultr",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Kultr \u2014 a liquid-glass web client for Navidrome with crossfade and AutoMix",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/evropiani/Kultr",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evropiani/Kultr.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:only": "vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "serve": "node server/serve.js",
+    "test": "node tests/run.mjs",
+    "check": "npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "idb": "^8.0.0",
+    "lucide-react": "^0.454.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.27.0",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vite-plugin-pwa": "^0.20.5"
+  }
+}

@@ -1,0 +1,30 @@
+# Kultr on its own, pointed at a Navidrome server you already run.
+#
+#   1. Edit KULTR_NAVIDROME_URL below.
+#   2. docker compose up -d
+#   3. Open http://localhost:4180 and leave the server field blank.
+#
+# Because Kultr proxies /rest to Navidrome, the browser sees a single address
+# and there is no cross-origin problem to solve.
+
+services:
+  kultr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Or use a published image instead of building:
+    # image: ghcr.io/evropiani/kultr:latest
+    container_name: kultr
+    restart: unless-stopped
+    ports:
+      - '4180:4180'
+    environment:
+      # Where your Navidrome lives, as seen FROM THIS CONTAINER.
+      #   - Navidrome in another compose service:  http://navidrome:4533
+      #   - Navidrome on the Docker host:          http://host.docker.internal:4533
+      #   - Navidrome elsewhere on your network:   http://192.168.1.10:4533
+      KULTR_NAVIDROME_URL: 'http://host.docker.internal:4533'
+      PORT: '4180'
+    # Needed for host.docker.internal on Linux; harmless elsewhere.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

@@ -1,0 +1,54 @@
+# Caddy: serve Kultr and Navidrome from one hostname.
+#
+# This is the recommended shape for a real deployment. Everything lives at one
+# address, so there is no cross-origin problem, and Caddy gets you HTTPS
+# automatically — which browsers now require for the offline/PWA features.
+#
+#   1. Replace music.example.com with your domain.
+#   2. Replace the upstream addresses if Navidrome is not on this machine.
+#   3. caddy run --config ./Caddyfile
+#
+# To run it locally without a domain, replace the first line with
+# `localhost:8080` and Caddy will use a local certificate.
+
+music.example.com {
+	encode zstd gzip
+
+	# Everything Navidrome owns. /rest is the Subsonic API that Kultr speaks;
+	# /share serves public share links.
+	handle /rest/* {
+		reverse_proxy navidrome:4533
+	}
+	handle /share/* {
+		reverse_proxy navidrome:4533
+	}
+
+	# Navidrome's own web interface, if you want it reachable too.
+	handle /app/* {
+		reverse_proxy navidrome:4533
+	}
+
+	# Everything else is Kultr.
+	handle {
+		reverse_proxy kultr:4180
+	}
+
+	header {
+		# Kultr is entirely first-party; nothing here calls out to the internet.
+		Referrer-Policy "same-origin"
+		X-Content-Type-Options "nosniff"
+		# Needed for the PWA install prompt and service worker.
+		Strict-Transport-Security "max-age=31536000"
+	}
+}
+
+# --- Serving the static build directly instead of the Node server -----------
+#
+# If you would rather have Caddy serve the files, build with `npm run build`
+# and use this block instead of the `handle { reverse_proxy kultr:4180 }` above:
+#
+#	handle {
+#		root * /srv/kultr/dist
+#		try_files {path} /index.html
+#		file_server
+#	}

@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+
+# Environment — never commit a server address or credentials
+.env
+.env.*
+!.env.example
+
+# Docker compose state from the full stack
+navidrome/
+music/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
