@@ -147,9 +147,9 @@ Three files, no CSS framework, no CSS-in-JS.
 
 - `tokens.css` — variables and reset. `--accent-r/g/b` are rewritten at
   runtime from the album art, which is how the whole interface retints.
-- `glass.css` — the glass recipe. A `.glass` surface is a blurred backdrop, an
-  artwork tint, a specular rim (the `::before` gradient with a mask), and a
-  shadow.
+- `glass.css` — the surface recipe. A `.glass` element is a blurred backdrop,
+  an artwork tint, a specular rim (the `::before` gradient with a mask), and a
+  shadow. The class names describe the rendering technique, not the product.
 - `app.css` — layout and components.
 
 Use the tokens rather than literal colours, so themes and the artwork tint keep

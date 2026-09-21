@@ -77,16 +77,16 @@ export function Settings() {
           />
         </Row>
         <Row
-          label="Glass"
-          hint="Liquid is the full effect. Frosted blurs less, Solid removes blur entirely — pick one of those if scrolling feels heavy on older hardware."
+          label="Surface blur"
+          hint="Full is the complete effect. Reduced blurs less, and Off removes the blur entirely — pick one of those if scrolling feels heavy on older hardware."
         >
           <Segmented<GlassLevel>
             value={settings.glass}
             onChange={(value) => settings.set('glass', value)}
             options={[
-              { value: 'liquid', label: 'Liquid' },
-              { value: 'frosted', label: 'Frosted' },
-              { value: 'solid', label: 'Solid' },
+              { value: 'liquid', label: 'Full' },
+              { value: 'frosted', label: 'Reduced' },
+              { value: 'solid', label: 'Off' },
             ]}
           />
         </Row>

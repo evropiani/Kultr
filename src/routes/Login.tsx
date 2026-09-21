@@ -56,7 +56,7 @@ export function Login() {
           <div>
             <h1 style={{ textAlign: 'center', fontSize: 26 }}>Kultr</h1>
             <p className="login__tagline">
-              {adding ? 'Add another Navidrome server.' : 'A liquid glass front end for your Navidrome server.'}
+              {adding ? 'Add another Navidrome server.' : 'A modern, minimalist client for your Navidrome server.'}
               <br />
               Crossfade, InjeKt, and your whole library mirrored locally.
             </p>

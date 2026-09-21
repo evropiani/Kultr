@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'Kultr',
           short_name: 'Kultr',
-          description: 'A liquid glass music client for your Navidrome server.',
+          description: 'A modern, minimalist client for your Navidrome server.',
           theme_color: '#0b0b0f',
           background_color: '#0b0b0f',
           display: 'standalone',

@@ -22,7 +22,7 @@ const paletteCache = new Map<string, [number, number, number]>()
 /**
  * Sample a dominant, reasonably saturated colour from artwork.
  *
- * Used to tint the liquid-glass surfaces so the whole UI picks up the colour of
+ * Used to tint the translucent surfaces so the whole UI picks up the colour of
  * whatever is playing. Falls back silently when the image cannot be read.
  */
 export async function dominantColor(url: string): Promise<[number, number, number] | null> {

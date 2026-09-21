@@ -4,7 +4,7 @@
 
 # Kultr
 
-**A liquid-glass web client for [Navidrome](https://www.navidrome.org/).**
+**A modern, minimalist web client for [Navidrome](https://www.navidrome.org/).**
 
 Mirrors your whole library locally, crossfades properly, and mixes tracks like a DJ.
 
@@ -38,7 +38,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |
 | **Everything else** | Queue with drag-to-reorder, favourites, ratings, playlists, scrobbling, sleep timer, internet radio, listening stats, visualizer, keyboard shortcuts, light and dark themes, and a PWA install on desktop, Android and iOS. |
 
-The interface takes its colour from whatever is playing — the glass, the
+The interface takes its colour from whatever is playing — the surfaces, the
 highlights and the backdrop all retint from the album art.
 
 ---
@@ -371,7 +371,7 @@ Older browsers fall back to a simpler player rather than breaking.
 
 Kultr was **vibecoded with [Claude Code](https://claude.ai/code)**, Anthropic's
 agentic coding tool. Every part of it — the Subsonic client, the two-deck audio
-engine, the tempo and key detection, the liquid-glass CSS, the reverse proxy,
+engine, the tempo and key detection, the interface CSS, the reverse proxy,
 the tests, the install guides and the deployment workflows — was produced by
 prompting Claude Code rather than typed by hand.
 

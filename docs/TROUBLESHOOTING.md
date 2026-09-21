@@ -168,8 +168,8 @@ under Sync.
 
 ### Scrolling is heavy
 
-Set **Settings → Appearance → Glass** to **Frosted** or **Solid**. The blur is
-the expensive part. **Reduce motion** also helps.
+Set **Settings → Appearance → Surface blur** to **Reduced** or **Off**. The
+blur is the expensive part. **Reduce motion** also helps.
 
 ### A huge library is sluggish
 

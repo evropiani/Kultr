@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Kultr \u2014 a liquid-glass web client for Navidrome with crossfade and AutoMix",
+  "description": "Kultr \u2014 a modern, minimalist web client for Navidrome with crossfade and InjeKt mixing",
   "license": "Apache-2.0",
   "homepage": "https://github.com/evropiani/Kultr",
   "repository": {

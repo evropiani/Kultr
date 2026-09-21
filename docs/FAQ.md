@@ -111,7 +111,7 @@ Streaming is streaming. Two things are Kultr-specific:
 - InjeKt analysis streams each track once at 96 kbps. On a metered connection,
   turn off **Analyse ahead** and do the analysis at home.
 
-The blur effects cost GPU. Set **Glass** to **Frosted** or **Solid** on a
+The blur effects cost GPU. Set **Surface blur** to **Reduced** or **Off** on a
 laptop running on battery.
 
 ### Why is it called Kultr?
