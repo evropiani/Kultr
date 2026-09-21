@@ -393,6 +393,37 @@ Node server is tiny.
 
 ---
 
+## Publishing your own demo on GitHub Pages
+
+Kultr is static files, so a fork can host its own copy for free. There is a
+workflow for it at `.github/workflows/deploy.yml` — it builds on every push to
+`main` and publishes the result.
+
+**One setting has to be changed first**, and it is the thing people get wrong:
+
+1. Go to **Settings → Pages** in your fork.
+2. Under **Build and deployment → Source**, choose **GitHub Actions**.
+
+If Source is left on *Deploy from a branch*, GitHub serves the repository
+contents verbatim — and the repository contains TypeScript source, not a built
+app. The root `index.html` asks the browser for `/src/main.tsx`, which no
+browser can run, so you get a blank page. The build step is what turns the
+source into something a browser understands, and only the *GitHub Actions*
+source runs it.
+
+After that, pushing to `main` publishes to
+`https://<your-username>.github.io/<repo>/`. The workflow works out the
+sub-path on its own and copies `index.html` to `404.html` so deep links work.
+
+A note on what you are publishing: the demo is only the client. It contains no
+music, no credentials and no server. Visitors type in their own Navidrome
+address, and their browser talks to their server directly — nothing passes
+through GitHub. They will, however, hit the cross-origin restriction described
+in [CORS.md](CORS.md) unless their server allows your Pages origin, which is
+why self-hosting is the better long-term answer for most people.
+
+---
+
 ## Updating
 
 **Docker:**
