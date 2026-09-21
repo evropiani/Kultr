@@ -288,7 +288,8 @@ to a folder the person has picked in a file dialog, so it is chosen in
 | <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> | Previous / next | <kbd>R</kbd> | Repeat |
 | <kbd>↑</kbd> <kbd>↓</kbd> | Volume | <kbd>L</kbd> | Favourite |
 | <kbd>/</kbd> | Search | <kbd>Q</kbd> | Queue |
-| <kbd>?</kbd> | All shortcuts | <kbd>F</kbd> | Full player |
+| <kbd>D</kbd> | Toggle InjeKt | <kbd>F</kbd> | Full player |
+| <kbd>?</kbd> | All shortcuts | <kbd>Esc</kbd> | Close, or clear selection |
 
 ---
 

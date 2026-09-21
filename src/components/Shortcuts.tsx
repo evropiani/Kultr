@@ -3,6 +3,7 @@ import { engine } from '@/audio/engine'
 import { toggleStarSong } from '@/lib/actions'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
+import { useSelection } from '@/store/selection'
 import { useUi } from '@/store/ui'
 import { Modal } from './ui'
 
@@ -19,7 +20,8 @@ const SHORTCUTS: [string, string][] = [
   ['F', 'Toggle the full player'],
   ['/', 'Focus search'],
   ['?', 'This list'],
-  ['Esc', 'Close whatever is open'],
+  ['D', 'Toggle InjeKt'],
+  ['Esc', 'Close what is open, or clear the selection'],
 ]
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -44,6 +46,7 @@ export function useKeyboardShortcuts(): void {
         else if (ui.nowPlayingOpen) ui.setNowPlaying(false)
         else if (ui.queueOpen) ui.setQueue(false)
         else if (ui.sidebarOpen) ui.setSidebar(false)
+        else if (useSelection.getState().selected.length) useSelection.getState().clear()
         return
       }
 
@@ -101,6 +104,10 @@ export function useKeyboardShortcuts(): void {
         case 'f':
         case 'F':
           ui.setNowPlaying(!ui.nowPlayingOpen)
+          break
+        case 'd':
+        case 'D':
+          settings.set('injektEnabled', !settings.injektEnabled)
           break
         case '?':
           ui.setShortcuts(true)
