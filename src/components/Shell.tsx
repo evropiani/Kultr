@@ -36,6 +36,7 @@ import { useSync } from '@/store/sync'
 import { useToast, useUi } from '@/store/ui'
 import { Menu, useMenu, type MenuItem } from './ui'
 import { OfflineProgressBar } from './Offline'
+import { Logo } from './Logo'
 
 /* ------------------------------------------------------------------ backdrop */
 
@@ -146,7 +147,7 @@ export function Sidebar() {
       {open ? <div className="sidebar-scrim" onClick={() => setSidebar(false)} /> : null}
       <nav className="sidebar glass" data-open={open} aria-label="Main navigation">
         <div className="sidebar__brand">
-          <span className="sidebar__mark">K</span>
+          <Logo size={32} />
           <span className="sidebar__name">Kultr</span>
           <button
             className="iconbtn mobile-only"

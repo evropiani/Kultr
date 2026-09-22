@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'prompt',
-        includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
+        includeAssets: ['favicon.png', 'logo-dark.png', 'logo-light.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'Kultr',
           short_name: 'Kultr',

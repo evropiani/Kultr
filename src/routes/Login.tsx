@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Info, Server, ShieldCheck, User } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { useAuth } from '@/store/auth'
 import { hostLabel } from '@/store/auth'
 import { Spinner, Switch } from '@/components/ui'
@@ -52,7 +53,7 @@ export function Login() {
     <div className="login">
       <form className="login__card glass glass-strong" onSubmit={submit}>
         <div className="login__brand">
-          <span className="login__mark">K</span>
+          <Logo size={78} />
           <div>
             <h1 style={{ textAlign: 'center', fontSize: 26 }}>Kultr</h1>
             <p className="login__tagline">

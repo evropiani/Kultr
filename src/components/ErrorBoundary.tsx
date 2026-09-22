@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Logo } from './Logo'
 
 /**
  * Last line of defence.
@@ -30,7 +31,7 @@ export class ErrorBoundary extends Component<
       <div className="login">
         <div className="login__card glass glass-strong">
           <div className="login__brand">
-            <span className="login__mark">K</span>
+            <Logo size={64} />
           </div>
           <h2 style={{ textAlign: 'center' }}>Something broke</h2>
           <p className="login__tagline">
