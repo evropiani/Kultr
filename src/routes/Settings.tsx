@@ -36,8 +36,10 @@ import { useAuth } from '@/store/auth'
 import {
   EQ_BANDS,
   EQ_PRESETS,
+  PLAYHEAD_STYLES,
   useSettings,
   type AudioEngineMode,
+  type CornerStyle,
   type CrossfadeCurve,
   type GlassLevel,
   type GridSize,
@@ -121,14 +123,38 @@ export function Settings() {
             label="Colour from artwork"
           />
         </Row>
-        {settings.accentMode === 'fixed' ? (
-          <Row label="Accent colour">
-            <input
-              type="color"
-              value={settings.accent}
-              aria-label="Accent colour"
-              style={{ width: 48, height: 32, border: 0, background: 'none' }}
-              onChange={(event) => settings.set('accent', event.target.value)}
+        <Row
+          label="Accent colour"
+          hint={
+            settings.accentMode === 'artwork'
+              ? 'Used on its own when colour from artwork is off, and mixed into the artwork colour below when it is on.'
+              : 'Used everywhere: highlights, the playhead, switches and the glow behind glass.'
+          }
+        >
+          <input
+            type="color"
+            value={settings.accent}
+            aria-label="Accent colour"
+            style={{ width: 48, height: 32, border: 0, background: 'none' }}
+            onChange={(event) => settings.set('accent', event.target.value)}
+          />
+        </Row>
+        {settings.accentMode === 'artwork' ? (
+          <Row
+            label="How much of your colour"
+            hint="Your accent laid over the artwork's colour, like an opacity. At 0% the album decides; at 100% you do; in between the interface still moves with the music but stays recognisably yours."
+            stack
+          >
+            <SliderRow
+              label="How much of your colour"
+              min={0}
+              max={100}
+              step={5}
+              value={settings.accentBlend}
+              onChange={(value) => settings.set('accentBlend', value)}
+              format={(value) =>
+                value === 0 ? 'artwork only' : value === 100 ? 'your colour only' : `${value}% yours`
+              }
             />
           </Row>
         ) : null}
@@ -144,6 +170,49 @@ export function Settings() {
             checked={settings.reduceMotion}
             onChange={(value) => settings.set('reduceMotion', value)}
             label="Reduce motion"
+          />
+        </Row>
+        <Row label="Corners" hint="How round everything in Kultr is.">
+          <Segmented<CornerStyle>
+            value={settings.corners}
+            onChange={(value) => settings.set('corners', value)}
+            options={[
+              { value: 'sharp', label: 'Sharp' },
+              { value: 'soft', label: 'Soft' },
+              { value: 'round', label: 'Round' },
+            ]}
+          />
+        </Row>
+        <Row
+          label="Playhead"
+          hint={PLAYHEAD_STYLES.find((style) => style.id === settings.playhead)?.note}
+          stack
+        >
+          <div className="playhead-picker">
+            {PLAYHEAD_STYLES.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                className="playhead-option"
+                data-selected={settings.playhead === style.id}
+                aria-pressed={settings.playhead === style.id}
+                onClick={() => settings.set('playhead', style.id)}
+              >
+                <span className="scrub" data-style={style.id} aria-hidden="true">
+                  <span className="scrub__track">
+                    <span className="scrub__fill" style={{ width: '62%' }} />
+                  </span>
+                </span>
+                <small>{style.name}</small>
+              </button>
+            ))}
+          </div>
+        </Row>
+        <Row label="Count time down" hint="Shows how much of the track is left instead of how much has played. Clicking the time in the player switches it too.">
+          <Switch
+            checked={settings.timeRemaining}
+            onChange={(value) => settings.set('timeRemaining', value)}
+            label="Count time down"
           />
         </Row>
         <Row label="Grid size">

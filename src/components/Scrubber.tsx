@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { formatTime } from '@/lib/format'
+import { useSettings } from '@/store/settings'
 
 /**
  * Progress bar with drag-to-seek.
@@ -11,6 +12,9 @@ import { formatTime } from '@/lib/format'
  *
  * When a transition is scheduled we shade the overlap region, so you can see
  * exactly where the next track will start bleeding in.
+ *
+ * The left-hand time counts up or down; clicking it switches, and the choice
+ * is remembered.
  */
 export function Scrubber({
   getTime,
@@ -28,12 +32,25 @@ export function Scrubber({
   /** While false the paint loop is not scheduled at all. */
   active?: boolean
 }) {
+  const playhead = useSettings((state) => state.playhead)
+  const timeRemaining = useSettings((state) => state.timeRemaining)
+  const setSetting = useSettings((state) => state.set)
   const trackRef = useRef<HTMLDivElement>(null)
   const fillRef = useRef<HTMLDivElement>(null)
   const knobRef = useRef<HTMLDivElement>(null)
-  const elapsedRef = useRef<HTMLSpanElement>(null)
+  const elapsedRef = useRef<HTMLButtonElement>(null)
   const [dragging, setDragging] = useState(false)
   const previewRef = useRef(0)
+
+  // Counting down needs a length to count down from, so an unknown duration
+  // falls back to counting up rather than showing "-0:00".
+  const stamp = useCallback(
+    (seconds: number) =>
+      timeRemaining && duration > 0
+        ? `-${formatTime(Math.max(0, duration - seconds))}`
+        : formatTime(seconds),
+    [timeRemaining, duration],
+  )
 
   const positionFromEvent = useCallback(
     (clientX: number) => {
@@ -72,7 +89,7 @@ export function Scrubber({
         if (knobRef.current) knobRef.current.style.left = `${percent}%`
       }
 
-      const label = formatTime(seconds)
+      const label = stamp(seconds)
       if (label !== lastLabel && elapsedRef.current) {
         elapsedRef.current.textContent = label
         lastLabel = label
@@ -81,7 +98,7 @@ export function Scrubber({
 
     raf = requestAnimationFrame(paint)
     return () => cancelAnimationFrame(raf)
-  }, [getTime, duration, dragging, active])
+  }, [getTime, duration, dragging, active, stamp])
 
   useEffect(() => {
     if (!dragging) return
@@ -105,19 +122,30 @@ export function Scrubber({
     const percent = duration > 0 ? Math.min(100, Math.max(0, (getTime() / duration) * 100)) : 0
     if (fillRef.current) fillRef.current.style.width = `${percent}%`
     if (knobRef.current) knobRef.current.style.left = `${percent}%`
-    if (elapsedRef.current) elapsedRef.current.textContent = formatTime(getTime())
-  }, [active, dragging, duration, getTime])
+    if (elapsedRef.current) elapsedRef.current.textContent = stamp(getTime())
+  }, [active, dragging, duration, getTime, stamp])
 
   const overlapLeft = overlap && duration > 0 ? (overlap.start / duration) * 100 : 0
   const overlapWidth = overlap && duration > 0 ? (overlap.duration / duration) * 100 : 0
 
   return (
     <div className="player__scrub">
-      {!compact ? <span ref={elapsedRef}>0:00</span> : null}
+      {!compact ? (
+        <button
+          type="button"
+          ref={elapsedRef}
+          className="player__time"
+          title={timeRemaining ? 'Showing time remaining — click for elapsed' : 'Showing elapsed time — click for remaining'}
+          onClick={() => setSetting('timeRemaining', !timeRemaining)}
+        >
+          0:00
+        </button>
+      ) : null}
       <div
         ref={trackRef}
         className="scrub"
         data-dragging={dragging}
+        data-style={playhead}
         role="slider"
         tabIndex={0}
         aria-label="Seek"

@@ -49,6 +49,7 @@ export function Backdrop() {
   const backdropArtwork = useSettings((state) => state.backdropArtwork)
   const accentMode = useSettings((state) => state.accentMode)
   const accent = useSettings((state) => state.accent)
+  const accentBlend = useSettings((state) => state.accentBlend)
   const setAccent = useUi((state) => state.setAccent)
   const [layers, setLayers] = useState<{ a: string; b: string; showA: boolean }>({
     a: '',
@@ -81,16 +82,24 @@ export function Backdrop() {
       setAccent(rgb)
     }
 
+    const chosen = hexToRgb(accent) ?? [124, 140, 255]
     if (accentMode === 'fixed' || !url) {
-      apply(hexToRgb(accent) ?? [124, 140, 255])
+      apply(chosen)
       return
     }
-    void dominantColor(url).then((rgb) => apply(rgb ?? hexToRgb(accent) ?? [124, 140, 255]))
+    // Your colour is laid over the artwork's at `accentBlend` opacity, so
+    // "colour from artwork" and "my accent" stop being an either/or: at 0 the
+    // artwork wins outright, at 100 your colour does, and in between the UI
+    // still shifts with the album while staying recognisably yours.
+    const mix = Math.min(1, Math.max(0, accentBlend / 100))
+    void dominantColor(url).then((rgb) =>
+      apply(rgb ? (rgb.map((c, i) => Math.round(c + (chosen[i] - c) * mix)) as [number, number, number]) : chosen),
+    )
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [songId, accentMode, accent, setAccent])
+  }, [songId, accentMode, accent, accentBlend, setAccent])
 
   return (
     <div className="backdrop" aria-hidden="true">

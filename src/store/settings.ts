@@ -7,6 +7,19 @@ export type CrossfadeCurve = 'equalPower' | 'linear' | 'smooth' | 'sharp'
 export type ReplayGainMode = 'off' | 'track' | 'album'
 export type AudioEngineMode = 'auto' | 'webaudio' | 'element'
 export type GridSize = 'small' | 'medium' | 'large'
+/** How round the app's corners are. */
+export type CornerStyle = 'sharp' | 'soft' | 'round'
+/** Look of the progress bar in the player. */
+export type PlayheadStyle = 'minimal' | 'glow' | 'pulse' | 'wave' | 'comet' | 'equalizer'
+
+export const PLAYHEAD_STYLES: { id: PlayheadStyle; name: string; note: string }[] = [
+  { id: 'minimal', name: 'Minimal', note: 'A plain accent-coloured bar. Still.' },
+  { id: 'glow', name: 'Glow', note: 'A soft halo that breathes around the playhead.' },
+  { id: 'pulse', name: 'Pulse', note: 'A ring that expands out of the playhead in time.' },
+  { id: 'wave', name: 'Wave', note: 'Diagonal light travelling along the played part.' },
+  { id: 'comet', name: 'Comet', note: 'A bright head dragging a shimmering tail.' },
+  { id: 'equalizer', name: 'Equalizer', note: 'Sliding bars, like a level meter.' },
+]
 /** Where "save for offline" puts the audio. */
 export type OfflineDestination = 'browser' | 'folder'
 
@@ -30,6 +43,15 @@ export interface SettingsState {
   glass: GlassLevel
   accentMode: 'artwork' | 'fixed'
   accent: string
+  /**
+   * How strongly `accent` is mixed into the colour taken from the artwork,
+   * 0–100. Think of it as the opacity of your colour laid over the artwork's.
+   */
+  accentBlend: number
+  corners: CornerStyle
+  playhead: PlayheadStyle
+  /** Whether the player's left-hand time counts up or down. */
+  timeRemaining: boolean
   reduceMotion: boolean
   backdropArtwork: boolean
   gridSize: GridSize
@@ -108,6 +130,10 @@ export const DEFAULT_SETTINGS = {
   glass: 'liquid' as GlassLevel,
   accentMode: 'artwork' as const,
   accent: '#7c8cff',
+  accentBlend: 0,
+  corners: 'soft' as CornerStyle,
+  playhead: 'minimal' as PlayheadStyle,
+  timeRemaining: false,
   reduceMotion: false,
   backdropArtwork: true,
   gridSize: 'medium' as GridSize,

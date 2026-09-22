@@ -116,19 +116,6 @@
   opacity: 1;
 }
 
-.sidebar__mark {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(190, 195, 215, 0.55));
-  color: #0b0b10;
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: -0.04em;
-  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
 .sidebar__name {
   font-size: 17px;
   font-weight: 700;
@@ -846,6 +833,154 @@
 }
 .scrub:hover .scrub__track {
   height: 6px;
+}
+.player__time {
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.player__time:hover {
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------- playhead styles */
+/*
+   Each style is pure CSS on top of the same two elements the paint loop
+   writes to, so switching one on costs nothing at runtime and the position
+   is still written straight to the DOM. Anything that moves on its own is
+   switched off under reduced motion.
+*/
+
+/* Glow — a halo that breathes around the head of the fill. */
+.scrub[data-style='glow'] .scrub__track {
+  overflow: visible;
+}
+.scrub[data-style='glow'] .scrub__fill::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+  animation: scrub-breathe 2.4s var(--ease-out) infinite;
+}
+@keyframes scrub-breathe {
+  0%, 100% { opacity: 0.55; transform: translate(50%, -50%) scale(1) }
+  50% { opacity: 1; transform: translate(50%, -50%) scale(1.5) }
+}
+
+/* Pulse — rings leaving the playhead. */
+.scrub[data-style='pulse'] .scrub__track {
+  overflow: visible;
+}
+.scrub[data-style='pulse'] .scrub__fill::after,
+.scrub[data-style='pulse'] .scrub__fill::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  transform: translate(50%, -50%);
+  animation: scrub-ring 1.9s var(--ease-out) infinite;
+}
+.scrub[data-style='pulse'] .scrub__fill::before {
+  animation-delay: 0.95s;
+}
+@keyframes scrub-ring {
+  0% { opacity: 0.9; transform: translate(50%, -50%) scale(0.4) }
+  100% { opacity: 0; transform: translate(50%, -50%) scale(2.6) }
+}
+
+/* Wave — light travelling along the part already played. */
+.scrub[data-style='wave'] .scrub__fill {
+  background:
+    repeating-linear-gradient(
+      112deg,
+      rgb(255 255 255 / 0.32) 0 6px,
+      transparent 6px 16px
+    ),
+    linear-gradient(90deg, var(--accent), rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.7));
+  background-size: 32px 100%, 100% 100%;
+  animation: scrub-travel 1.1s linear infinite;
+}
+@keyframes scrub-travel {
+  to { background-position: 32px 0, 0 0 }
+}
+
+/* Comet — a bright head with a tail that shimmers behind it. */
+.scrub[data-style='comet'] .scrub__track {
+  overflow: visible;
+}
+.scrub[data-style='comet'] .scrub__fill {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.15),
+    rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.55) 55%,
+    var(--accent)
+  );
+  box-shadow: 0 0 12px -2px var(--accent-glow);
+}
+.scrub[data-style='comet'] .scrub__fill::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(50%, -50%);
+  box-shadow: 0 0 10px 2px var(--accent);
+  animation: scrub-flicker 1.4s var(--ease-out) infinite;
+}
+@keyframes scrub-flicker {
+  0%, 100% { box-shadow: 0 0 8px 1px var(--accent) }
+  50% { box-shadow: 0 0 16px 4px var(--accent) }
+}
+
+/* Equalizer — sliding bars, like a level meter. */
+.scrub[data-style='equalizer'] .scrub__track {
+  height: 8px;
+  border-radius: var(--r-xs);
+}
+.scrub[data-style='equalizer']:hover .scrub__track {
+  height: 10px;
+}
+.scrub[data-style='equalizer'] .scrub__fill {
+  border-radius: var(--r-xs);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--accent) 0 3px,
+      transparent 3px 6px
+    );
+  background-size: 6px 100%;
+  animation: scrub-slide 0.7s linear infinite;
+}
+@keyframes scrub-slide {
+  to { background-position: 6px 0 }
+}
+
+:root[data-motion='reduced'] .scrub__fill,
+:root[data-motion='reduced'] .scrub__fill::before,
+:root[data-motion='reduced'] .scrub__fill::after {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scrub__fill,
+  .scrub__fill::before,
+  .scrub__fill::after {
+    animation: none !important;
+  }
 }
 
 /* --------------------------------------------------------- now playing view */
@@ -1587,20 +1722,6 @@
   gap: 12px;
   margin-bottom: 4px;
 }
-.login__mark {
-  width: 74px;
-  height: 74px;
-  border-radius: 22px;
-  display: grid;
-  place-items: center;
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  color: #0b0b10;
-  background: linear-gradient(145deg, #ffffff, #c3c7d6 55%, #eef0f6);
-  box-shadow: 0 22px 46px -20px rgba(0, 0, 0, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -2px 6px rgba(0, 0, 0, 0.18);
-}
 .login__tagline {
   color: var(--ink-3);
   font-size: 13px;
@@ -1951,4 +2072,50 @@
   .selbar {
     bottom: calc(var(--player-h) + var(--safe-bottom) + 70px);
   }
+}
+
+/* Playhead picker in Settings — each option previews itself. */
+.playhead-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.playhead-option {
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 9px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-tint);
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+.playhead-option:hover {
+  background: var(--glass-tint-strong);
+}
+.playhead-option[data-selected='true'] {
+  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.65);
+  background: var(--accent-soft);
+}
+.playhead-option small {
+  font-size: 12px;
+  font-weight: 560;
+  color: var(--ink-2);
+}
+.playhead-option[data-selected='true'] small {
+  color: var(--ink);
+}
+/* The preview is a real scrubber, minus the interaction. */
+.playhead-option .scrub {
+  flex: none;
+  width: 100%;
+  cursor: inherit;
+  pointer-events: none;
+}
+.playhead-option .scrub__track,
+.playhead-option .scrub__fill {
+  display: block;
 }

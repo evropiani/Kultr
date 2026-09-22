@@ -28,7 +28,7 @@ import { useSelection } from '@/store/selection'
 
 /** Keep the document's data-* attributes in step with the settings store. */
 function useThemeEffects(): void {
-  const { theme, glass, gridSize, compactRows, reduceMotion } = useSettings()
+  const { theme, glass, gridSize, compactRows, reduceMotion, corners } = useSettings()
 
   useEffect(() => {
     const root = document.documentElement
@@ -58,7 +58,8 @@ function useThemeEffects(): void {
     root.dataset.grid = gridSize
     root.dataset.rows = compactRows ? 'compact' : 'normal'
     root.dataset.motion = reduceMotion ? 'reduced' : 'full'
-  }, [glass, gridSize, compactRows, reduceMotion])
+    root.dataset.corners = corners
+  }, [glass, gridSize, compactRows, reduceMotion, corners])
 }
 
 /** Reconnect on load, restore the queue, and run the automatic sync checks. */
