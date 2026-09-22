@@ -53,11 +53,22 @@ planner snaps against whichever anchor is closer to the point it is using.
 About 35 seconds before the end of a track, Kultr looks at what is next and
 builds a plan.
 
-**1. Can they be beat-matched?**
+**1. Can they be beat-matched, and at what tempo?**
 
 It compares the two tempos, considering half and double time as well — a 140 BPM
-track runs into a 70 BPM one perfectly well. If the required stretch is within
-your limit (default 8%) and both estimates are confident, beat-matching is on.
+track runs into a 70 BPM one perfectly well.
+
+It then picks a tempo for them to **meet** at, rather than dragging the new
+track onto the old one's. The meeting point is a geometric interpolation,
+because tempo is a ratio: halfway from 120 to 130 BPM is 124.9, not 125. Where
+it sits between the two is the **Tempo share** setting — 50% by default, which
+splits the work evenly; 0% reproduces the older one-sided behaviour.
+
+Both resulting stretches have to be within your limit (default 8%) and both
+estimates have to be confident. Because the limit applies to each track
+separately and the gap is shared, an 8% limit now covers roughly a 16% gap:
+120 into 128 BPM is 6.3% for one deck alone — too far — but 3.2% each when
+shared, which is comfortably inside it.
 
 **2. How long should the blend be?**
 
@@ -71,6 +82,12 @@ At the outro, snapped down to a downbeat of the outgoing track. If that point
 has already passed, it moves forward and **re-snaps** — losing alignment there
 is exactly the bug that makes "beat-matched" meaningless.
 
+The approach ramp is measured backwards from here in the *outgoing track's own
+timeline*, not on the clock, so slowing that deck down does not also stretch
+the ramp, and it always finishes exactly on the bar where the blend starts. If
+the plan is made too late for a full ramp, the ramp is shortened rather than
+reaching back into the past.
+
 **4. Where does the next track come in?**
 
 At its first downbeat after the intro ends, so you get the track rather than
@@ -81,7 +98,7 @@ twenty seconds of pad. Capped at 45 seconds in.
 | | |
 |---|---|
 | **Equal-power fade** | Perceived loudness stays constant through the overlap. |
-| **Tempo ramp** | The incoming track plays at the matched rate, then eases back to its own over eight bars. Pitch is preserved — it time-stretches rather than detuning. |
+| **Tempo ramp, before and after** | The outgoing track drifts from its own tempo to the meeting tempo over the eight bars *leading up to* the blend, so the two are already locked when the overlap begins — done that slowly it is felt rather than heard. The incoming track enters at the meeting tempo and eases back to its own over the eight bars after. Pitch is preserved throughout: it time-stretches rather than detuning. |
 | **Bass swap** | Outgoing low-shelf drops to −26 dB over the first 55% of the blend; incoming rises from −26 dB over the last 65%. Two kick drums never occupy the same space. |
 | **Filter sweep** | When keys clash, a high-pass on the outgoing track sweeps from 20 Hz to 2.4 kHz instead of blending into a muddy chord. |
 
@@ -109,8 +126,10 @@ and you can see the measurements for both tracks and exactly what was decided.
 | Setting | Default | Notes |
 |---|---|---|
 | Enable InjeKt | on | Off falls back to plain crossfade |
-| Beat-match | on | Time-stretch the incoming track onto the beat |
-| Maximum tempo shift | 8% | Above ~8% stretching starts to be audible |
+| Beat-match | on | Time-stretch both tracks onto a shared tempo |
+| Meet in the middle | on | Move the current track too, instead of only the next |
+| Tempo share | 50 / 50 | How much of the gap the current track closes |
+| Maximum tempo shift | 8% | Per track. Above ~8% stretching starts to be audible |
 | Transition length | 8 bars | Shortened automatically when tracks clash |
 | Bass swap | on | Needs Web Audio — see [CORS.md](CORS.md) |
 | Harmonic mixing | on | Uses the detected key |
@@ -120,10 +139,13 @@ and you can see the measurements for both tracks and exactly what was decided.
 
 ### Starting points
 
-- **Subtle** — max shift 4%, 16 bars, harmonic mixing on. Long, gentle blends
-  that only happen when tracks genuinely fit.
-- **Club** — max shift 10%, 16 bars, bass swap on, skip intros on. Long
-  beat-matched blends, as aggressive as it gets without sounding stretched.
+- **Subtle** — max shift 4%, tempo share 50, 16 bars, harmonic mixing on. Long,
+  gentle blends that only happen when tracks genuinely fit.
+- **Club** — max shift 10%, tempo share 50, 16 bars, bass swap on, skip intros
+  on. Long beat-matched blends, as aggressive as it gets without sounding
+  stretched.
+- **Purist** — tempo share 0. Nothing touches the track you are listening to;
+  only the incoming one is stretched, as older versions did.
 - **Radio** — beat-match off, 4 bars. Quick tidy transitions, no stretching.
 - **Album listening** — InjeKt off, crossfade off, gapless on. Nothing gets in
   the way of the record.

@@ -2149,3 +2149,30 @@
 .playhead-option .scrub__fill {
   display: block;
 }
+
+/* Colour picker that matches the rest of the chrome rather than the OS. */
+.swatch {
+  width: 52px;
+  height: 34px;
+  flex: none;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-tint);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.swatch:hover {
+  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.6);
+}
+.swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--r-sm) - 4px);
+}
+.swatch::-moz-color-swatch {
+  border: 0;
+  border-radius: calc(var(--r-sm) - 4px);
+}

@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="public/icon-192.png" width="104" alt="Kultr" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png" />
+  <img src="public/logo-light.png" width="104" alt="Kultr" />
+</picture>
 
 # Kultr
 
@@ -10,7 +13,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
-[Try the live demo](https://evropiani.github.io/Kultr/) · [Install](#install) · [InjeKt](#injekt) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Try the live demo](https://evropiani.github.io/Kultr/) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 </div>
 
@@ -21,18 +24,42 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 > — if you would rather not trust a page on the internet with your password,
 > [run it yourself](#install); it takes about a minute.
 
+## A look at it
+
+|  |  |
+|---|---|
+| ![Your library, mirrored locally](docs/screenshots/albums.png) | ![An album, playing](docs/screenshots/album.png) |
+| **Your library, mirrored locally.** Browsing is instant because nothing is fetched to draw it. | **An album, playing.** The whole interface takes its colour from the artwork. |
+| ![InjeKt explaining a transition](docs/screenshots/injekt.png) | ![Appearance settings](docs/screenshots/settings.png) |
+| **InjeKt, showing its working.** Tempo, key, energy and the exact plan for the hand-over. | **Make it yours.** Accent colour, corner style, and six playhead designs that preview themselves. |
+| ![The light theme](docs/screenshots/albums-light.png) | ![Signing in](docs/screenshots/login.png) |
+| **Light theme.** Both themes get their own logo, cut out with no background. | **One screen to connect.** Name the server, or let it use its address. |
+
+<div align="center">
+
+<img src="docs/screenshots/mobile-album.png" width="250" alt="Kultr on a phone" />
+<img src="docs/screenshots/mobile-player.png" width="250" alt="The full-screen player on a phone" />
+
+*On a phone, installed as a PWA.*
+
+</div>
+
+---
+
 ## What it does
 
 |  | |
 |---|---|
 | **Full library sync** | One button mirrors every artist, album, track, playlist and genre into your browser. Browsing, sorting and searching are then instant and work with the server switched off. A second button checks for changes and pulls in only what moved. |
 | **Crossfade** | Real dual-deck overlap with a configurable length (0–20s) and four fade shapes. Not a volume trick on one player — two decks actually play at once. |
-| **InjeKt** | Beat-matched, key-aware transitions. Kultr works out each track's tempo, musical key, energy and where its intro and outro are, then blends like a DJ: starts at the outro, time-stretches the incoming track onto the beat, swaps the basslines over, skips long intros. [How it works →](docs/INJEKT.md) |
+| **InjeKt** | Beat-matched, key-aware transitions. Kultr works out each track's tempo, musical key, energy and where its intro and outro are, then blends like a DJ: it starts at the outro, eases *both* tracks onto a shared tempo, swaps the basslines over and skips long intros. [How it works →](docs/INJEKT.md) |
 | **Gapless** | Turn crossfade off and the next track starts the instant the current one ends. |
 | **Offline sync** | A sync button on every page — albums, artists, songs, genres, playlists, favourites, or the whole library. It is incremental: run it again and it only fetches what you do not already have. Downloads go into the browser, or into a real folder you pick, with readable `Artist - Album - Track` filenames. |
 | **Select and act in bulk** | Tick boxes on tracks and cards (shift-click for a range), then download, delete, queue, favourite or add to a playlist in one go. |
 | **Drag and drop** | Drag any track, album or artist onto a target: play next, add to queue, favourite, sync offline, or delete downloads. |
-| **Many servers** | Add as many Navidrome servers as you like, switch between them, and turn one off without deleting it. |
+| **Many servers** | Add as many Navidrome servers as you like, give each one a name, switch between them, and turn one off without deleting it. |
+| **Make it yours** | Light and dark, three corner styles, six playhead designs, and an accent colour you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
+| **Settings backup** | Export every preference to a small JSON file and import it on another machine. Servers and passwords are never in it. |
 | **Equaliser** | Ten bands, nine presets, pre-amp. |
 | **Volume levelling** | ReplayGain, per track or per album, with clipping protection. |
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |
@@ -230,10 +257,16 @@ Kultr decodes each track once and measures it: tempo and beat grid, musical key
 where the intro ends and the outro begins. When one track is about to hand over
 to the next, it plans a transition from those numbers:
 
-- **Beat-matching** — time-stretches the incoming track onto the outgoing
-  track's tempo, then eases it back to its own over the next eight bars. Pitch
-  is preserved; a limit you control (default 8%) stops it from stretching
-  anything too far.
+- **Beat-matching, from both sides** — rather than dragging the new track onto
+  the old one's tempo, Kultr picks a tempo between them and moves both. The
+  track you are listening to drifts into it over eight of its own bars before
+  the blend even starts, so the two are already locked when the next one
+  appears; afterwards the new track eases back to its natural tempo. Each side
+  therefore moves half as far, which is half as audible, and pairs that a
+  one-sided match would reject now work — the limit you set (default 8%)
+  applies per track, so it covers roughly twice the gap. Pitch is preserved
+  throughout, and **Settings → InjeKt → Tempo share** decides how the work is
+  split (0% is the old one-sided behaviour).
 - **Bar alignment** — the blend starts on a downbeat of the outgoing track and
   the incoming track enters on one of its own, so the grids actually line up.
 - **Bass swap** — the outgoing bass rolls off before the incoming bass comes up,
@@ -334,7 +367,7 @@ echo "KULTR_PROXY_TARGET=http://localhost:4533" > .env
 npm run dev
 
 npm run typecheck   # TypeScript, strict
-npm test            # DSP and InjeKt planner suites
+npm test            # DSP, InjeKt planner and settings-file suites
 npm run check       # both
 ```
 
@@ -355,6 +388,7 @@ Architecture, where everything lives, and how to add a feature:
 | [MOBILE.md](docs/MOBILE.md) | PWA today, native apps next |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | When something is broken |
 | [FAQ.md](docs/FAQ.md) | Short answers |
+| [CHANGELOG.md](CHANGELOG.md) | What changed, and when |
 
 ---
 

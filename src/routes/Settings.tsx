@@ -152,9 +152,7 @@ export function Settings() {
               step={5}
               value={settings.accentBlend}
               onChange={(value) => settings.set('accentBlend', value)}
-              format={(value) =>
-                value === 0 ? 'artwork only' : value === 100 ? 'your colour only' : `${value}% yours`
-              }
+              format={(value) => (value === 0 ? 'artwork' : value === 100 ? 'yours' : `${value}% yours`)}
             />
           </Row>
         ) : null}
