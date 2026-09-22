@@ -13,6 +13,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # Only to see whether GitHub's own Jekyll build is still running.
+  actions: read
 
 # Never let two deploys race; always finish the one in flight.
 concurrency:
@@ -74,10 +76,14 @@ jobs:
             AFTER="$(build_type)"
             echo "Pages build type is now: $AFTER"
             if [ "$AFTER" != "workflow" ]; then
-              echo "::error::Pages is set to 'Deploy from a branch', which publishes this repository as-is and races this workflow, and it could not be changed automatically. Fix it at Settings -> Pages -> Build and deployment -> Source -> GitHub Actions."
-              exit 1
+              # GITHUB_TOKEN may create a Pages site but not re-point an
+              # existing one; that needs a token with admin rights. Say so and
+              # carry on — the deploy job waits out the Jekyll build so this
+              # push still publishes correctly.
+              echo "::warning::Pages is set to 'Deploy from a branch', so GitHub also builds this repository with Jekyll on every push and the two publishes race. This workflow works around it by deploying last, but the real fix is one setting: Settings -> Pages -> Build and deployment -> Source -> GitHub Actions."
+            else
+              echo "::notice::Pages was publishing from a branch and has been switched to GitHub Actions."
             fi
-            echo "::notice::Pages was publishing from a branch and has been switched to GitHub Actions."
           elif [ "$BEFORE" != "workflow" ]; then
             echo "::warning::Could not read the Pages build type (got '$BEFORE'); continuing."
           fi
@@ -119,5 +125,33 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # While Pages is still set to "Deploy from a branch", GitHub runs its own
+      # Jekyll build of the repository on every push, in parallel with this
+      # workflow. Both publish to the same site, so whichever finishes last
+      # wins — and that used to be decided by which runner happened to be
+      # quicker. Waiting for it means this deploy is always the last word.
+      #
+      # Once the source is switched to GitHub Actions the Jekyll build stops
+      # running at all, and this step finds nothing and returns immediately.
+      - name: Let GitHub's Jekyll build finish first, if it is running
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 40); do
+            RUNNING="$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=50" \
+              --jq '[.workflow_runs[]
+                    | select(.path == "dynamic/pages/pages-build-deployment")
+                    | select(.status != "completed")] | length' 2>/dev/null || echo 0)"
+            if [ "$RUNNING" = "0" ]; then
+              [ "$attempt" = "1" ] && echo "No Jekyll build in flight." \
+                                  || echo "Jekyll build finished; deploying now."
+              exit 0
+            fi
+            echo "Waiting for GitHub's Jekyll build to finish ($attempt/40)…"
+            sleep 10
+          done
+          echo "::warning::GitHub's Jekyll build is still running after 400s; deploying anyway."
+
       - id: deployment
         uses: actions/deploy-pages@v4

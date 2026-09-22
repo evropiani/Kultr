@@ -37,11 +37,13 @@ Three changes here so this can never be mysterious again:
   visible the moment the document is parsed, so there is nothing to wait for.
   It used to pulse for eight seconds first, which is exactly long enough to
   look like a boot loop and not long enough for anyone to wait.
-- **The deploy fixes the setting, or fails.** The workflow reads the Pages
-  build type and, if it is still `legacy`, switches it to Actions itself using
-  the `pages: write` permission it already holds. If that does not take, it
-  stops and names the setting. A red deploy naming the fix beats a green one
-  that leaves a coin flip in place.
+- **The deploy wins the race on purpose.** It tries to switch the setting
+  itself first; `GITHUB_TOKEN` turns out to be allowed to *create* a Pages site
+  but not to re-point an existing one, so that returns 403 and the workflow
+  says so. It then waits for GitHub's Jekyll build of the same commit to
+  finish before publishing, which makes this deploy the last word every time
+  instead of most times. Once the source is switched by hand the Jekyll build
+  stops running at all and the wait finds nothing.
 - **Documented** in INSTALL.md and TROUBLESHOOTING.md, including the
   works-then-breaks symptom, which is the confusing part.
 
