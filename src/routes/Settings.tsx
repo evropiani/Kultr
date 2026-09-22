@@ -222,7 +222,7 @@ export function Settings() {
         </Row>
         <Row
           label="Beat-match"
-          hint="Time-stretches the incoming track so the beats line up, then eases it back to its own tempo."
+          hint="Time-stretches the two tracks until their beats line up, then eases the new one back to its own tempo."
         >
           <Switch
             checked={settings.injektBeatMatch}
@@ -231,8 +231,33 @@ export function Settings() {
           />
         </Row>
         <Row
+          label="Meet in the middle"
+          hint="Drifts the track you are listening to toward the next one's tempo before the blend starts, instead of making the new track do all the stretching. Because the change is shared, it is half as audible on each side — and pairs that were too far apart to match suddenly are not."
+        >
+          <Switch
+            checked={settings.injektTempoRamp}
+            onChange={(value) => settings.set('injektTempoRamp', value)}
+            label="Meet in the middle"
+          />
+        </Row>
+        <Row
+          label="Tempo share"
+          hint="How much of the gap the current track closes. 0% leaves it alone, 100% makes it travel the whole way to the next track's tempo."
+          stack
+        >
+          <SliderRow
+            label="Tempo share"
+            min={0}
+            max={100}
+            step={5}
+            value={settings.injektTempoBlend}
+            onChange={(value) => settings.set('injektTempoBlend', value)}
+            format={(value) => `${value}% this track / ${100 - value}% the next`}
+          />
+        </Row>
+        <Row
           label="Maximum tempo shift"
-          hint="How far a track may be stretched to match. Above roughly 8% it starts to be audible."
+          hint="How far either track may be stretched. Above roughly 8% it starts to be audible."
           stack
         >
           <SliderRow

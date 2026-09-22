@@ -65,6 +65,10 @@ export interface SettingsState {
   injektBassSwap: boolean
   injektHarmonic: boolean
   injektMaxTempoShift: number
+  /** Ease the *current* track toward the next one's tempo before the blend. */
+  injektTempoRamp: boolean
+  /** Share of the tempo gap the current track closes, 0–100. */
+  injektTempoBlend: number
   injektBars: number
   injektSkipIntro: boolean
   injektAutoQueue: boolean
@@ -136,6 +140,8 @@ export const DEFAULT_SETTINGS = {
   injektBassSwap: true,
   injektHarmonic: true,
   injektMaxTempoShift: 8,
+  injektTempoRamp: true,
+  injektTempoBlend: 50,
   injektBars: 8,
   injektSkipIntro: true,
   injektAutoQueue: true,

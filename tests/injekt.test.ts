@@ -24,7 +24,7 @@ function analysis(id: string, o: Partial<TrackAnalysis>): TrackAnalysis {
 }
 const song = (id: string, duration = 240): Song => ({ id, title: id, duration })
 
-function reset() { ANALYSES.clear(); Object.assign(CURRENT, { injektEnabled: true, crossfadeEnabled: true, crossfadeSeconds: 6, injektBeatMatch: true, injektBassSwap: true, injektHarmonic: true, injektMaxTempoShift: 8, injektBars: 8, injektSkipIntro: true, gapless: true, crossfadeCurve: 'equalPower' }) }
+function reset() { ANALYSES.clear(); Object.assign(CURRENT, { injektEnabled: true, crossfadeEnabled: true, crossfadeSeconds: 6, injektBeatMatch: true, injektBassSwap: true, injektHarmonic: true, injektMaxTempoShift: 8, injektTempoRamp: true, injektTempoBlend: 50, injektBars: 8, injektSkipIntro: true, gapless: true, crossfadeCurve: 'equalPower' }) }
 
 async function main() {
   console.log('\n== Plain crossfade (InjeKt off) ==')
@@ -53,17 +53,27 @@ async function main() {
   analysis('b', { bpm: 126, camelot: '9A', energy: 0.62, introEnd: 12 })
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
   assert('type is blend', p.type === 'blend', `-> ${p.type}`)
-  assert('incoming tempo pulled to match', Math.abs(p.incomingRate - 124 / 126) < 1e-6, `-> rate ${p.incomingRate.toFixed(5)} (${((p.incomingRate - 1) * 100).toFixed(2)}%)`)
+  {
+    // Both decks move: they meet at the geometric mean of the two tempos.
+    const meet = Math.sqrt(124 * 126)
+    assert('the two decks meet at a shared tempo', Math.abs(p.outgoingRate * 124 - p.incomingRate * 126) < 1e-9, `-> ${(p.outgoingRate * 124).toFixed(4)} vs ${(p.incomingRate * 126).toFixed(4)} BPM`)
+    assert('meeting tempo is between the two', Math.abs(p.outgoingRate * 124 - meet) < 1e-6, `-> ${(p.outgoingRate * 124).toFixed(3)} BPM`)
+    assert('current track speeds up toward it', p.outgoingRate > 1 && Math.abs(p.outgoingRate - meet / 124) < 1e-9, `-> rate ${p.outgoingRate.toFixed(5)} (+${((p.outgoingRate - 1) * 100).toFixed(2)}%)`)
+    assert('next track slows down toward it', p.incomingRate < 1 && Math.abs(p.incomingRate - meet / 126) < 1e-9, `-> rate ${p.incomingRate.toFixed(5)} (${((p.incomingRate - 1) * 100).toFixed(2)}%)`)
+    assert('each deck moves less than it would alone', Math.abs(p.incomingRate - 1) < Math.abs(124 / 126 - 1), `-> ${((p.incomingRate - 1) * 100).toFixed(2)}% vs ${((124 / 126 - 1) * 100).toFixed(2)}%`)
+    assert('current track is eased in before the blend', p.outgoingRamp > 0, `-> ${p.outgoingRamp.toFixed(1)}s`)
+    assert('the ramp does not reach into the past', p.startAt - p.outgoingRamp >= 190, `-> starts drifting at ${(p.startAt - p.outgoingRamp).toFixed(2)}s, now is 190s`)
+  }
   assert('bass swap on', p.bassSwap)
   assert('no filter sweep (keys agree)', !p.sweep)
-  assert('8 bars at 124bpm ~ 15.5s', Math.abs(p.duration - 8 * 4 * 60 / 124) < 0.05, `-> ${p.duration.toFixed(2)}s`)
+  assert('8 bars of the meeting tempo', Math.abs(p.duration - (8 * 4 * 60 / 124) / p.outgoingRate) < 0.05, `-> ${p.duration.toFixed(2)}s`)
   assert('starts at/near the outro', p.startAt <= 205 && p.startAt > 195, `-> ${p.startAt.toFixed(2)}s`)
   {
     const bar = (60 / 124) * 4
     const off = Math.abs(((p.startAt - 203.2258) / bar) - Math.round((p.startAt - 203.2258) / bar)) * bar
     assert('start sits exactly on a bar of the outgoing track', off < 0.01, `-> ${off.toFixed(4)}s off the grid`)
   }
-  assert('overlap fits inside the track', p.startAt + p.duration <= 240.01, `-> ends ${(p.startAt + p.duration).toFixed(2)}s`)
+  assert('overlap fits inside the track', p.startAt + p.duration * p.outgoingRate <= 240.01, `-> ends ${(p.startAt + p.duration * p.outgoingRate).toFixed(2)}s`)
   assert('skips the intro of the next track', p.inStartOffset >= 12, `-> ${p.inStartOffset.toFixed(2)}s`)
   assert('tempo is released afterwards', p.tempoRelease > 0, `-> ${p.tempoRelease.toFixed(1)}s`)
 
@@ -134,7 +144,30 @@ async function main() {
   assert('5% shift rejected when limit is 2%', p.incomingRate === 1, `-> rate ${p.incomingRate}`)
   CURRENT.injektMaxTempoShift = 8
   p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
-  assert('5% shift accepted when limit is 8%', Math.abs(p.incomingRate - 120 / 126) < 1e-6, `-> rate ${p.incomingRate.toFixed(4)}`)
+  assert('5% shift accepted when limit is 8%', Math.abs(p.incomingRate - Math.sqrt(120 / 126)) < 1e-6, `-> rate ${p.incomingRate.toFixed(4)}`)
+  assert('neither deck exceeds the limit', Math.max(Math.abs(p.incomingRate - 1), Math.abs(p.outgoingRate - 1)) <= 0.08, `-> worst ${(Math.max(Math.abs(p.incomingRate - 1), Math.abs(p.outgoingRate - 1)) * 100).toFixed(2)}%`)
+
+  console.log('\n== Tempo blend share ==')
+  reset(); CURRENT.injektTempoBlend = 0
+  analysis('a', { bpm: 124, camelot: '8A' }); analysis('b', { bpm: 126, camelot: '8A' })
+  p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
+  assert('at 0% the current track is left alone', p.outgoingRate === 1 && Math.abs(p.incomingRate - 124 / 126) < 1e-9, `-> out ${p.outgoingRate}, in ${p.incomingRate.toFixed(5)}`)
+  assert('and there is nothing to ramp', p.outgoingRamp === 0, `-> ${p.outgoingRamp}`)
+  CURRENT.injektTempoBlend = 100
+  p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
+  assert('at 100% the current track does all the moving', Math.abs(p.incomingRate - 1) < 1e-9 && Math.abs(p.outgoingRate - 126 / 124) < 1e-9, `-> out ${p.outgoingRate.toFixed(5)}, in ${p.incomingRate}`)
+  CURRENT.injektTempoBlend = 50; CURRENT.injektTempoRamp = false
+  p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
+  assert('switched off, only the next track moves', p.outgoingRate === 1 && p.outgoingRamp === 0, `-> out ${p.outgoingRate}`)
+
+  console.log('\n== Splitting the shift widens what can be matched ==')
+  reset(); CURRENT.injektMaxTempoShift = 4; CURRENT.injektTempoBlend = 0
+  analysis('a', { bpm: 120, camelot: '8A' }); analysis('b', { bpm: 128, camelot: '8A' })
+  p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
+  assert('6.3% is too far for one deck alone', p.incomingRate === 1, `-> rate ${p.incomingRate}`)
+  CURRENT.injektTempoBlend = 50
+  p = await planTransition(song('a'), song('b'), { durationA: 240, currentTime: 190 })
+  assert('but fine when shared between two', p.type === 'blend' && Math.abs(p.incomingRate - 1) > 1e-6, `-> ${p.type}, in ${p.incomingRate.toFixed(4)}, out ${p.outgoingRate.toFixed(4)}`)
 
   console.log('\n== Low BPM confidence disables beat-matching ==')
   reset()

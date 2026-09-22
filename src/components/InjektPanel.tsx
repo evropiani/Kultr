@@ -96,9 +96,19 @@ export function InjektPanel() {
             <span className="injekt__value">{formatTime(plan.inStartOffset)}</span>
           </div>
           <div className="injekt__row">
-            <span>Tempo nudge</span>
+            <span>This track</span>
             <span className="injekt__value">
-              {plan.incomingRate === 1 ? 'none' : `${((plan.incomingRate - 1) * 100).toFixed(1)}%`}
+              {plan.outgoingRate === 1
+                ? 'natural tempo'
+                : `${plan.outgoingRate > 1 ? '+' : ''}${((plan.outgoingRate - 1) * 100).toFixed(1)}%${plan.outgoingRamp > 0 ? ` over ${plan.outgoingRamp.toFixed(0)}s` : ''}`}
+            </span>
+          </div>
+          <div className="injekt__row">
+            <span>Next track</span>
+            <span className="injekt__value">
+              {plan.incomingRate === 1
+                ? 'natural tempo'
+                : `${plan.incomingRate > 1 ? '+' : ''}${((plan.incomingRate - 1) * 100).toFixed(1)}%`}
             </span>
           </div>
           <div className="injekt__row">

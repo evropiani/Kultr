@@ -30,6 +30,16 @@ export interface TransitionPlan {
   inStartOffset: number
   /** playbackRate applied to the incoming track for beat-matching. */
   incomingRate: number
+  /**
+   * playbackRate the *outgoing* track is eased to before the blend, so both
+   * tracks meet at a shared tempo instead of the next one doing all the work.
+   */
+  outgoingRate: number
+  /**
+   * Seconds of the outgoing track — measured in its own timeline, ending at
+   * `startAt` — over which it drifts from its natural tempo to `outgoingRate`.
+   */
+  outgoingRamp: number
   /** Seconds over which the incoming track eases back to its natural tempo. */
   tempoRelease: number
   bassSwap: boolean
@@ -79,6 +89,55 @@ function snapUpToBar(analysis: TrackAnalysis, time: number): number {
   return Math.max(0, origin + bars * bar)
 }
 
+export interface TempoMatch {
+  /** Tempo, in BPM, both decks play at during the overlap. */
+  meetBpm: number
+  /** playbackRate for the outgoing deck. */
+  outgoingRate: number
+  /** playbackRate for the incoming deck. */
+  incomingRate: number
+  /** The BPM of the incoming track once half/double time is accounted for. */
+  targetBpm: number
+  /** The larger of the two decks' tempo shifts, as a fraction. */
+  worstShift: number
+}
+
+/**
+ * Work out a tempo the two tracks can meet at.
+ *
+ * `blend` is the share of the journey the outgoing track makes: 0 leaves it
+ * alone and stretches the incoming track all the way (the classic, and rather
+ * audible, approach), 1 does the opposite, 0.5 splits the difference. The
+ * meeting point is a geometric interpolation because tempo is a ratio — going
+ * halfway from 120 to 130 is 124.9, not 125.
+ *
+ * Half and double time are considered, so a 140 BPM track mixing into a 70 BPM
+ * one is matched at 140/140 rather than being rejected as too far apart.
+ */
+export function matchTempo(bpmA: number, bpmB: number, blend: number): TempoMatch {
+  const share = Math.min(1, Math.max(0, blend))
+  let best: TempoMatch = {
+    meetBpm: bpmA,
+    outgoingRate: 1,
+    incomingRate: 1,
+    targetBpm: bpmB,
+    worstShift: Infinity,
+  }
+  if (!(bpmA > 0) || !(bpmB > 0)) return { ...best, worstShift: Infinity }
+
+  for (const targetBpm of [bpmB, bpmB * 2, bpmB / 2]) {
+    if (targetBpm < 50 || targetBpm > 220) continue
+    const meetBpm = bpmA * Math.pow(targetBpm / bpmA, share)
+    const outgoingRate = meetBpm / bpmA
+    const incomingRate = meetBpm / targetBpm
+    const worstShift = Math.max(Math.abs(outgoingRate - 1), Math.abs(incomingRate - 1))
+    if (worstShift < best.worstShift) {
+      best = { meetBpm, outgoingRate, incomingRate, targetBpm, worstShift }
+    }
+  }
+  return best
+}
+
 function gaplessPlan(durationA: number): TransitionPlan {
   return {
     type: 'gapless',
@@ -86,6 +145,8 @@ function gaplessPlan(durationA: number): TransitionPlan {
     startAt: Math.max(0, durationA - 0.18),
     inStartOffset: 0,
     incomingRate: 1,
+    outgoingRate: 1,
+    outgoingRamp: 0,
     tempoRelease: 0,
     bassSwap: false,
     sweep: false,
@@ -103,6 +164,8 @@ function hardCutPlan(durationA: number): TransitionPlan {
     startAt: Math.max(0, durationA - 0.05),
     inStartOffset: 0,
     incomingRate: 1,
+    outgoingRate: 1,
+    outgoingRamp: 0,
     tempoRelease: 0,
     bassSwap: false,
     sweep: false,
@@ -120,6 +183,8 @@ function crossfadePlan(durationA: number, seconds: number, curve: CrossfadeCurve
     startAt: Math.max(0, durationA - duration),
     inStartOffset: 0,
     incomingRate: 1,
+    outgoingRate: 1,
+    outgoingRamp: 0,
     tempoRelease: 0,
     bassSwap: false,
     sweep: false,
@@ -181,23 +246,18 @@ export async function planTransition(
   const bpmA = analysisA.bpm
   const bpmB = analysisB.bpm
 
-  // Consider half/double time too — a 140 BPM track mixes fine into a 70 BPM one.
-  const candidates = [bpmB, bpmB * 2, bpmB / 2]
-  let bestRate = 1
-  let bestShift = Infinity
-  for (const candidate of candidates) {
-    if (candidate < 50 || candidate > 220) continue
-    const rate = bpmA / candidate
-    const shift = Math.abs(rate - 1)
-    if (shift < bestShift) {
-      bestShift = shift
-      bestRate = rate
-    }
-  }
-
+  // How much of the tempo gap the *outgoing* track closes. At 0 the next
+  // track does all the stretching, which is what a naive beat-match does and
+  // what makes the incoming track sound wrong. Meeting in the middle halves
+  // the artefact on both sides and lets the current track drift into the new
+  // tempo before the blend even starts.
+  const blend = s.injektTempoRamp ? clamp(s.injektTempoBlend / 100, 0, 1) : 0
   const maxShift = s.injektMaxTempoShift / 100
+
+  // Consider half/double time too — a 140 BPM track mixes fine into a 70 BPM one.
+  const match = matchTempo(bpmA, bpmB, blend)
   const confident = analysisA.bpmConfidence >= 0.2 && analysisB.bpmConfidence >= 0.2
-  const beatMatch = s.injektBeatMatch && confident && bestShift <= maxShift
+  const beatMatch = s.injektBeatMatch && confident && match.worstShift <= maxShift
 
   const keyDistance = camelotDistance(analysisA.camelot, analysisB.camelot)
   const harmonicClash = s.injektHarmonic && keyDistance > 2
@@ -242,14 +302,33 @@ export async function planTransition(
   inStartOffset = clamp(inStartOffset, 0, Math.max(0, (next.duration ?? analysisB.duration) - 30))
 
   const type: TransitionType = harmonicClash ? 'sweep' : beatMatch ? 'blend' : 'crossfade'
-  const incomingRate = beatMatch ? clamp(bestRate, 0.75, 1.35) : 1
-  const matchedBpm = bpmB * incomingRate
+  const incomingRate = beatMatch ? clamp(match.incomingRate, 0.75, 1.35) : 1
+  const outgoingRate = beatMatch ? clamp(match.outgoingRate, 0.75, 1.35) : 1
+  const meetBpm = bpmA * outgoingRate
+
+  // The outgoing track drifts into the meeting tempo *before* the blend, over
+  // eight of its own bars, so by the time the next track appears the two are
+  // already locked. Done slowly enough it is felt rather than heard; done
+  // abruptly at the blend it sounds like a tape speeding up.
+  //
+  // Measured in the outgoing track's own timeline, which is also what the
+  // engine compares against, so a slowed-down deck does not drift out of it.
+  let outgoingRamp = 0
+  if (beatMatch && Math.abs(outgoingRate - 1) > 0.0005) {
+    outgoingRamp = clamp(barSeconds * 8, 6, 24)
+    // Never reach back before the playhead: a ramp that should already have
+    // begun is simply started shorter.
+    outgoingRamp = Math.min(outgoingRamp, Math.max(0, startAt - context.currentTime - 0.25))
+  }
 
   const details: string[] = []
   if (beatMatch) {
     details.push(
-      `Beat-matched ${bpmB.toFixed(0)} → ${matchedBpm.toFixed(0)} BPM (${((incomingRate - 1) * 100).toFixed(1)}%)`,
+      `Beat-matched at ${meetBpm.toFixed(0)} BPM — this track ${outgoingRate >= 1 ? 'up' : 'down'} ${(Math.abs(outgoingRate - 1) * 100).toFixed(1)}%, the next ${incomingRate >= 1 ? 'up' : 'down'} ${(Math.abs(incomingRate - 1) * 100).toFixed(1)}%`,
     )
+    if (outgoingRamp > 0) {
+      details.push(`current track eased into tempo over ${outgoingRamp.toFixed(0)}s`)
+    }
   } else {
     details.push(`${bpmA.toFixed(0)} BPM into ${bpmB.toFixed(0)} BPM, tempos too far apart to match`)
   }
@@ -258,15 +337,20 @@ export async function planTransition(
   if (inStartOffset > 1) details.push(`intro skipped to ${inStartOffset.toFixed(1)}s`)
 
   const label = beatMatch
-    ? `InjeKt · ${bpmA.toFixed(0)}→${matchedBpm.toFixed(0)} BPM · ${bars} bars`
+    ? `InjeKt · ${bpmA.toFixed(0)}⇄${bpmB.toFixed(0)} @ ${meetBpm.toFixed(0)} BPM · ${bars} bars`
     : `InjeKt · ${duration.toFixed(1)}s ${harmonicClash ? 'sweep' : 'blend'}`
 
   return {
     type,
-    duration,
+    // `duration` was measured in the outgoing track's timeline; the fades run
+    // on the clock, and during the overlap that track is playing at
+    // `outgoingRate`, so the same music takes proportionally longer or less.
+    duration: duration / outgoingRate,
     startAt,
     inStartOffset,
     incomingRate,
+    outgoingRate,
+    outgoingRamp,
     tempoRelease: beatMatch ? clamp((60 / bpmB) * 4 * 8, 4, 30) : 0,
     bassSwap: s.injektBassSwap && (type === 'blend' || type === 'sweep'),
     sweep: type === 'sweep',

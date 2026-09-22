@@ -136,6 +136,12 @@ export class AudioEngine {
     onDone?: () => void
   }[] = []
   private tempoRelease: { deck: Deck; from: number; start: number; duration: number } | null = null
+  /**
+   * The outgoing deck drifting toward the tempo it will share with the next
+   * track. Tracked in that deck's own timeline rather than on the clock, so
+   * slowing the deck down does not also slow the ramp down.
+   */
+  private tempoApproach: { deck: Deck; rate: number; from: number; to: number } | null = null
   private silenceSince = 0
   private silenceChecked = false
   private started = false
@@ -486,9 +492,9 @@ export class AudioEngine {
   seek(seconds: number): void {
     const deck = this.active
     if (!deck.song) return
-    // Seeking invalidates a scheduled transition.
-    this.pending = null
-    this.preparedFor = null
+    // Seeking invalidates a scheduled transition, and any tempo drift it had
+    // already started.
+    this.clearPendingTransition()
     try {
       deck.el.currentTime = Math.max(0, Math.min(seconds, this.duration || seconds))
     } catch {
@@ -547,6 +553,10 @@ export class AudioEngine {
   clearPendingTransition(): void {
     this.pending = null
     this.preparedFor = null
+    if (this.tempoApproach) {
+      this.tempoApproach.deck.el.playbackRate = 1
+      this.tempoApproach = null
+    }
   }
 
   /** Manual skip with a short fade, used by next/previous. */
@@ -634,6 +644,10 @@ export class AudioEngine {
     const begin = async () => {
       if (to.song?.id !== song.id) await this.prime(to, song, plan.inStartOffset)
       if (Math.abs(plan.incomingRate - 1) > 0.001) to.el.playbackRate = plan.incomingRate
+      // Whatever the approach ramp got to, both decks share the meeting tempo
+      // for the length of the overlap.
+      this.tempoApproach = null
+      if (Math.abs(plan.outgoingRate - 1) > 0.001) from.el.playbackRate = plan.outgoingRate
       this.setDeckLevel(to, 0)
       await this.start(to)
 
@@ -690,6 +704,10 @@ export class AudioEngine {
     this.transitioning = false
     this.elementFades = []
     this.tempoRelease = null
+    if (this.tempoApproach) {
+      this.tempoApproach.deck.el.playbackRate = 1
+      this.tempoApproach = null
+    }
   }
 
   // ------------------------------------------------------------------ loop --
@@ -707,6 +725,7 @@ export class AudioEngine {
       this.state !== 'playing' &&
       !this.elementFades.length &&
       !this.tempoRelease &&
+      !this.tempoApproach &&
       !this.transitioning
     ) {
       return
@@ -749,6 +768,22 @@ export class AudioEngine {
     if (!deck.song) return
 
     const currentTime = deck.el.currentTime || 0
+
+    // Drift the outgoing track toward the tempo it will share with the next
+    // one. Positions come from the deck itself, so the ramp always finishes
+    // exactly where the blend begins however the rate has changed on the way.
+    if (this.tempoApproach && this.tempoApproach.deck === deck) {
+      const { rate, from, to } = this.tempoApproach
+      const span = to - from
+      const t = span > 0 ? (currentTime - from) / span : 1
+      if (t >= 1) {
+        deck.el.playbackRate = rate
+        this.tempoApproach = null
+      } else if (t >= 0) {
+        const eased = t * t * (3 - 2 * t)
+        deck.el.playbackRate = 1 + (rate - 1) * eased
+      }
+    }
     const duration = this.duration
 
     // The transition check below needs frame accuracy, but the UI does not —
@@ -765,7 +800,22 @@ export class AudioEngine {
       const remaining = duration - currentTime
 
       if (this.pending) {
-        const startAt = Math.min(this.pending.plan.startAt, duration - 0.05)
+        const plan = this.pending.plan
+        const startAt = Math.min(plan.startAt, duration - 0.05)
+        if (
+          !this.tempoApproach &&
+          plan.outgoingRamp > 0 &&
+          Math.abs(plan.outgoingRate - 1) > 0.001 &&
+          currentTime >= startAt - plan.outgoingRamp &&
+          currentTime < startAt
+        ) {
+          this.tempoApproach = {
+            deck,
+            rate: plan.outgoingRate,
+            from: currentTime,
+            to: startAt,
+          }
+        }
         if (currentTime >= startAt) {
           this.executeTransition(this.pending.song, this.pending.plan)
         }
