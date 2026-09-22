@@ -37,9 +37,11 @@ Three changes here so this can never be mysterious again:
   visible the moment the document is parsed, so there is nothing to wait for.
   It used to pulse for eight seconds first, which is exactly long enough to
   look like a boot loop and not long enough for anyone to wait.
-- **The deploy fails instead of racing.** The workflow now reads the Pages
-  build type and stops with the setting to change if it is still `legacy`. A
-  red deploy naming the fix beats a green one that leaves a coin flip in place.
+- **The deploy fixes the setting, or fails.** The workflow reads the Pages
+  build type and, if it is still `legacy`, switches it to Actions itself using
+  the `pages: write` permission it already holds. If that does not take, it
+  stops and names the setting. A red deploy naming the fix beats a green one
+  that leaves a coin flip in place.
 - **Documented** in INSTALL.md and TROUBLESHOOTING.md, including the
   works-then-breaks symptom, which is the confusing part.
 

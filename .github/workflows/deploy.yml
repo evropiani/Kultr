@@ -47,26 +47,39 @@ jobs:
           # check below.
           enablement: true
 
-      - name: Check Pages is publishing from Actions, not from the branch
+      - name: Make sure Pages publishes from Actions, not from the branch
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           # A repository left on "Deploy from a branch" publishes itself
-          # verbatim: index.html asking for /src/main.tsx, which no browser can
-          # run. Worse, GitHub's own Jekyll build then races this workflow on
-          # every push, so whichever finishes last wins and the site works or
-          # breaks at random.
+          # verbatim: an index.html asking for /src/main.tsx, which no browser
+          # can run. Worse, GitHub then runs its own Jekyll build on every push
+          # alongside this workflow — two publishers, one site, last one wins.
+          # The site works or breaks depending on which finishes first, which
+          # is not a thing anyone should have to debug twice.
           #
-          # Failing here is the point. A red deploy that names the setting is
-          # far better than a green one that leaves a coin-flip in place.
-          BUILD_TYPE="$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null || echo unknown)"
-          echo "Pages build type: $BUILD_TYPE"
-          if [ "$BUILD_TYPE" = "legacy" ]; then
-            echo "::error::Pages is set to 'Deploy from a branch', which publishes this repository as-is and races this workflow. Fix it at Settings -> Pages -> Build and deployment -> Source -> GitHub Actions."
-            exit 1
-          fi
-          if [ "$BUILD_TYPE" != "workflow" ]; then
-            echo "::warning::Could not read the Pages build type (got '$BUILD_TYPE'); continuing."
+          # configure-pages only *creates* a Pages site; it will not move an
+          # existing one off a branch. So do that here, with the pages:write
+          # permission this workflow already holds.
+          build_type() {
+            gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null || echo unknown
+          }
+
+          BEFORE="$(build_type)"
+          echo "Pages build type: $BEFORE"
+
+          if [ "$BEFORE" = "legacy" ]; then
+            echo "Switching the Pages source from a branch to GitHub Actions…"
+            gh api -X PUT "repos/$GITHUB_REPOSITORY/pages" -f build_type=workflow || true
+            AFTER="$(build_type)"
+            echo "Pages build type is now: $AFTER"
+            if [ "$AFTER" != "workflow" ]; then
+              echo "::error::Pages is set to 'Deploy from a branch', which publishes this repository as-is and races this workflow, and it could not be changed automatically. Fix it at Settings -> Pages -> Build and deployment -> Source -> GitHub Actions."
+              exit 1
+            fi
+            echo "::notice::Pages was publishing from a branch and has been switched to GitHub Actions."
+          elif [ "$BEFORE" != "workflow" ]; then
+            echo "::warning::Could not read the Pages build type (got '$BEFORE'); continuing."
           fi
 
       - name: Work out the public base path
