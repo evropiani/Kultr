@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Blend,
+  Download,
   FolderDown,
   Gauge,
   Pencil,
@@ -13,6 +14,7 @@ import {
   Server,
   SlidersHorizontal,
   Sparkles,
+  Upload,
   Trash2,
   Volume2,
 } from 'lucide-react'
@@ -23,6 +25,11 @@ import {
   supportsFolderDownloads,
 } from '@/lib/filesystem'
 import { formatBytes } from '@/lib/format'
+import {
+  buildSettingsFile,
+  downloadSettingsFile,
+  readSettingsFile,
+} from '@/lib/settingsFile'
 import { useOffline } from '@/store/offline'
 import { engine } from '@/audio/engine'
 import { useAuth } from '@/store/auth'
@@ -48,6 +55,20 @@ export function Settings() {
   const setShortcuts = useUi((state) => state.setShortcuts)
   const offline = useOffline()
   const [confirmReset, setConfirmReset] = useState(false)
+  const toast = useToast()
+  const importInput = useRef<HTMLInputElement>(null)
+
+  const importSettings = async (file: File) => {
+    try {
+      const result = readSettingsFile(JSON.parse(await file.text()))
+      settings.merge(result.patch)
+      engine.applyEq()
+      const extra = result.skipped.length ? `, ${result.skipped.length} skipped` : ''
+      toast.show(`Imported ${result.applied.length} settings${extra}.`, 'success')
+    } catch (err) {
+      toast.show((err as Error).message || 'That file could not be read.', 'error')
+    }
+  }
 
   useEffect(() => {
     void offline.refresh()
@@ -653,6 +674,49 @@ export function Settings() {
           <button className="pill" onClick={() => setShortcuts(true)}>
             <Keyboard size={14} />
             View
+          </button>
+        </Row>
+      </Section>
+
+      {/* ---------------------------------------------------------- backup */}
+      <Section
+        title="Backup"
+        icon={<Download size={16} />}
+        description="Carry your setup to another browser or machine. The file holds your preferences only — no servers, no usernames and no passwords, so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too."
+      >
+        <Row
+          label="Export settings"
+          hint="Saves a small JSON file with everything in this page except your servers."
+        >
+          <button
+            className="pill"
+            onClick={() => {
+              const name = downloadSettingsFile(buildSettingsFile(settings, __KULTR_VERSION__))
+              toast.show(`Saved ${name}.`, 'success')
+            }}
+          >
+            <Download size={14} />
+            Export
+          </button>
+        </Row>
+        <Row
+          label="Import settings"
+          hint="Replaces the preferences in the file and leaves everything else as it is. Unknown or credential-shaped entries are ignored."
+        >
+          <input
+            ref={importInput}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void importSettings(file)
+            }}
+          />
+          <button className="pill" onClick={() => importInput.current?.click()}>
+            <Upload size={14} />
+            Import
           </button>
         </Row>
       </Section>

@@ -1617,6 +1617,10 @@
   color: var(--ink-2);
   padding-left: 2px;
 }
+.login__optional {
+  font-weight: 500;
+  color: var(--ink-3);
+}
 .login__error {
   padding: 11px 13px;
   border-radius: var(--r-sm);

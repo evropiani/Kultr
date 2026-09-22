@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, Info, Server, ShieldCheck, User } from 'lucide-react'
+import { Eye, EyeOff, Info, Server, ShieldCheck, Tag, User } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { useAuth } from '@/store/auth'
 import { hostLabel } from '@/store/auth'
@@ -24,6 +24,7 @@ export function Login() {
   const presetServer = import.meta.env.VITE_NAVIDROME_URL ?? ''
 
   const [serverUrl, setServerUrl] = useState(presetServer)
+  const [label, setLabel] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -42,6 +43,7 @@ export function Login() {
       username,
       password,
       authMode: plainAuth ? 'plain' : 'token',
+      label,
       remember,
     })
     if (ok) navigate('/', { replace: true })
@@ -112,6 +114,24 @@ export function Login() {
             </span>
           </div>
         ) : null}
+
+        <div className="login__field">
+          <label htmlFor="label">Name <span className="login__optional">optional</span></label>
+          <div className="field">
+            <Tag size={16} opacity={0.6} />
+            <input
+              id="label"
+              name="label"
+              value={label}
+              placeholder={serverUrl ? hostLabel(serverUrl) : 'Living room, Home NAS, …'}
+              spellCheck={false}
+              onChange={(event) => setLabel(event.target.value)}
+            />
+          </div>
+          <span className="login__hint">
+            What to call this server in Kultr. Leave it empty to use its address.
+          </span>
+        </div>
 
         <div className="login__field">
           <label htmlFor="username">Username</label>
