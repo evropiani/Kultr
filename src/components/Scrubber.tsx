@@ -1,6 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { formatTime } from '@/lib/format'
 import { useSettings } from '@/store/settings'
+import type { TransitionPlan } from '@/audio/injekt'
+
+/**
+ * Where the next track will start bleeding in, as a region of *this* track.
+ *
+ * `plan` must already have been checked against the track playing now — a
+ * plan built for a different track measures time in that track's timeline,
+ * and drawing it here would put the marker in the wrong place, sometimes past
+ * the end of the bar entirely.
+ */
+export function overlapRegion(
+  plan: TransitionPlan | null,
+  duration: number,
+  injektEnabled: boolean,
+  crossfadeEnabled: boolean,
+  crossfadeSeconds: number,
+): { start: number; duration: number } | null {
+  if (!(duration > 0)) return null
+
+  const candidate =
+    plan && (injektEnabled || crossfadeEnabled)
+      ? { start: plan.startAt, duration: plan.duration }
+      : crossfadeEnabled && crossfadeSeconds > 0 && duration > crossfadeSeconds
+        ? { start: duration - crossfadeSeconds, duration: crossfadeSeconds }
+        : null
+  if (!candidate) return null
+
+  // A hand-off with no overlap (gapless, or a hard cut) has nothing to show.
+  const start = Math.max(0, Math.min(candidate.start, duration))
+  const length = Math.min(candidate.duration, duration - start)
+  if (!(length > 0.25)) return null
+  return { start, duration: length }
+}
 
 /**
  * Progress bar with drag-to-seek.
@@ -125,8 +158,16 @@ export function Scrubber({
     if (elapsedRef.current) elapsedRef.current.textContent = stamp(getTime())
   }, [active, dragging, duration, getTime, stamp])
 
-  const overlapLeft = overlap && duration > 0 ? (overlap.start / duration) * 100 : 0
-  const overlapWidth = overlap && duration > 0 ? (overlap.duration / duration) * 100 : 0
+  // Clamped rather than trusted: some playhead designs let the track paint
+  // outside its own box, and a region that escaped it would sit next to the
+  // bar looking like a stray mark — and, since it still bubbles a click up to
+  // the bar, would seek to the end of the track when pressed.
+  const overlapLeft =
+    overlap && duration > 0 ? Math.min(100, Math.max(0, (overlap.start / duration) * 100)) : 0
+  const overlapWidth =
+    overlap && duration > 0
+      ? Math.min(100 - overlapLeft, Math.max(0, (overlap.duration / duration) * 100))
+      : 0
 
   return (
     <div className="player__scrub">
@@ -155,6 +196,11 @@ export function Scrubber({
         aria-valuetext={`${formatTime(getTime())} of ${formatTime(duration)}`}
         onPointerDown={(event) => {
           if (duration <= 0) return
+          const rect = trackRef.current?.getBoundingClientRect()
+          // Ignore a press that is not on the bar itself. Without this, a
+          // child painted outside the bar would still bubble its click up and
+          // be read as "seek to the very end".
+          if (!rect || event.clientX < rect.left - 2 || event.clientX > rect.right + 2) return
           previewRef.current = positionFromEvent(event.clientX)
           setDragging(true)
         }}

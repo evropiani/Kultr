@@ -23,8 +23,9 @@ import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useUi } from '@/store/ui'
 import { Art } from './ui'
-import { Scrubber } from './Scrubber'
+import { Scrubber, overlapRegion } from './Scrubber'
 import { SleepTimerMenu } from './SleepTimer'
+import { CastButton } from './Cast'
 
 /** Read straight from the engine so the scrubber needs no React state. */
 const getEngineTime = () => engine.currentTime
@@ -73,12 +74,13 @@ export function PlayerBar() {
 
   const playing = player.playback === 'playing'
   const duration = player.duration || song.duration || 0
-  const overlap =
-    player.lastPlan && (injektEnabled || crossfadeEnabled)
-      ? { start: player.lastPlan.startAt, duration: player.lastPlan.duration }
-      : crossfadeEnabled && duration > crossfadeSeconds
-        ? { start: duration - crossfadeSeconds, duration: crossfadeSeconds }
-        : null
+  const overlap = overlapRegion(
+    player.currentPlan(),
+    duration,
+    injektEnabled,
+    crossfadeEnabled,
+    crossfadeSeconds,
+  )
 
   return (
     <footer className="player glass glass-strong">
@@ -165,6 +167,7 @@ export function PlayerBar() {
         >
           <Sparkles size={17} />
         </button>
+        <CastButton />
         <SleepTimerMenu>
           <Timer size={16} />
         </SleepTimerMenu>

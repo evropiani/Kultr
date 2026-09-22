@@ -94,26 +94,11 @@
   padding: 2px 8px 16px;
 }
 .logo {
-  position: relative;
   flex: none;
-  display: inline-block;
-}
-.logo__art {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  display: block;
   object-fit: contain;
-  /* Both are in the DOM; only the one matching the theme is painted, so a
-     theme switch never flashes an unloaded image. */
-  opacity: 0;
-  transition: opacity var(--dur) var(--ease-out);
   pointer-events: none;
   user-select: none;
-}
-:root[data-theme='dark'] .logo__art--dark,
-:root[data-theme='light'] .logo__art--light {
-  opacity: 1;
 }
 
 .sidebar__name {
@@ -834,6 +819,10 @@
 .scrub:hover .scrub__track {
   height: 6px;
 }
+.player__scrub > span {
+  min-width: 36px;
+  text-align: left;
+}
 .player__time {
   min-width: 36px;
   text-align: right;
@@ -1080,10 +1069,25 @@
   width: min(560px, 100%);
 }
 .npv__buttons {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+/* Each side takes an equal share and packs inward, which is what keeps the
+   play button on the centre line no matter how many controls sit beside it. */
+.npv__side {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
+  gap: 10px;
+  min-width: 0;
+}
+.npv__side:first-child {
+  justify-content: flex-end;
+}
+.npv__side:last-child {
+  justify-content: flex-start;
 }
 .npv__play {
   width: 62px;
@@ -1148,14 +1152,6 @@
 }
 .lyrics__line[data-past='true'] {
   color: var(--ink-3);
-}
-
-/* Visualizer canvas. */
-.viz {
-  width: 100%;
-  height: 120px;
-  display: block;
-  border-radius: var(--r-md);
 }
 
 /* InjeKt readout. */
@@ -2175,4 +2171,101 @@
 .swatch::-moz-color-swatch {
   border: 0;
   border-radius: calc(var(--r-sm) - 4px);
+}
+
+/* ------------------------------------------------- home-page shelf picker */
+
+.tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: var(--glass-tint);
+  border: 1px solid var(--glass-edge);
+}
+.tile__order {
+  display: grid;
+  gap: 1px;
+  flex: none;
+}
+.tile__text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.tiles__add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* --------------------------------------------------------------- code box */
+
+.codebox {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--glass-tint);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  resize: vertical;
+  tab-size: 2;
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.codebox:focus {
+  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.6);
+}
+.codebox::placeholder {
+  color: var(--ink-3);
+}
+
+/* ---------------------------------------------------------- radio stations */
+
+.radios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 12px 14px;
+}
+.radio__play {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.radio__name {
+  font-size: 15px;
+  font-weight: 620;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.radio__url {
+  font-size: 12px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

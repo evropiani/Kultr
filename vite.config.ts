@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      __KULTR_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.1.0'),
+      __KULTR_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.2.0'),
       __KULTR_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
     },
     server: {
@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'prompt',
-        includeAssets: ['favicon.png', 'logo-dark.png', 'logo-light.png', 'apple-touch-icon.png'],
+        includeAssets: ['favicon.png', 'logo-light.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'Kultr',
           short_name: 'Kultr',

@@ -7,6 +7,81 @@ only fixed.
 
 ---
 
+## 1.2.0 — 2026-09-22
+
+A home page you choose the contents of, casting, custom CSS, and four fixes.
+
+### 2026-09-22 13:50 — A home page you choose
+
+- Fifteen shelves are available — most played, random, favourite and recently
+  added, across tracks, albums, artists, playlists and internet radio — and
+  **Settings → Home page** switches each one on or off and puts them in
+  whatever order you like.
+- Out of the box: most played tracks, most played albums, some random tracks,
+  most played artists.
+- A shelf with nothing to put in it is skipped rather than shown empty, so
+  switching one on may change nothing until there is something to fill it.
+- Artists and playlists have no play count of their own in Subsonic, so those
+  two are worked out by adding up the play counts of the tracks underneath
+  them. Playlists need their contents synced for this.
+- Internet radio stations can be hearted. Subsonic has no notion of a
+  favourite station, so this one is local to Kultr and travels with a settings
+  export rather than to other clients.
+
+### 2026-09-22 13:50 — The crossfade marker no longer escapes the bar
+
+The shaded region showing where the next track begins was drawn from the last
+transition plan, whatever track that plan was made for. Once playback moved on,
+its positions were being measured against a different track's length — so on a
+shorter one the marker landed past the end of the bar, as a stray mark beside
+the time. Clicking it still counted as a click on the bar, which read as "seek
+to the very end", and the track jumped.
+
+A plan is now stored with the track it was built from and only drawn against
+that track, the region is clamped to the bar regardless, and a press that is
+not on the bar is ignored instead of being clamped into one.
+
+### 2026-09-22 13:50 — The full player's controls are centred
+
+Adding the favourite button to the transport had quietly pushed the play button
+off-centre: with six controls in a row, the third one is not the middle.
+The row is now three columns — side, play, side — so the play button sits on
+the centre line however many controls flank it.
+
+### 2026-09-22 13:50 — Casting
+
+The player bar and the full player have a cast button: Chromecast and other
+receivers through the Remote Playback API in Chromium, AirPlay in Safari. It
+does not appear at all in browsers that have neither.
+
+The receiver fetches the stream itself, so it needs to be able to reach your
+Navidrome, and casting bypasses Web Audio, so the equaliser, crossfade and
+InjeKt do not apply to it. Both are limits of the platform.
+
+### 2026-09-22 13:50 — Accent borders, opacity, and custom CSS
+
+- **Panel borders** can take the accent colour, so the outline of every panel
+  and card moves with the artwork too, with an opacity slider of its own.
+- **Panel opacity** decides how much of the background shows through the glass,
+  from 20% to 200% of the theme's own value.
+- **Settings → Custom CSS** takes a stylesheet of your own and applies it last,
+  so it overrides everything else.
+
+### 2026-09-22 13:50 — Removed: the visualizer
+
+It did not earn its place. The tab, its setting and its canvas are gone. The
+analyser node behind it stays, because it is what detects a silent Web Audio
+graph and triggers the fallback to compatibility mode.
+
+### 2026-09-22 13:50 — One logo, not two
+
+The neon variant is gone. The chrome mark reads on light and dark alike, so it
+is now used for both themes, for the favicon and for every app icon — which
+also means there is no second image to load and nothing to swap when the theme
+changes.
+
+---
+
 ## 1.1.0 — 2026-09-22
 
 Tempo that meets in the middle, a real logo, a lot more control over how

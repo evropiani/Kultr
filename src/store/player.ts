@@ -32,7 +32,15 @@ export interface PlayerState {
   source: string
   engineMode: EngineMode
   transition: { plan: TransitionPlan; song: Song } | null
-  lastPlan: TransitionPlan | null
+  /**
+   * The most recent transition plan, together with the track it was built
+   * *from*. The pairing matters: a plan's positions are in that track's
+   * timeline, so drawing a stale one against a different track puts the
+   * overlap marker somewhere meaningless — usually past the end of the bar.
+   */
+  lastPlan: { plan: TransitionPlan; fromId: string } | null
+  /** The plan for the track playing right now, or null if there isn't one. */
+  currentPlan: () => TransitionPlan | null
   sleepTimerEndsAt: number | null
   sleepTimerAfterTrack: boolean
   ready: boolean
@@ -114,6 +122,12 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   sleepTimerAfterTrack: false,
   ready: false,
 
+  currentPlan() {
+    const { lastPlan } = get()
+    if (!lastPlan) return null
+    return lastPlan.fromId && lastPlan.fromId === get().current()?.id ? lastPlan.plan : null
+  },
+
   current() {
     const { queue, index } = get()
     return queue[index] ?? null
@@ -169,7 +183,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         void prepareNextTransition()
       },
       onTransitionStart: (plan, song) => {
-        set({ transition: { plan, song }, lastPlan: plan })
+        set({ transition: { plan, song }, lastPlan: { plan, fromId: get().current()?.id ?? '' } })
       },
       onTransitionEnd: () => set({ transition: null }),
       onError: (message) => useToast.getState().show(message, 'error'),
@@ -536,7 +550,7 @@ async function prepareNextTransition(): Promise<void> {
     const fresh = usePlayer.getState()
     if (fresh.current()?.id !== current.id) return
     engine.setPendingTransition(next, plan)
-    usePlayer.setState({ lastPlan: plan })
+    usePlayer.setState({ lastPlan: { plan, fromId: current.id } })
   } catch (err) {
     console.warn('[kultr] could not plan the next transition', err)
   } finally {

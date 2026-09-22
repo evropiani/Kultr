@@ -10,7 +10,7 @@ import {
   Shuffle,
   Trash2,
 } from 'lucide-react'
-import type { Album, Playlist, Song } from '@/api/types'
+import type { Album, Playlist, RadioStation, Song } from '@/api/types'
 import { getClient, describeError } from '@/api/subsonic'
 import {
   allAlbums,
@@ -34,6 +34,7 @@ import { Grid, AlbumCard, PlaylistCard } from '@/components/Cards'
 import { TrackList } from '@/components/TrackList'
 import { Art, Empty, Modal, SkeletonGrid, Spinner } from '@/components/ui'
 import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
+import { RadioGrid, radioSongs } from '@/components/Radio'
 
 /* --------------------------------------------------------------- playlists -- */
 
@@ -432,21 +433,9 @@ export function Radio() {
   const { data: stations, loading } = useAsync(
     async () => getClient().getInternetRadioStations(),
     [],
-    [] as Awaited<ReturnType<ReturnType<typeof getClient>['getInternetRadioStations']>>,
+    [] as RadioStation[],
   )
-
-  const songs = useMemo<Song[]>(
-    () =>
-      stations.map((station) => ({
-        id: station.id,
-        title: station.name,
-        artist: 'Internet radio',
-        album: station.homePageUrl ?? '',
-        duration: 0,
-        kultrStreamUrl: station.streamUrl,
-      })),
-    [stations],
-  )
+  const songs = useMemo(() => radioSongs(stations), [stations])
 
   return (
     <>
@@ -466,21 +455,7 @@ export function Radio() {
           Add internet radio stations in Navidrome's web interface and they will appear here.
         </Empty>
       ) : (
-        <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))' }}>
-          {stations.map((station, index) => (
-            <button
-              key={station.id}
-              className="stat glass glass-hit"
-              style={{ textAlign: 'left' }}
-              onClick={() => void usePlayer.getState().playNow(songs, index, 'Radio')}
-            >
-              <span className="stat__value" style={{ fontSize: 16 }}>
-                {station.name}
-              </span>
-              <span className="stat__label">{station.streamUrl}</span>
-            </button>
-          ))}
-        </div>
+        <RadioGrid stations={stations} songs={songs} />
       )}
     </>
   )

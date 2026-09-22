@@ -1,9 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png" />
-  <img src="public/logo-light.png" width="104" alt="Kultr" />
-</picture>
+<img src="public/logo-light.png" width="104" alt="Kultr" />
 
 # Kultr
 
@@ -14,6 +11,8 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
 [Try the live demo](https://evropiani.github.io/Kultr/) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+
+Questions or ideas? Find me on Discord: [@evropioani](https://discord.com/users/319246364246540288)
 
 </div>
 
@@ -31,9 +30,11 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 | ![Your library, mirrored locally](docs/screenshots/albums.png) | ![An album, playing](docs/screenshots/album.png) |
 | **Your library, mirrored locally.** Browsing is instant because nothing is fetched to draw it. | **An album, playing.** The whole interface takes its colour from the artwork. |
 | ![InjeKt explaining a transition](docs/screenshots/injekt.png) | ![Appearance settings](docs/screenshots/settings.png) |
-| **InjeKt, showing its working.** Tempo, key, energy and the exact plan for the hand-over. | **Make it yours.** Accent colour, corner style, and six playhead designs that preview themselves. |
+| **InjeKt, showing its working.** Tempo, key, energy and the exact plan for the hand-over. | **Make it yours.** Accent colour, borders, corner style, and six playhead designs that preview themselves. |
+| ![Choosing the home page shelves](docs/screenshots/home-settings.png) | ![The home page](docs/screenshots/home.png) |
+| **Choose your home page.** Fifteen shelves, switched on and off and put in the order you want. | **And here it is.** Empty shelves are skipped, so it never looks half-finished. |
 | ![The light theme](docs/screenshots/albums-light.png) | ![Signing in](docs/screenshots/login.png) |
-| **Light theme.** Both themes get their own logo, cut out with no background. | **One screen to connect.** Name the server, or let it use its address. |
+| **Light theme.** The same cut-out mark reads on either background. | **One screen to connect.** Name the server, or let it use its address. |
 
 <div align="center">
 
@@ -58,12 +59,15 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 | **Select and act in bulk** | Tick boxes on tracks and cards (shift-click for a range), then download, delete, queue, favourite or add to a playlist in one go. |
 | **Drag and drop** | Drag any track, album or artist onto a target: play next, add to queue, favourite, sync offline, or delete downloads. |
 | **Many servers** | Add as many Navidrome servers as you like, give each one a name, switch between them, and turn one off without deleting it. |
-| **Make it yours** | Light and dark, three corner styles, six playhead designs, and an accent colour you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
+| **A home page you choose** | Fifteen shelves — most played, random, favourite and recently added, across tracks, albums, artists, playlists and radio — switched on, off and reordered to taste. A shelf with nothing to show is skipped rather than left empty. |
+| **Cast** | Send playback to a Chromecast or an AirPlay device, where the browser supports it. |
+| **Make it yours** | Light and dark, three corner styles, six playhead designs, borders that take the accent colour, opacity sliders for both, and an accent you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
+| **Custom CSS** | A box in Settings for your own stylesheet, applied last so it overrides everything. |
 | **Settings backup** | Export every preference to a small JSON file and import it on another machine. Servers and passwords are never in it. |
 | **Equaliser** | Ten bands, nine presets, pre-amp. |
 | **Volume levelling** | ReplayGain, per track or per album, with clipping protection. |
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |
-| **Everything else** | Queue with drag-to-reorder, favourites, ratings, playlists, scrobbling, sleep timer, internet radio, listening stats, visualizer, keyboard shortcuts, light and dark themes, and a PWA install on desktop, Android and iOS. |
+| **Everything else** | Queue with drag-to-reorder, favourites, ratings, playlists, scrobbling, sleep timer, internet radio, listening stats, keyboard shortcuts, light and dark themes, and a PWA install on desktop, Android and iOS. |
 
 The interface takes its colour from whatever is playing — the surfaces, the
 highlights and the backdrop all retint from the album art.
@@ -236,7 +240,7 @@ origin.
 
 It is not only about convenience. Same-origin audio is also what lets the
 browser hand the audio data to Web Audio, which powers the **equaliser**, the
-**visualizer** and InjeKt's **bass swap**. Without it Kultr still plays and
+and InjeKt's **bass swap**. Without it Kultr still plays and
 still crossfades, but those three go away and you will see a note saying so.
 
 Using the hosted demo, or typing a server address by hand, means the browser
@@ -323,6 +327,39 @@ to a folder the person has picked in a file dialog, so it is chosen in
 | <kbd>/</kbd> | Search | <kbd>Q</kbd> | Queue |
 | <kbd>D</kbd> | Toggle InjeKt | <kbd>F</kbd> | Full player |
 | <kbd>?</kbd> | All shortcuts | <kbd>Esc</kbd> | Close, or clear selection |
+
+---
+
+## Casting
+
+Kultr can hand playback to another device: the **cast** button in the player
+bar and in the full player opens whatever picker the browser provides —
+Chromecast and friends through the Remote Playback API in Chromium, AirPlay in
+Safari. Firefox has neither, so the button does not appear there at all rather
+than sitting inert.
+
+Two things worth knowing, both inherent to how the web does this:
+
+- The receiver is handed the **stream URL** and fetches it itself, so it has to
+  be able to reach your Navidrome. On a home network that is normally fine;
+  over a VPN or a tunnel that only your browser can use, it is not.
+- Casting bypasses Web Audio, so the **equaliser, crossfade and InjeKt do not
+  apply** — the device gets the plain file.
+
+---
+
+## Custom CSS
+
+**Settings → Custom CSS** takes a stylesheet of your own and applies it last,
+so it wins over everything else. Useful variables: `--accent-r/g/b`,
+`--glass-tint`, `--glass-edge`, `--ink`, `--r-lg`.
+
+Kultr's class names are not a stable interface — they can change between
+versions, and a rule that stops matching simply stops doing anything. CSS
+cannot read your library or reach your server, so the worst a bad rule can do
+is make the app look wrong; clearing the box undoes it. It *can* load images
+and fonts from other sites, which tells those sites your IP address, so only
+paste CSS you are willing to run.
 
 ---
 
@@ -415,7 +452,8 @@ tells you what kind of codebase this is: the comments explain *why* rather than
 the whole thing is structured to be readable by whoever (or whatever) picks it
 up next.
 
-Issues and pull requests are welcome either way.
+Issues and pull requests are welcome either way — or find me on Discord,
+[@evropioani](https://discord.com/users/319246364246540288).
 
 ## License
 

@@ -2,7 +2,7 @@
  * A single shared AudioContext for the whole app.
  *
  * Browsers cap the number of contexts and suspend them until a user gesture,
- * so everything (player, analysis, visualizer) goes through this one.
+ * so everything (player, analysis, level detection) goes through this one.
  */
 
 let ctx: AudioContext | null = null

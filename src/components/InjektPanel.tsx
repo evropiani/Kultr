@@ -18,7 +18,7 @@ export function InjektPanel() {
   const { injektEnabled, injektBars, injektMaxTempoShift } = useSettings()
   const current = player.current()
   const next = player.peekNext()
-  const plan = player.lastPlan
+  const plan = player.currentPlan()
 
   const [analysisA, setAnalysisA] = useState<TrackAnalysis | null>(null)
   const [analysisB, setAnalysisB] = useState<TrackAnalysis | null>(null)

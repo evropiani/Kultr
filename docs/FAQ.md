@@ -70,7 +70,7 @@ browser. Nothing is uploaded and nothing is written to your server.
 
 Kultr is in compatibility mode, which happens when the browser cannot read the
 audio data — a cross-origin restriction. Playback and crossfade work; the EQ,
-visualizer and InjeKt bass swap need Web Audio. [CORS.md](CORS.md) explains
+and InjeKt bass swap need Web Audio. [CORS.md](CORS.md) explains
 the fix.
 
 ### Does it work with Airsonic / Gonic / Ampache / other servers?

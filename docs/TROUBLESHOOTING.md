@@ -95,12 +95,12 @@ Transcode format** to `mp3` or `opus` and Navidrome will convert on the fly.
   several clients will struggle.
 - Save tracks for offline if your connection is unreliable.
 
-### The equaliser does nothing / the visualizer is empty
+### The equaliser does nothing
 
 Kultr is in compatibility mode because it cannot read the audio data. There is
 a note under **Settings → Audio** confirming which mode is active. The fix is
 same-origin audio — see [CORS.md](CORS.md). Playback and crossfade are
-unaffected; the EQ, the visualizer and InjeKt's bass swap are.
+unaffected; the EQ and InjeKt's bass swap are.
 
 ### Volume jumps between tracks
 

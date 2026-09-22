@@ -42,6 +42,8 @@ const hostile = readSettingsFile({
     offlineFolderName: '/etc',
     somethingMadeUp: true,
     eqGains: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    homeTiles: ['randomSongs', 'radios', 'favouriteAlbums', 'recentlyAdded', 'randomAlbums'],
+    favouriteRadios: [42],
   },
 })
 const why = (key: string) => hostile.skipped.find((s) => s.key === key)?.why ?? 'APPLIED'
@@ -54,6 +56,8 @@ assert('NaN refused', why('injektBars') === 'not a number', `-> ${why('injektBar
 assert('device-local key refused', why('offlineFolderName') !== 'APPLIED', `-> ${why('offlineFolderName')}`)
 assert('unknown key refused', why('somethingMadeUp') === 'not a Kultr setting', `-> ${why('somethingMadeUp')}`)
 assert('over-long eq trimmed to the real band count', ((hostile.patch as Record<string, unknown>).eqGains as number[]).length === DEFAULT_SETTINGS.eqGains.length)
+assert('a free list keeps every entry', ((hostile.patch as Record<string, unknown>).homeTiles as string[]).length === 5, `-> ${((hostile.patch as Record<string, unknown>).homeTiles as string[] | undefined)?.length}`)
+assert('a list of the wrong element type is refused', why('favouriteRadios') === 'wrong shape', `-> ${why('favouriteRadios')}`)
 
 console.log('\n== Files that are not ours are refused outright ==')
 for (const [name, value] of [['null', null], ['a string', 'nope'], ['other json', { kind: 'something.else', settings: {} }], ['no settings', { kind: 'kultr.settings' }]] as [string, unknown][]) {

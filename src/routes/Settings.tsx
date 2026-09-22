@@ -2,13 +2,19 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Blend,
+  ChevronDown,
+  ChevronUp,
+  Code2,
   Download,
   FolderDown,
   Gauge,
   Pencil,
   Info,
   Keyboard,
+  LayoutGrid,
   LogOut,
+  MessageCircle,
+  Minus,
   Palette,
   Plus,
   Server,
@@ -25,6 +31,7 @@ import {
   supportsFolderDownloads,
 } from '@/lib/filesystem'
 import { formatBytes } from '@/lib/format'
+import { availableHomeTiles, resolveHomeTiles } from '@/lib/homeTiles'
 import {
   buildSettingsFile,
   downloadSettingsFile,
@@ -34,6 +41,7 @@ import { useOffline } from '@/store/offline'
 import { engine } from '@/audio/engine'
 import { useAuth } from '@/store/auth'
 import {
+  DEFAULT_SETTINGS,
   EQ_BANDS,
   EQ_PRESETS,
   PLAYHEAD_STYLES,
@@ -41,6 +49,7 @@ import {
   type AudioEngineMode,
   type CornerStyle,
   type CrossfadeCurve,
+  type SurfaceBorder,
   type GlassLevel,
   type GridSize,
   type OfflineDestination,
@@ -156,6 +165,51 @@ export function Settings() {
             />
           </Row>
         ) : null}
+        <Row
+          label="Panel borders"
+          hint="Panels, cards and controls are outlined with a hairline. Accent colours that outline with whatever the accent currently is, so the edges of the interface move with the music too."
+        >
+          <Segmented<SurfaceBorder>
+            value={settings.surfaceBorder}
+            onChange={(value) => settings.set('surfaceBorder', value)}
+            options={[
+              { value: 'neutral', label: 'Neutral' },
+              { value: 'accent', label: 'Accent' },
+            ]}
+          />
+        </Row>
+        {settings.surfaceBorder === 'accent' ? (
+          <Row
+            label="Border opacity"
+            hint="How strongly those outlines are drawn. Low is a whisper of colour on the edge of each panel; high is a definite frame."
+            stack
+          >
+            <SliderRow
+              label="Border opacity"
+              min={0}
+              max={100}
+              step={5}
+              value={settings.borderOpacity}
+              onChange={(value) => settings.set('borderOpacity', value)}
+              format={(value) => (value === 0 ? 'invisible' : `${value}%`)}
+            />
+          </Row>
+        ) : null}
+        <Row
+          label="Panel opacity"
+          hint="How much of the background shows through the glass. Below 100% the panels get more transparent, above it they get more solid. Has no effect with surface blur switched off, since those panels are opaque by design."
+          stack
+        >
+          <SliderRow
+            label="Panel opacity"
+            min={20}
+            max={200}
+            step={10}
+            value={settings.surfaceOpacity}
+            onChange={(value) => settings.set('surfaceOpacity', value)}
+            format={(value) => (value === 100 ? 'default' : `${value}%`)}
+          />
+        </Row>
         <Row label="Blurred artwork background">
           <Switch
             checked={settings.backdropArtwork}
@@ -493,7 +547,7 @@ export function Settings() {
         </Row>
         <Row
           label="Audio engine"
-          hint={`Currently running in ${engine.mode === 'webaudio' ? 'Web Audio' : 'compatibility'} mode. Web Audio enables the equaliser, visualizer and the InjeKt bass swap, but needs the audio to be readable cross-origin. Changing this takes effect after a reload.`}
+          hint={`Currently running in ${engine.mode === 'webaudio' ? 'Web Audio' : 'compatibility'} mode. Web Audio enables the equaliser and the InjeKt bass swap, but needs the audio to be readable cross-origin. Changing this takes effect after a reload.`}
         >
           <Segmented<AudioEngineMode>
             value={settings.audioEngine}
@@ -725,13 +779,6 @@ export function Settings() {
             label="Show lyrics"
           />
         </Row>
-        <Row label="Show visualizer tab">
-          <Switch
-            checked={settings.showVisualizer}
-            onChange={(value) => settings.set('showVisualizer', value)}
-            label="Show visualizer"
-          />
-        </Row>
         <Row label="Keyboard shortcuts" hint="Space to play/pause, arrows to seek, and more.">
           <Switch
             checked={settings.keyboardShortcuts}
@@ -741,6 +788,58 @@ export function Settings() {
           <button className="pill" onClick={() => setShortcuts(true)}>
             <Keyboard size={14} />
             View
+          </button>
+        </Row>
+      </Section>
+
+      {/* ------------------------------------------------------- home page */}
+      <Section
+        title="Home page"
+        icon={<LayoutGrid size={16} />}
+        description="Which shelves the home page shows, and in what order. A shelf with nothing to put in it is skipped rather than shown empty, so switching one on may change nothing until there is something to fill it."
+        actions={
+          <button
+            className="pill"
+            onClick={() => settings.set('homeTiles', [...DEFAULT_SETTINGS.homeTiles])}
+          >
+            Reset to defaults
+          </button>
+        }
+      >
+        <HomeTileEditor
+          value={settings.homeTiles}
+          onChange={(value) => settings.set('homeTiles', value)}
+        />
+      </Section>
+
+      {/* -------------------------------------------------------- custom css */}
+      <Section
+        title="Custom CSS"
+        icon={<Code2 size={16} />}
+        description="Applied last, so it overrides everything else. Kultr's own class names are not a stable interface — they can change between versions, and a rule that stops matching simply does nothing. Useful variables: --accent-r/g/b, --glass-tint, --glass-edge, --ink, --r-lg."
+      >
+        <Row label="Stylesheet" stack>
+          <textarea
+            className="codebox"
+            spellCheck={false}
+            rows={10}
+            placeholder={'/* e.g. a fatter playhead */\n.scrub__track { height: 8px; }'}
+            value={settings.customCss}
+            aria-label="Custom CSS"
+            onChange={(event) => settings.set('customCss', event.target.value)}
+          />
+        </Row>
+        <Row
+          label="What it can and cannot do"
+          hint="CSS cannot read your library or reach your server, so a bad rule can only make the app look wrong — clear the box to undo it. It can, however, load images and fonts from other sites, which tells those sites your IP address. Only paste CSS you are willing to run."
+        >
+          <button
+            className="pill"
+            disabled={!settings.customCss}
+            onClick={() => settings.set('customCss', '')}
+          >
+            <Trash2 size={14} />
+            Clear
           </button>
         </Row>
       </Section>
@@ -904,6 +1003,17 @@ export function Settings() {
             github.com/evropiani/Kultr
           </a>
         </Row>
+        <Row label="Get in touch" hint="Questions, ideas, or something broken.">
+          <a
+            className="pill"
+            href="https://discord.com/users/319246364246540288"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle size={14} />
+            @evropioani
+          </a>
+        </Row>
       </Section>
 
       <Modal
@@ -937,5 +1047,104 @@ export function Settings() {
         </p>
       </Modal>
     </div>
+  )
+}
+
+/* ---------------------------------------------------------------- home page */
+
+/**
+ * Pick and order the home-page shelves.
+ *
+ * The stored value is just the enabled ids in order, so "off" is simply
+ * absence — there is no second list to keep in step, and an id from a future
+ * version that this build does not know about is dropped on read rather than
+ * breaking the page.
+ */
+function HomeTileEditor({
+  value,
+  onChange,
+}: {
+  value: string[]
+  onChange: (next: string[]) => void
+}) {
+  const enabled = resolveHomeTiles(value)
+  const available = availableHomeTiles(value)
+
+  const move = (index: number, by: number) => {
+    const next = enabled.map((tile) => tile.id)
+    const target = index + by
+    if (target < 0 || target >= next.length) return
+    ;[next[index], next[target]] = [next[target], next[index]]
+    onChange(next)
+  }
+
+  return (
+    <>
+      {enabled.length === 0 ? (
+        <p className="row__hint">
+          Every shelf is switched off. The home page will only show the greeting and its two
+          buttons until you add one back.
+        </p>
+      ) : null}
+
+      <ol className="tiles">
+        {enabled.map((tile, index) => (
+          <li key={tile.id} className="tile">
+            <div className="tile__order">
+              <button
+                className="iconbtn"
+                style={{ width: 26, height: 22 }}
+                aria-label={`Move ${tile.title} up`}
+                disabled={index === 0}
+                onClick={() => move(index, -1)}
+              >
+                <ChevronUp size={15} />
+              </button>
+              <button
+                className="iconbtn"
+                style={{ width: 26, height: 22 }}
+                aria-label={`Move ${tile.title} down`}
+                disabled={index === enabled.length - 1}
+                onClick={() => move(index, 1)}
+              >
+                <ChevronDown size={15} />
+              </button>
+            </div>
+            <div className="tile__text">
+              <span className="row__label">{tile.title}</span>
+              <span className="row__hint">{tile.note}</span>
+            </div>
+            <button
+              className="pill pill-icon"
+              aria-label={`Remove ${tile.title} from the home page`}
+              title="Remove from the home page"
+              onClick={() => onChange(enabled.filter((entry) => entry.id !== tile.id).map((entry) => entry.id))}
+            >
+              <Minus size={14} />
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      {available.length ? (
+        <>
+          <div className="hairline" style={{ margin: '14px 0 12px' }} />
+          <span className="row__label">Not shown</span>
+          <div className="tiles__add">
+            {available.map((tile) => (
+              <button
+                key={tile.id}
+                className="pill"
+                title={tile.note}
+                onClick={() => onChange([...value, tile.id])}
+              >
+                <Plus size={13} />
+                {tile.title}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+    </>
   )
 }

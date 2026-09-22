@@ -18,7 +18,7 @@ import type { TransitionPlan } from './injekt'
  * If Web Audio is unavailable — or the audio turns out not to be CORS-readable,
  * which silences MediaElementSource — the engine drops to "element" mode and
  * crossfades with plain element volume instead. Everything still works; only
- * the EQ, visualizer and bass-swap parts of InjeKt go away.
+ * the EQ and the bass-swap part of InjeKt go away.
  */
 
 export type EngineMode = 'webaudio' | 'element'
@@ -296,8 +296,9 @@ export class AudioEngine {
   get currentSong(): Song | null {
     return this.active.song
   }
-  get analyserNode(): AnalyserNode | null {
-    return this.analyser
+  /** The element that is actually producing sound, for the cast pickers. */
+  get activeElement(): HTMLAudioElement {
+    return this.active.el
   }
   get isTransitioning(): boolean {
     return this.transitioning
@@ -878,7 +879,7 @@ export class AudioEngine {
 
     this.callbacks.onModeChange(
       'element',
-      'Your server does not send CORS headers for audio, so Kultr switched to compatibility mode. Crossfade still works; the equaliser, visualizer and InjeKt bass-swap do not. Putting Kultr and Navidrome behind one reverse proxy fixes this.',
+      'Your server does not send CORS headers for audio, so Kultr switched to compatibility mode. Crossfade still works; the equaliser and InjeKt bass-swap do not. Putting Kultr and Navidrome behind one reverse proxy fixes this.',
     )
 
     if (song) await this.play(song, { startAt: position, autoplay: wasPlaying })

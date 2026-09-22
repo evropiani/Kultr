@@ -23,12 +23,12 @@ import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useUi } from '@/store/ui'
 import { Art } from './ui'
-import { Scrubber } from './Scrubber'
+import { Scrubber, overlapRegion } from './Scrubber'
 import { Lyrics } from './Lyrics'
-import { Visualizer } from './Visualizer'
 import { InjektPanel } from './InjektPanel'
+import { CastButton } from './Cast'
 
-type Tab = 'queue' | 'lyrics' | 'injekt' | 'visual'
+type Tab = 'queue' | 'lyrics' | 'injekt'
 
 const getEngineTime = () => engine.currentTime
 
@@ -39,7 +39,6 @@ export function NowPlaying() {
   const song = player.current()
   const {
     showLyrics,
-    showVisualizer,
     crossfadeEnabled,
     crossfadeSeconds,
     injektEnabled,
@@ -53,17 +52,18 @@ export function NowPlaying() {
 
   const playing = player.playback === 'playing'
   const duration = player.duration || song.duration || 0
-  const overlap = player.lastPlan
-    ? { start: player.lastPlan.startAt, duration: player.lastPlan.duration }
-    : crossfadeEnabled && duration > crossfadeSeconds
-      ? { start: duration - crossfadeSeconds, duration: crossfadeSeconds }
-      : null
+  const overlap = overlapRegion(
+    player.currentPlan(),
+    duration,
+    injektEnabled,
+    crossfadeEnabled,
+    crossfadeSeconds,
+  )
 
   const tabs: { id: Tab; label: string; hidden?: boolean }[] = [
     { id: 'queue', label: 'Up next' },
     { id: 'lyrics', label: 'Lyrics', hidden: !showLyrics },
     { id: 'injekt', label: 'InjeKt' },
-    { id: 'visual', label: 'Visualizer', hidden: !showVisualizer },
   ]
 
   return (
@@ -146,18 +146,31 @@ export function NowPlaying() {
               overlap={overlap}
               active={playing}
             />
+            {/* Three columns, not one flex row: the two side groups each take
+                an equal share, so the play button sits dead centre however
+                many controls flank it. */}
             <div className="npv__buttons">
-              <button
-                className="iconbtn"
-                data-active={player.shuffle}
-                aria-label="Shuffle"
-                onClick={() => player.setShuffle(!player.shuffle)}
-              >
-                <Shuffle size={18} />
-              </button>
-              <button className="iconbtn" aria-label="Previous" onClick={() => void player.previous()}>
-                <SkipBack size={24} fill="currentColor" />
-              </button>
+              <div className="npv__side">
+                <button
+                  className="iconbtn"
+                  data-active={player.shuffle}
+                  aria-label="Shuffle"
+                  onClick={() => player.setShuffle(!player.shuffle)}
+                >
+                  <Shuffle size={18} />
+                </button>
+                <button
+                  className="iconbtn"
+                  data-active={starred}
+                  aria-label="Favourite"
+                  onClick={async () => setStarred(await toggleStarSong(song))}
+                >
+                  <Heart size={18} fill={starred ? 'currentColor' : 'none'} />
+                </button>
+                <button className="iconbtn" aria-label="Previous" onClick={() => void player.previous()}>
+                  <SkipBack size={24} fill="currentColor" />
+                </button>
+              </div>
               <button
                 className="npv__play"
                 aria-label={playing ? 'Pause' : 'Play'}
@@ -169,25 +182,20 @@ export function NowPlaying() {
                   <Play size={26} fill="currentColor" style={{ marginLeft: 3 }} />
                 )}
               </button>
-              <button className="iconbtn" aria-label="Next" onClick={() => void player.next(true)}>
-                <SkipForward size={24} fill="currentColor" />
-              </button>
-              <button
-                className="iconbtn"
-                data-active={player.repeat !== 'off'}
-                aria-label={`Repeat: ${player.repeat}`}
-                onClick={player.cycleRepeat}
-              >
-                {player.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
-              </button>
-              <button
-                className="iconbtn"
-                data-active={starred}
-                aria-label="Favourite"
-                onClick={async () => setStarred(await toggleStarSong(song))}
-              >
-                <Heart size={18} fill={starred ? 'currentColor' : 'none'} />
-              </button>
+              <div className="npv__side">
+                <button className="iconbtn" aria-label="Next" onClick={() => void player.next(true)}>
+                  <SkipForward size={24} fill="currentColor" />
+                </button>
+                <button
+                  className="iconbtn"
+                  data-active={player.repeat !== 'off'}
+                  aria-label={`Repeat: ${player.repeat}`}
+                  onClick={player.cycleRepeat}
+                >
+                  {player.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
+                </button>
+                <CastButton size={18} />
+              </div>
             </div>
           </div>
         </div>
@@ -213,14 +221,6 @@ export function NowPlaying() {
             {tab === 'queue' ? <UpNext /> : null}
             {tab === 'lyrics' ? <Lyrics song={song} /> : null}
             {tab === 'injekt' ? <InjektPanel /> : null}
-            {tab === 'visual' ? (
-              <div style={{ display: 'grid', gap: 14 }}>
-                <Visualizer height={180} />
-                <p className="row__hint">
-                  Bars are grouped logarithmically, so the low end does not swamp everything else.
-                </p>
-              </div>
-            ) : null}
           </div>
         </div>
         ) : null}

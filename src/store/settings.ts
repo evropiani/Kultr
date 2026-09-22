@@ -9,6 +9,8 @@ export type AudioEngineMode = 'auto' | 'webaudio' | 'element'
 export type GridSize = 'small' | 'medium' | 'large'
 /** How round the app's corners are. */
 export type CornerStyle = 'sharp' | 'soft' | 'round'
+/** Where the border colour of glass surfaces comes from. */
+export type SurfaceBorder = 'neutral' | 'accent'
 /** Look of the progress bar in the player. */
 export type PlayheadStyle = 'minimal' | 'glow' | 'pulse' | 'wave' | 'comet' | 'equalizer'
 
@@ -48,6 +50,12 @@ export interface SettingsState {
    * 0–100. Think of it as the opacity of your colour laid over the artwork's.
    */
   accentBlend: number
+  /** Borders of panels, cards and controls: neutral, or tinted with the accent. */
+  surfaceBorder: SurfaceBorder
+  /** Opacity of those borders, 0–100. */
+  borderOpacity: number
+  /** How solid glass panels are, as a percentage of the theme's own value. */
+  surfaceOpacity: number
   corners: CornerStyle
   playhead: PlayheadStyle
   /** Whether the player's left-hand time counts up or down. */
@@ -112,7 +120,15 @@ export interface SettingsState {
 
   // ---- misc
   showLyrics: boolean
-  showVisualizer: boolean
+  /**
+   * Which shelves the home page shows, in order. Ids come from HOME_TILES;
+   * anything missing from this list is switched off.
+   */
+  homeTiles: string[]
+  /** Radio stations you have hearted. Navidrome has no concept of this. */
+  favouriteRadios: string[]
+  /** Stylesheet injected verbatim, last, so it can override anything. */
+  customCss: string
   /** Right-hand pane of the full-screen player. */
   showPlayerPanel: boolean
   discordLikeRichPresence: boolean
@@ -131,6 +147,9 @@ export const DEFAULT_SETTINGS = {
   accentMode: 'artwork' as const,
   accent: '#7c8cff',
   accentBlend: 0,
+  surfaceBorder: 'accent' as SurfaceBorder,
+  borderOpacity: 45,
+  surfaceOpacity: 100,
   corners: 'soft' as CornerStyle,
   playhead: 'minimal' as PlayheadStyle,
   timeRemaining: false,
@@ -184,7 +203,9 @@ export const DEFAULT_SETTINGS = {
   offlineFirst: true,
 
   showLyrics: true,
-  showVisualizer: true,
+  homeTiles: ['mostPlayedSongs', 'mostPlayedAlbums', 'randomSongs', 'mostPlayedArtists'],
+  favouriteRadios: [] as string[],
+  customCss: '',
   showPlayerPanel: true,
   discordLikeRichPresence: false,
   keyboardShortcuts: true,
@@ -203,7 +224,7 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'kultr.settings',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         const { set: _set, merge: _merge, applyEqPreset: _apply, reset: _reset, ...rest } = state
@@ -219,6 +240,9 @@ export const useSettings = create<SettingsState>()(
             if (!(renamed in old)) old[renamed] = old[key]
             delete old[key]
           }
+          // v3 → v4 removed the visualizer. Drop anything that is no longer a
+          // setting rather than carrying dead keys forward forever.
+          if (!(key in DEFAULT_SETTINGS)) delete old[key]
         }
         return { ...DEFAULT_SETTINGS, ...old } as SettingsState
       },

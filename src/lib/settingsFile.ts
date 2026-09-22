@@ -22,6 +22,14 @@ const DEVICE_LOCAL_KEYS = [
   'muted',
 ] as const
 
+/**
+ * Lists whose length is fixed by the app rather than chosen by the person.
+ * Everything else — the home shelves, favourite stations — is free to be any
+ * length, so it must not be trimmed to however many the defaults happen to
+ * have.
+ */
+const FIXED_LENGTH_KEYS = new Set(['eqGains'])
+
 /** Never let anything credential-shaped through, whatever the file claims. */
 const FORBIDDEN = /pass|secret|token|credential|server|username|auth/i
 
@@ -102,12 +110,14 @@ export function readSettingsFile(input: unknown): ImportResult {
     }
     const expected = defaults[key]
     if (Array.isArray(expected)) {
-      if (!Array.isArray(value) || value.some((entry) => typeof entry !== 'number')) {
+      // An empty default says nothing about its element type, so those are
+      // taken to be lists of ids — which is what all of them currently are.
+      const elementType = typeof expected[0] === 'number' ? 'number' : 'string'
+      if (!Array.isArray(value) || value.some((entry) => typeof entry !== elementType)) {
         skipped.push({ key, why: 'wrong shape' })
         continue
       }
-      // The equaliser has a fixed number of bands.
-      patch[key] = (value as number[]).slice(0, expected.length)
+      patch[key] = FIXED_LENGTH_KEYS.has(key) ? value.slice(0, expected.length) : value
       applied.push(key)
       continue
     }

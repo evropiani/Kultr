@@ -3,9 +3,9 @@ import clsx from 'clsx'
 /**
  * The Kultr mark.
  *
- * Two cut-out artworks with no background of their own — a chrome K for light
- * themes and a neon one for dark. Both are rendered and CSS picks which is
- * visible, so switching theme never shows a missing or half-loaded image.
+ * One cut-out artwork with no background of its own, which reads on light and
+ * dark alike — so there is nothing to swap when the theme changes, and nothing
+ * to flash while a second image loads.
  */
 export function Logo({
   size = 34,
@@ -16,11 +16,17 @@ export function Logo({
   className?: string
   title?: string
 }) {
-  const base = import.meta.env.BASE_URL
   return (
-    <span className={clsx('logo', className)} style={{ width: size, height: size }} title={title}>
-      <img className="logo__art logo__art--dark" src={`${base}logo-dark.png`} alt="" aria-hidden="true" />
-      <img className="logo__art logo__art--light" src={`${base}logo-light.png`} alt="" aria-hidden="true" />
-    </span>
+    <img
+      className={clsx('logo', className)}
+      style={{ width: size, height: size }}
+      // Pages serves the app from a sub-path, so the public base matters.
+      src={`${import.meta.env.BASE_URL}logo-light.png`}
+      width={size}
+      height={size}
+      alt=""
+      aria-hidden="true"
+      title={title}
+    />
   )
 }

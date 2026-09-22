@@ -30,7 +30,6 @@ It is not only about the error message. When the audio comes from the page's
 own origin, the browser lets Web Audio read the samples. That is what powers:
 
 - the **10-band equaliser**
-- the **visualizer**
 - InjeKt's **bass swap** (the low-shelf filters on each deck)
 
 Cross-origin audio without CORS headers is played but not readable, so
@@ -172,7 +171,7 @@ Two things to know if you go this way:
 - **Mixed content.** An HTTPS page cannot call an `http://` address at all. If
   Kultr is on HTTPS, Navidrome must be too. Browsers make an exception for
   `http://localhost`.
-- The equaliser, visualizer and bass swap still need the audio responses to
+- The equaliser and bass swap still need the audio responses to
   carry the header too, not just the API — which the `/rest/` block above does
   cover, since streaming lives under `/rest/stream`.
 

@@ -28,7 +28,18 @@ import { useSelection } from '@/store/selection'
 
 /** Keep the document's data-* attributes in step with the settings store. */
 function useThemeEffects(): void {
-  const { theme, glass, gridSize, compactRows, reduceMotion, corners } = useSettings()
+  const {
+    theme,
+    glass,
+    gridSize,
+    compactRows,
+    reduceMotion,
+    corners,
+    surfaceBorder,
+    borderOpacity,
+    surfaceOpacity,
+    customCss,
+  } = useSettings()
 
   useEffect(() => {
     const root = document.documentElement
@@ -59,7 +70,35 @@ function useThemeEffects(): void {
     root.dataset.rows = compactRows ? 'compact' : 'normal'
     root.dataset.motion = reduceMotion ? 'reduced' : 'full'
     root.dataset.corners = corners
-  }, [glass, gridSize, compactRows, reduceMotion, corners])
+    root.dataset.border = surfaceBorder
+    root.style.setProperty('--surface-scale', String(surfaceOpacity / 100))
+    // Written inline so it beats the per-theme value whatever the source
+    // order of the stylesheets turns out to be; removed again in neutral
+    // mode so each theme keeps its own hairline.
+    if (surfaceBorder === 'accent') {
+      root.style.setProperty('--edge-a', String(borderOpacity / 100))
+    } else {
+      root.style.removeProperty('--edge-a')
+    }
+  }, [glass, gridSize, compactRows, reduceMotion, corners, surfaceBorder, borderOpacity, surfaceOpacity])
+
+  // Whatever is in the box, last, so it can override anything above it. It is
+  // injected as a stylesheet rather than interpolated anywhere, so the worst a
+  // bad rule can do is make the app look wrong.
+  useEffect(() => {
+    const id = 'kultr-custom-css'
+    let node = document.getElementById(id) as HTMLStyleElement | null
+    if (!customCss.trim()) {
+      node?.remove()
+      return
+    }
+    if (!node) {
+      node = document.createElement('style')
+      node.id = id
+      document.head.append(node)
+    }
+    node.textContent = customCss
+  }, [customCss])
 }
 
 /** Reconnect on load, restore the queue, and run the automatic sync checks. */
