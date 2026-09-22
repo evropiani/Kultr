@@ -311,13 +311,20 @@ export function TopBar() {
       <div className="topbar__spacer" />
 
       <button
-        className="pill"
+        className="pill pill--sync"
         onClick={() => void sync.run('check')}
         disabled={sync.running}
+        aria-label="Check for updates"
         title="Check the server for changes and pull in anything new"
       >
         <RefreshCw size={14} className={sync.running ? 'spin' : undefined} />
-        {sync.running ? `${Math.round(sync.progress.percent * 100)}%` : 'Check for updates'}
+        {/* The label folds away on a phone; the percentage does not, because
+            it is the only sign that a sync is making progress. */}
+        {sync.running ? (
+          <span>{Math.round(sync.progress.percent * 100)}%</span>
+        ) : (
+          <span className="pill__label">Check for updates</span>
+        )}
       </button>
 
       <button

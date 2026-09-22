@@ -1876,8 +1876,38 @@
   .npv {
     padding: calc(10px + var(--safe-top)) 12px calc(12px + var(--safe-bottom));
   }
+  /* The top bar is where everything used to run off the edge: six controls
+     and a search field will not fit on a phone. Back/forward duplicate the
+     system gestures, the spacer has nothing left to push, and the sync
+     button says what it does with its icon. */
   .topbar {
     padding: 0 10px;
+    gap: 6px;
+  }
+  .topbar__nav,
+  .topbar__spacer {
+    display: none;
+  }
+  .topbar__search {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+  }
+  .pill--sync {
+    padding: 0 11px;
+  }
+  .pill--sync .pill__label {
+    display: none;
+  }
+  .page-head {
+    align-items: flex-start;
+  }
+  .page-actions {
+    width: 100%;
+  }
+  .page-actions .pill {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 
