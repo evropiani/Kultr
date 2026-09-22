@@ -7,6 +7,45 @@ only fixed.
 
 ---
 
+## 1.4.0 — 2026-09-22
+
+### 2026-09-22 15:36 — Settings grouped by what you are actually doing
+
+**Player is gone.** Its two settings had nothing to do with each other: *Show
+lyrics tab* now sits directly under *Playhead* in Appearance, and *Keyboard
+shortcuts* under *Built with* in About, which is where you go looking for a
+reference anyway.
+
+**Crossfade is now Playback**, and has gained *Resume where you left off* and
+*Scrobble plays* from Audio — neither was about sound, both are about what
+happens when you play something. Audio is left doing one job: loudness, and
+what Kultr asks the server to send.
+
+**Reset Kultr moved out of Servers**, where it was buried under the server
+list, into **Backup and reset** — directly below the export, which is what you
+want to run first.
+
+**Appearance is ordered in runs** instead of the order things were added:
+frame (theme, blur, corners, motion), then colour, then panel surfaces, then
+list density, then the player's own chrome.
+
+Section order is now roughly how often each is touched: Appearance, Home page,
+Playback, InjeKt, Audio, Equaliser, Offline, Servers, Custom CSS, Backup and
+reset, About.
+
+### 2026-09-22 15:36 — Track shelves run in two columns
+
+*Played the most*, *Something else* and *Jump back in* were a single column of
+ten, which is a lot of scrolling for a glance. They are now five and five,
+side by side, stacking back to one column below 1080px.
+
+The album column went with the change — half the width has no room for it —
+and so did the artist column that used to replace it, since the artist is
+already named under the song title. What is left is the title, the artist
+beneath it, the heart and the length.
+
+---
+
 ## 1.3.0 — 2026-09-22
 
 ### 2026-09-22 15:08 — Settings is a list you can skim

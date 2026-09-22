@@ -37,6 +37,11 @@ export interface TrackListProps {
   source: string
   /** Hide the album column (album pages already say which album it is). */
   hideAlbum?: boolean
+  /**
+   * Drop the album/artist column altogether. The title cell already carries
+   * the artist, so in a narrow list that column is a second copy of it.
+   */
+  hideSecondary?: boolean
   /** Show artwork thumbnails per row. */
   showArt?: boolean
   /** Numbering: track numbers on album pages, running index elsewhere. */
@@ -50,6 +55,7 @@ export function TrackList({
   songs,
   source,
   hideAlbum,
+  hideSecondary,
   showArt = true,
   numbering = 'index',
   sortable = true,
@@ -179,7 +185,7 @@ export function TrackList({
 
   if (!virtualise) {
     return (
-      <div className="tracks">
+      <div className="tracks" data-secondary={hideSecondary ? 'none' : 'shown'}>
         {header}
         {rows}
       </div>
@@ -187,7 +193,7 @@ export function TrackList({
   }
 
   return (
-    <div className="tracks">
+    <div className="tracks" data-secondary={hideSecondary ? 'none' : 'shown'}>
       {header}
       <div ref={containerRef} style={{ maxHeight: '62vh', overflow: 'auto' }}>
         <div style={{ height: totalHeight, position: 'relative' }}>

@@ -7,7 +7,6 @@ import {
   Code2,
   Download,
   FolderDown,
-  Gauge,
   Pencil,
   Info,
   Keyboard,
@@ -158,6 +157,24 @@ export function Settings() {
             ]}
           />
         </Row>
+        <Row label="Corners" hint="How round everything in Kultr is.">
+          <Segmented<CornerStyle>
+            value={settings.corners}
+            onChange={(value) => settings.set('corners', value)}
+            options={[
+              { value: 'sharp', label: 'Sharp' },
+              { value: 'soft', label: 'Soft' },
+              { value: 'round', label: 'Round' },
+            ]}
+          />
+        </Row>
+        <Row label="Reduce motion" hint="Stops the drifting background and spring animations.">
+          <Switch
+            checked={settings.reduceMotion}
+            onChange={(value) => settings.set('reduceMotion', value)}
+            label="Reduce motion"
+          />
+        </Row>
         <Row
           label="Colour from artwork"
           hint="Tints the whole interface with the dominant colour of whatever is playing."
@@ -201,6 +218,13 @@ export function Settings() {
             />
           </Row>
         ) : null}
+        <Row label="Blurred artwork background">
+          <Switch
+            checked={settings.backdropArtwork}
+            onChange={(value) => settings.set('backdropArtwork', value)}
+            label="Blurred artwork background"
+          />
+        </Row>
         <Row
           label="Panel borders"
           hint="Panels, cards and controls are outlined with a hairline. Accent colours that outline with whatever the accent currently is, so the edges of the interface move with the music too."
@@ -246,29 +270,22 @@ export function Settings() {
             format={(value) => (value === 100 ? 'default' : `${value}%`)}
           />
         </Row>
-        <Row label="Blurred artwork background">
-          <Switch
-            checked={settings.backdropArtwork}
-            onChange={(value) => settings.set('backdropArtwork', value)}
-            label="Blurred artwork background"
-          />
-        </Row>
-        <Row label="Reduce motion" hint="Stops the drifting background and spring animations.">
-          <Switch
-            checked={settings.reduceMotion}
-            onChange={(value) => settings.set('reduceMotion', value)}
-            label="Reduce motion"
-          />
-        </Row>
-        <Row label="Corners" hint="How round everything in Kultr is.">
-          <Segmented<CornerStyle>
-            value={settings.corners}
-            onChange={(value) => settings.set('corners', value)}
+        <Row label="Grid size">
+          <Segmented<GridSize>
+            value={settings.gridSize}
+            onChange={(value) => settings.set('gridSize', value)}
             options={[
-              { value: 'sharp', label: 'Sharp' },
-              { value: 'soft', label: 'Soft' },
-              { value: 'round', label: 'Round' },
+              { value: 'small', label: 'Small' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'large', label: 'Large' },
             ]}
+          />
+        </Row>
+        <Row label="Compact track rows">
+          <Switch
+            checked={settings.compactRows}
+            onChange={(value) => settings.set('compactRows', value)}
+            label="Compact track rows"
           />
         </Row>
         <Row
@@ -296,29 +313,18 @@ export function Settings() {
             ))}
           </div>
         </Row>
+        <Row label="Show lyrics tab">
+          <Switch
+            checked={settings.showLyrics}
+            onChange={(value) => settings.set('showLyrics', value)}
+            label="Show lyrics"
+          />
+        </Row>
         <Row label="Count time down" hint="Shows how much of the track is left instead of how much has played. Clicking the time in the player switches it too.">
           <Switch
             checked={settings.timeRemaining}
             onChange={(value) => settings.set('timeRemaining', value)}
             label="Count time down"
-          />
-        </Row>
-        <Row label="Grid size">
-          <Segmented<GridSize>
-            value={settings.gridSize}
-            onChange={(value) => settings.set('gridSize', value)}
-            options={[
-              { value: 'small', label: 'Small' },
-              { value: 'medium', label: 'Medium' },
-              { value: 'large', label: 'Large' },
-            ]}
-          />
-        </Row>
-        <Row label="Compact track rows">
-          <Switch
-            checked={settings.compactRows}
-            onChange={(value) => settings.set('compactRows', value)}
-            label="Compact track rows"
           />
         </Row>
       </Panel>
@@ -343,11 +349,11 @@ export function Settings() {
         />
       </Panel>
 
-      {/* -------------------------------------------------------- crossfade */}
+      {/* --------------------------------------------------------- playback */}
       <Panel
-        title="Crossfade"
+        title="Playback"
         icon={<Blend size={16} />}
-        description="Overlap the end of one track with the start of the next. InjeKt overrides these numbers when it is switched on and knows both tracks."
+        description="What happens between one track and the next, and what playing something does. InjeKt overrides the crossfade numbers when it is switched on and knows both tracks."
       >
         <Row label="Crossfade between tracks">
           <Switch
@@ -401,6 +407,20 @@ export function Settings() {
             checked={settings.gapless}
             onChange={(value) => settings.set('gapless', value)}
             label="Gapless playback"
+          />
+        </Row>
+        <Row label="Resume where you left off" hint="Restores the queue and position when Kultr reopens.">
+          <Switch
+            checked={settings.resumeOnStart}
+            onChange={(value) => settings.set('resumeOnStart', value)}
+            label="Resume on start"
+          />
+        </Row>
+        <Row label="Scrobble plays" hint="Tells Navidrome what you listened to, which feeds its own statistics.">
+          <Switch
+            checked={settings.scrobble}
+            onChange={(value) => settings.set('scrobble', value)}
+            label="Scrobble plays"
           />
         </Row>
       </Panel>
@@ -529,7 +549,11 @@ export function Settings() {
       </Panel>
 
       {/* ------------------------------------------------------------ audio */}
-      <Panel title="Audio" icon={<Volume2 size={16} />}>
+      <Panel
+        title="Audio"
+        icon={<Volume2 size={16} />}
+        description="Loudness, and what Kultr asks your server to send."
+      >
         <Row
           label="Volume levelling"
           hint="Uses the ReplayGain tags Navidrome reports so quiet and loud albums play at a similar level."
@@ -613,20 +637,6 @@ export function Settings() {
               { value: 'webaudio', label: 'Web Audio' },
               { value: 'element', label: 'Compatibility' },
             ]}
-          />
-        </Row>
-        <Row label="Scrobble plays" hint="Tells Navidrome what you listened to, which feeds its own statistics.">
-          <Switch
-            checked={settings.scrobble}
-            onChange={(value) => settings.set('scrobble', value)}
-            label="Scrobble plays"
-          />
-        </Row>
-        <Row label="Resume where you left off" hint="Restores the queue and position when Kultr reopens.">
-          <Switch
-            checked={settings.resumeOnStart}
-            onChange={(value) => settings.set('resumeOnStart', value)}
-            label="Resume on start"
           />
         </Row>
       </Panel>
@@ -825,117 +835,7 @@ export function Settings() {
         </Row>
       </Panel>
 
-      {/* ------------------------------------------------------- interface */}
-      <Panel title="Player" icon={<Gauge size={16} />}>
-        <Row label="Show lyrics tab">
-          <Switch
-            checked={settings.showLyrics}
-            onChange={(value) => settings.set('showLyrics', value)}
-            label="Show lyrics"
-          />
-        </Row>
-        <Row label="Keyboard shortcuts" hint="Space to play/pause, arrows to seek, and more.">
-          <Switch
-            checked={settings.keyboardShortcuts}
-            onChange={(value) => settings.set('keyboardShortcuts', value)}
-            label="Keyboard shortcuts"
-          />
-          <button className="pill" onClick={() => setShortcuts(true)}>
-            <Keyboard size={14} />
-            View
-          </button>
-        </Row>
-      </Panel>
-
-      {/* -------------------------------------------------------- custom css */}
-      <Panel
-        title="Custom CSS"
-        icon={<Code2 size={16} />}
-        description="Applied last, so it overrides everything else. Kultr's own class names are not a stable interface — they can change between versions, and a rule that stops matching simply does nothing. Useful variables: --accent-r/g/b, --glass-tint, --glass-edge, --ink, --r-lg."
-      >
-        <Row label="Stylesheet" stack>
-          <textarea
-            className="codebox"
-            spellCheck={false}
-            rows={10}
-            placeholder={'/* e.g. a fatter playhead */\n.scrub__track { height: 8px; }'}
-            value={settings.customCss}
-            aria-label="Custom CSS"
-            onChange={(event) => settings.set('customCss', event.target.value)}
-          />
-        </Row>
-        <Row
-          label="What it can and cannot do"
-          hint="CSS cannot read your library or reach your server, so a bad rule can only make the app look wrong — clear the box to undo it. It can, however, load images and fonts from other sites, which tells those sites your IP address. Only paste CSS you are willing to run."
-        >
-          <button
-            className="pill"
-            disabled={!settings.customCss}
-            onClick={() => settings.set('customCss', '')}
-          >
-            <Trash2 size={14} />
-            Clear
-          </button>
-        </Row>
-      </Panel>
-
-      {/* ---------------------------------------------------------- backup */}
-      <Panel
-        title="Backup"
-        icon={<Download size={16} />}
-        description="Carry your setup to another browser or machine. A plain export holds your preferences only — no servers, no usernames and no passwords — so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too."
-      >
-        <Row
-          label="Export settings"
-          hint="Saves a small JSON file with everything on this page. Your servers are not in it."
-        >
-          <button
-            className="pill"
-            onClick={() => {
-              const name = downloadSettingsFile(buildSettingsFile(settings, __KULTR_VERSION__))
-              toast.show(`Saved ${name}.`, 'success')
-            }}
-          >
-            <Download size={14} />
-            Export
-          </button>
-          <button
-            className="pill"
-            disabled={auth.profiles.length === 0}
-            title={
-              auth.profiles.length === 0
-                ? 'No servers saved yet'
-                : 'Include the list of servers as well'
-            }
-            onClick={() => setConfirmServerExport(true)}
-          >
-            <Server size={14} />
-            Export with servers
-          </button>
-        </Row>
-        <Row
-          label="Import settings"
-          hint="Replaces the preferences in the file and leaves everything else as it is. Unknown or credential-shaped entries are ignored."
-        >
-          <input
-            ref={importInput}
-            type="file"
-            accept="application/json,.json"
-            hidden
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              event.target.value = ''
-              if (file) void importSettings(file)
-            }}
-          />
-          <button className="pill" onClick={() => importInput.current?.click()}>
-            <Upload size={14} />
-            Import
-          </button>
-        </Row>
-      </Panel>
-
-      {/* --------------------------------------------------------- account */}
+      {/* ---------------------------------------------------------- servers */}
       <Panel
         title="Servers"
         icon={<Server size={16} />}
@@ -1024,7 +924,98 @@ export function Settings() {
             Sign out
           </button>
         </Row>
-        <Row label="Reset Kultr" hint="Deletes the local database, settings and offline files.">
+      </Panel>
+
+      {/* -------------------------------------------------------- custom css */}
+      <Panel
+        title="Custom CSS"
+        icon={<Code2 size={16} />}
+        description="Applied last, so it overrides everything else. Kultr's own class names are not a stable interface — they can change between versions, and a rule that stops matching simply does nothing. Useful variables: --accent-r/g/b, --glass-tint, --glass-edge, --ink, --r-lg."
+      >
+        <Row label="Stylesheet" stack>
+          <textarea
+            className="codebox"
+            spellCheck={false}
+            rows={10}
+            placeholder={'/* e.g. a fatter playhead */\n.scrub__track { height: 8px; }'}
+            value={settings.customCss}
+            aria-label="Custom CSS"
+            onChange={(event) => settings.set('customCss', event.target.value)}
+          />
+        </Row>
+        <Row
+          label="What it can and cannot do"
+          hint="CSS cannot read your library or reach your server, so a bad rule can only make the app look wrong — clear the box to undo it. It can, however, load images and fonts from other sites, which tells those sites your IP address. Only paste CSS you are willing to run."
+        >
+          <button
+            className="pill"
+            disabled={!settings.customCss}
+            onClick={() => settings.set('customCss', '')}
+          >
+            <Trash2 size={14} />
+            Clear
+          </button>
+        </Row>
+      </Panel>
+
+      {/* ------------------------------------------------- backup and reset */}
+      <Panel
+        title="Backup and reset"
+        icon={<Download size={16} />}
+        description="Carry your setup to another browser or machine, or wipe it and start again. A plain export holds your preferences only — no servers, no usernames and no passwords — so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too."
+      >
+        <Row
+          label="Export settings"
+          hint="Saves a small JSON file with everything on this page. Your servers are not in it."
+        >
+          <button
+            className="pill"
+            onClick={() => {
+              const name = downloadSettingsFile(buildSettingsFile(settings, __KULTR_VERSION__))
+              toast.show(`Saved ${name}.`, 'success')
+            }}
+          >
+            <Download size={14} />
+            Export
+          </button>
+          <button
+            className="pill"
+            disabled={auth.profiles.length === 0}
+            title={
+              auth.profiles.length === 0
+                ? 'No servers saved yet'
+                : 'Include the list of servers as well'
+            }
+            onClick={() => setConfirmServerExport(true)}
+          >
+            <Server size={14} />
+            Export with servers
+          </button>
+        </Row>
+        <Row
+          label="Import settings"
+          hint="Replaces the preferences in the file and leaves everything else as it is. Unknown or credential-shaped entries are ignored."
+        >
+          <input
+            ref={importInput}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void importSettings(file)
+            }}
+          />
+          <button className="pill" onClick={() => importInput.current?.click()}>
+            <Upload size={14} />
+            Import
+          </button>
+        </Row>
+        <Row
+          label="Reset Kultr"
+          hint="Deletes the local library mirror, your settings, saved servers and offline files from this browser. Nothing on your server is touched. Export first if you want any of it back."
+        >
           <button className="pill" style={{ color: 'var(--danger)' }} onClick={() => setConfirmReset(true)}>
             <Trash2 size={14} />
             Reset everything
@@ -1042,6 +1033,17 @@ export function Settings() {
             <Sparkles size={14} />
             Claude Code
           </a>
+        </Row>
+        <Row label="Keyboard shortcuts" hint="Space to play/pause, arrows to seek, and more.">
+          <Switch
+            checked={settings.keyboardShortcuts}
+            onChange={(value) => settings.set('keyboardShortcuts', value)}
+            label="Keyboard shortcuts"
+          />
+          <button className="pill" onClick={() => setShortcuts(true)}>
+            <Keyboard size={14} />
+            View
+          </button>
         </Row>
         <Row label="Version">
           <span className="value" style={{ minWidth: 120 }}>{__KULTR_VERSION__}</span>

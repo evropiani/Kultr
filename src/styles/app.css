@@ -2310,3 +2310,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* A track shelf split into two columns on the home page. */
+.shelf-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+  align-items: start;
+}
+@media (max-width: 1080px) {
+  .shelf-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Lists that drop the album/artist column — the title cell already names the
+   artist, so in a narrow column it would just be saying it twice. */
+.tracks[data-secondary='none'] .col-album {
+  display: none;
+}
+.tracks[data-secondary='none'] .trackrow,
+.tracks[data-secondary='none'] .tracks__header {
+  grid-template-columns: 24px 34px minmax(0, 1fr) 84px auto;
+}

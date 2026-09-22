@@ -269,10 +269,30 @@ function buildShelves(
 ): { tile: HomeTile; body: React.ReactNode }[] {
   const out: { tile: HomeTile; body: React.ReactNode }[] = []
 
-  const songList = (songs: Song[], source: string) =>
-    songs.length ? (
-      <TrackList songs={songs} source={source} numbering="none" sortable={false} />
-    ) : null
+  // Track shelves run in two columns: ten names stacked in one column is a lot
+  // of vertical space for a glance, and half the width has no room for a
+  // second column that only repeats the artist already under the title.
+  const songList = (songs: Song[], source: string) => {
+    if (!songs.length) return null
+    const half = Math.ceil(songs.length / 2)
+    const columns = songs.length > 3 ? [songs.slice(0, half), songs.slice(half)] : [songs]
+    return (
+      <div className="shelf-split">
+        {columns.map((column, index) =>
+          column.length ? (
+            <TrackList
+              key={index}
+              songs={column}
+              source={source}
+              numbering="none"
+              sortable={false}
+              hideSecondary
+            />
+          ) : null,
+        )}
+      </div>
+    )
+  }
   const albumGrid = (albums: Album[]) =>
     albums.length ? (
       <Grid>
