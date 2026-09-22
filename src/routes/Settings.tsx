@@ -1011,7 +1011,7 @@ export function Settings() {
             rel="noreferrer"
           >
             <MessageCircle size={14} />
-            @evropioani
+            @evropiani
           </a>
         </Row>
       </Section>

@@ -12,7 +12,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 [Try the live demo](https://evropiani.github.io/Kultr/) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-Questions or ideas? Find me on Discord: [@evropioani](https://discord.com/users/319246364246540288)
+Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
 </div>
 
@@ -453,7 +453,7 @@ the whole thing is structured to be readable by whoever (or whatever) picks it
 up next.
 
 Issues and pull requests are welcome either way — or find me on Discord,
-[@evropioani](https://discord.com/users/319246364246540288).
+[@evropiani](https://discord.com/users/319246364246540288).
 
 ## License
 

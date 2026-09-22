@@ -9,6 +9,11 @@ only fixed.
 
 ## 1.2.1 — 2026-09-22
 
+### 2026-09-22 14:44 — Discord handle corrected
+
+It was `@evropioani` in the About section and twice in the README. The link
+behind it was always right; only the text was wrong.
+
 ### 2026-09-22 14:27 — The splash that never goes away, explained
 
 The live site got stuck on a pulsing “KULTR” again. The app was not at fault:
