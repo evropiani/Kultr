@@ -5,6 +5,32 @@ Grouped by what you are seeing. If it is a connection error,
 
 ---
 
+## The page never loads
+
+### A pulsing “KULTR” and nothing else
+
+The app is not running. Wait a second and the splash replaces itself with what
+went wrong; the usual answer is that the host is serving Kultr's *source*
+rather than a build of it, and the page is asking the browser for
+`/src/main.tsx`, which no browser can execute.
+
+On GitHub Pages this is one setting: **Settings → Pages → Build and deployment
+→ Source → GitHub Actions**. See
+[INSTALL.md](INSTALL.md#publishing-your-own-demo-on-github-pages).
+
+### It worked yesterday and is broken today, with no relevant change
+
+Same cause, one step removed. A repository whose Pages **Source** is still a
+branch gets *two* publishers on every push: the deploy workflow, and GitHub's
+own Jekyll build of the repository (a run called *pages build and deployment*).
+They publish to the same site, so whichever finishes last wins — and which one
+that is varies by a few seconds each time. The site then alternates between
+working and showing the splash.
+
+Switching Source to **GitHub Actions** stops the Jekyll build running at all.
+
+---
+
 ## I cannot log in
 
 ### "Could not reach the server"

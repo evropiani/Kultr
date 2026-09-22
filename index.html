@@ -51,27 +51,18 @@
       //
       // If the bundle never executes, the splash below would pulse forever and
       // tell you nothing. That is a miserable way to find out your host is
-      // misconfigured, so after a few seconds we say what went wrong instead.
-      //
-      // The usual cause: a static host serving the repository source rather
-      // than a build, in which case this page still points at /src/main.tsx —
-      // TypeScript, which no browser can run.
-      window.addEventListener('load', function () {
-        setTimeout(function () {
+      // misconfigured, so we say what went wrong instead.
+      (function () {
+        function explain(why, fix) {
           var boot = document.getElementById('kultr-boot');
           var root = document.getElementById('root');
-          if (!boot || (root && root.childElementCount > 0)) return;
-
-          var unbuilt = !!document.querySelector('script[src$=".tsx"], script[src$=".ts"]');
-          var why = unbuilt
-            ? 'This page is the <strong>source</strong> of Kultr, not a build of it. It is asking the browser for <code>/src/main.tsx</code>, which is TypeScript — browsers cannot run that.'
-            : 'The app bundle did not load. It may have failed to download, or the page is being served from the wrong path.';
-          var fix = unbuilt
-            ? 'On GitHub Pages: <strong>Settings → Pages → Build and deployment → Source → GitHub Actions</strong>. That runs the build workflow, which publishes the compiled app. “Deploy from a branch” publishes the repository as-is, which is what you are seeing.'
-            : 'Check the browser console for the failing request, and that the app was built with the right base path (<code>KULTR_BASE</code>).';
-
+          // Nothing to say if the app took over, and never talk over an
+          // explanation that is already on screen — the instant one below is
+          // more specific than anything the timer can work out later.
+          if (!boot || boot.hasAttribute('data-error')) return;
+          if (root && root.childElementCount > 0) return;
           boot.innerHTML =
-            '<div style="max-width:620px;margin:0 auto;padding:28px;text-align:left;line-height:1.65;font-size:14px">' +
+            '<div style="max-width:640px;margin:0 auto;padding:28px;text-align:left;line-height:1.65;font-size:14px">' +
             '<div style="font-size:26px;font-weight:800;letter-spacing:-0.02em;margin-bottom:6px">Kultr did not start</div>' +
             '<p style="margin:0 0 14px">' + why + '</p>' +
             '<p style="margin:0 0 14px">' + fix + '</p>' +
@@ -79,8 +70,31 @@
             '<a style="color:inherit" href="https://github.com/evropiani/Kultr/blob/main/docs/INSTALL.md">docs/INSTALL.md</a>' +
             '</p></div>';
           boot.setAttribute('data-error', '');
-        }, 8000);
-      });
+        }
+
+        // The unbuilt-source case is visible the moment the document is
+        // parsed — this page is still asking for /src/main.tsx, which no
+        // browser can run. There is nothing to wait for, so say so at once
+        // rather than pulsing a logo for eight seconds first.
+        document.addEventListener('DOMContentLoaded', function () {
+          if (!document.querySelector('script[src$=".tsx"], script[src$=".ts"]')) return;
+          explain(
+            'This page is the <strong>source</strong> of Kultr, not a build of it. It is asking the browser for <code>/src/main.tsx</code>, which is TypeScript — browsers cannot run that.',
+            'On GitHub Pages: <strong>Settings → Pages → Build and deployment → Source → GitHub Actions</strong>. “Deploy from a branch” publishes the repository as-is, which is what you are seeing. Leaving it on a branch also lets GitHub’s own Jekyll build race the real one, so the site can work after one push and break after the next.'
+          );
+        });
+
+        // Everything else — a failed download, a wrong base path — can only be
+        // diagnosed by waiting to see whether the app ever takes over.
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            explain(
+              'The app bundle did not load. It may have failed to download, or the page is being served from the wrong path.',
+              'Check the browser console for the failing request, and that the app was built with the right base path (<code>KULTR_BASE</code>).'
+            );
+          }, 8000);
+        });
+      })();
     </script>
   </head>
   <body>

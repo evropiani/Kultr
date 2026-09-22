@@ -407,9 +407,20 @@ workflow for it at `.github/workflows/deploy.yml` — it builds on every push to
 If Source is left on *Deploy from a branch*, GitHub serves the repository
 contents verbatim — and the repository contains TypeScript source, not a built
 app. The root `index.html` asks the browser for `/src/main.tsx`, which no
-browser can run, so you get a blank page. The build step is what turns the
-source into something a browser understands, and only the *GitHub Actions*
-source runs it.
+browser can run, so you get a pulsing “KULTR” splash and nothing else. The
+build step is what turns the source into something a browser understands, and
+only the *GitHub Actions* source runs it.
+
+Worse, it does not fail consistently. Leaving Source on a branch means
+**GitHub runs its own Jekyll build on every push as well**, alongside the
+workflow — you will see a run called *pages build and deployment* next to
+*Deploy to GitHub Pages*. Both publish to the same site, so whichever finishes
+last wins. The site then works after one push and breaks after the next, for no
+reason visible in the diff. Switching Source to *GitHub Actions* stops the
+Jekyll build running at all, which is what removes the race.
+
+The workflow now checks this and fails with that message rather than
+publishing into a coin flip.
 
 After that, pushing to `main` publishes to
 `https://<your-username>.github.io/<repo>/`. The workflow works out the

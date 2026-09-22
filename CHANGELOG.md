@@ -7,6 +7,44 @@ only fixed.
 
 ---
 
+## 1.2.1 — 2026-09-22
+
+### 2026-09-22 14:27 — The splash that never goes away, explained
+
+The live site got stuck on a pulsing “KULTR” again. The app was not at fault:
+every build, the service-worker upgrade path and the settings migration were
+checked against a real library and booted cleanly.
+
+The cause is a repository setting. **Pages is still set to “Deploy from a
+branch”**, which means GitHub runs its own Jekyll build of the repository on
+every push *as well as* the deploy workflow — two publishers, one site,
+whichever finishes last wins. On the 1.1.0 push the workflow landed five
+seconds after Jekyll and the site was fine. On the 1.2.0 push Jekyll landed
+eight seconds after the workflow, so the published site became the repository
+verbatim: an `index.html` asking for `/src/main.tsx`, which no browser can run.
+Nothing ever mounts, so nothing ever removes the splash.
+
+That coin flip has been there since the beginning; it has simply been landing
+the right way up.
+
+The fix is one setting — **Settings → Pages → Build and deployment → Source →
+GitHub Actions** — which also stops the Jekyll build running at all. Until
+that is changed, no push can be relied on to publish.
+
+Three changes here so this can never be mysterious again:
+
+- **The splash explains itself immediately.** The unbuilt-source case is
+  visible the moment the document is parsed, so there is nothing to wait for.
+  It used to pulse for eight seconds first, which is exactly long enough to
+  look like a boot loop and not long enough for anyone to wait.
+- **The deploy fails instead of racing.** The workflow now reads the Pages
+  build type and stops with the setting to change if it is still `legacy`. A
+  red deploy naming the fix beats a green one that leaves a coin flip in place.
+- **Documented** in INSTALL.md and TROUBLESHOOTING.md, including the
+  works-then-breaks symptom, which is the confusing part.
+
+---
+
 ## 1.2.0 — 2026-09-22
 
 A home page you choose the contents of, casting, custom CSS, and four fixes.
