@@ -13,15 +13,17 @@ import {
   Keyboard,
   LayoutGrid,
   LogOut,
-  MessageCircle,
   Minus,
   Palette,
   Plus,
   Server,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  Upload,
+  Tag,
   Trash2,
+  Upload,
+  User,
   Volume2,
 } from 'lucide-react'
 import { destroyDatabase } from '@/db'
@@ -57,7 +59,34 @@ import {
   type ThemeMode,
 } from '@/store/settings'
 import { useToast, useUi } from '@/store/ui'
-import { Modal, Row, Section, Segmented, SliderRow, Switch } from '@/components/ui'
+import { Modal, Row, Section, Segmented, SliderRow, Spinner, Switch } from '@/components/ui'
+import { DiscordIcon } from '@/components/icons'
+
+/**
+ * A settings section that remembers whether it is open.
+ *
+ * Keyed by title rather than a separate id: there is exactly one section per
+ * title, and renaming one simply means it starts closed again, which is a
+ * better trade than threading ids through every call site.
+ */
+function Panel(props: Parameters<typeof Section>[0]) {
+  const open = useSettings((state) => state.openSettingsSections)
+  const setSetting = useSettings((state) => state.set)
+  const isOpen = open.includes(props.title)
+  return (
+    <Section
+      {...props}
+      collapsible
+      open={isOpen}
+      onToggle={(next) =>
+        setSetting(
+          'openSettingsSections',
+          next ? [...open, props.title] : open.filter((title) => title !== props.title),
+        )
+      }
+    />
+  )
+}
 
 export function Settings() {
   const settings = useSettings()
@@ -66,6 +95,8 @@ export function Settings() {
   const setShortcuts = useUi((state) => state.setShortcuts)
   const offline = useOffline()
   const [confirmReset, setConfirmReset] = useState(false)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [confirmServerExport, setConfirmServerExport] = useState(false)
   const toast = useToast()
   const importInput = useRef<HTMLInputElement>(null)
 
@@ -74,8 +105,13 @@ export function Settings() {
       const result = readSettingsFile(JSON.parse(await file.text()))
       settings.merge(result.patch)
       engine.applyEq()
+      const added = result.servers.length ? auth.importProfiles(result.servers) : 0
       const extra = result.skipped.length ? `, ${result.skipped.length} skipped` : ''
-      toast.show(`Imported ${result.applied.length} settings${extra}.`, 'success')
+      const servers = added ? `, ${added} server${added === 1 ? '' : 's'} added` : ''
+      toast.show(`Imported ${result.applied.length} settings${extra}${servers}.`, 'success')
+      if (added) {
+        toast.show('Imported servers need a username and password before they can connect.', 'info', 9000)
+      }
     } catch (err) {
       toast.show((err as Error).message || 'That file could not be read.', 'error')
     }
@@ -96,7 +132,7 @@ export function Settings() {
       </div>
 
       {/* ------------------------------------------------------ appearance */}
-      <Section title="Appearance" icon={<Palette size={16} />}>
+      <Panel title="Appearance" icon={<Palette size={16} />}>
         <Row label="Theme">
           <Segmented<ThemeMode>
             value={settings.theme}
@@ -285,10 +321,30 @@ export function Settings() {
             label="Compact track rows"
           />
         </Row>
-      </Section>
+      </Panel>
+
+      {/* ------------------------------------------------------- home page */}
+      <Panel
+        title="Home page"
+        icon={<LayoutGrid size={16} />}
+        description="Which shelves the home page shows, and in what order. A shelf with nothing to put in it is skipped rather than shown empty, so switching one on may change nothing until there is something to fill it."
+        actions={
+          <button
+            className="pill"
+            onClick={() => settings.set('homeTiles', [...DEFAULT_SETTINGS.homeTiles])}
+          >
+            Reset to defaults
+          </button>
+        }
+      >
+        <HomeTileEditor
+          value={settings.homeTiles}
+          onChange={(value) => settings.set('homeTiles', value)}
+        />
+      </Panel>
 
       {/* -------------------------------------------------------- crossfade */}
-      <Section
+      <Panel
         title="Crossfade"
         icon={<Blend size={16} />}
         description="Overlap the end of one track with the start of the next. InjeKt overrides these numbers when it is switched on and knows both tracks."
@@ -347,10 +403,10 @@ export function Settings() {
             label="Gapless playback"
           />
         </Row>
-      </Section>
+      </Panel>
 
       {/* ---------------------------------------------------------- injekt */}
-      <Section
+      <Panel
         title="InjeKt"
         icon={<Sparkles size={16} />}
         description="Kultr analyses each track's tempo, key, energy and structure, then mixes like a DJ would: it starts the blend at the outro, beat-matches the incoming track, swaps the basslines over and skips long intros. Everything degrades to a normal crossfade when two tracks simply do not fit."
@@ -470,10 +526,10 @@ export function Settings() {
             label="Analyse ahead"
           />
         </Row>
-      </Section>
+      </Panel>
 
       {/* ------------------------------------------------------------ audio */}
-      <Section title="Audio" icon={<Volume2 size={16} />}>
+      <Panel title="Audio" icon={<Volume2 size={16} />}>
         <Row
           label="Volume levelling"
           hint="Uses the ReplayGain tags Navidrome reports so quiet and loud albums play at a similar level."
@@ -573,10 +629,10 @@ export function Settings() {
             label="Resume on start"
           />
         </Row>
-      </Section>
+      </Panel>
 
       {/* ------------------------------------------------------- equaliser */}
-      <Section
+      <Panel
         title="Equaliser"
         icon={<SlidersHorizontal size={16} />}
         description={
@@ -657,11 +713,10 @@ export function Settings() {
             format={(value) => `${value > 0 ? '+' : ''}${value.toFixed(1)} dB`}
           />
         </Row>
-      </Section>
-
+      </Panel>
 
       {/* --------------------------------------------------------- offline */}
-      <Section
+      <Panel
         title="Offline"
         icon={<FolderDown size={16} />}
         description="Where “Sync offline” puts the audio. Syncing is incremental — running it again only fetches tracks you do not already have."
@@ -768,10 +823,10 @@ export function Settings() {
             label="Prefer offline copies"
           />
         </Row>
-      </Section>
+      </Panel>
 
       {/* ------------------------------------------------------- interface */}
-      <Section title="Interface" icon={<Gauge size={16} />}>
+      <Panel title="Player" icon={<Gauge size={16} />}>
         <Row label="Show lyrics tab">
           <Switch
             checked={settings.showLyrics}
@@ -790,30 +845,10 @@ export function Settings() {
             View
           </button>
         </Row>
-      </Section>
-
-      {/* ------------------------------------------------------- home page */}
-      <Section
-        title="Home page"
-        icon={<LayoutGrid size={16} />}
-        description="Which shelves the home page shows, and in what order. A shelf with nothing to put in it is skipped rather than shown empty, so switching one on may change nothing until there is something to fill it."
-        actions={
-          <button
-            className="pill"
-            onClick={() => settings.set('homeTiles', [...DEFAULT_SETTINGS.homeTiles])}
-          >
-            Reset to defaults
-          </button>
-        }
-      >
-        <HomeTileEditor
-          value={settings.homeTiles}
-          onChange={(value) => settings.set('homeTiles', value)}
-        />
-      </Section>
+      </Panel>
 
       {/* -------------------------------------------------------- custom css */}
-      <Section
+      <Panel
         title="Custom CSS"
         icon={<Code2 size={16} />}
         description="Applied last, so it overrides everything else. Kultr's own class names are not a stable interface — they can change between versions, and a rule that stops matching simply does nothing. Useful variables: --accent-r/g/b, --glass-tint, --glass-edge, --ink, --r-lg."
@@ -842,17 +877,17 @@ export function Settings() {
             Clear
           </button>
         </Row>
-      </Section>
+      </Panel>
 
       {/* ---------------------------------------------------------- backup */}
-      <Section
+      <Panel
         title="Backup"
         icon={<Download size={16} />}
-        description="Carry your setup to another browser or machine. The file holds your preferences only — no servers, no usernames and no passwords, so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too."
+        description="Carry your setup to another browser or machine. A plain export holds your preferences only — no servers, no usernames and no passwords — so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too."
       >
         <Row
           label="Export settings"
-          hint="Saves a small JSON file with everything in this page except your servers."
+          hint="Saves a small JSON file with everything on this page. Your servers are not in it."
         >
           <button
             className="pill"
@@ -863,6 +898,19 @@ export function Settings() {
           >
             <Download size={14} />
             Export
+          </button>
+          <button
+            className="pill"
+            disabled={auth.profiles.length === 0}
+            title={
+              auth.profiles.length === 0
+                ? 'No servers saved yet'
+                : 'Include the list of servers as well'
+            }
+            onClick={() => setConfirmServerExport(true)}
+          >
+            <Server size={14} />
+            Export with servers
           </button>
         </Row>
         <Row
@@ -885,10 +933,10 @@ export function Settings() {
             Import
           </button>
         </Row>
-      </Section>
+      </Panel>
 
       {/* --------------------------------------------------------- account */}
-      <Section
+      <Panel
         title="Servers"
         icon={<Server size={16} />}
         description="Add as many Navidrome servers as you like. Switching servers swaps the library, queue and downloads for that server's own. Turning one off keeps it in the list without connecting to it."
@@ -909,13 +957,15 @@ export function Settings() {
         {auth.profiles.map((profile) => {
           const active = profile.id === auth.activeId
           const enabled = profile.enabled !== false
+          // Servers restored from an export have no username yet.
+          const incomplete = !profile.username
           return (
             <Row
               key={profile.id}
               label={profile.label}
-              hint={`${profile.username} · ${profile.serverUrl || 'same origin as this page'}${
-                active ? ' · connected' : enabled ? '' : ' · switched off'
-              }`}
+              hint={`${incomplete ? 'No sign-in details yet' : profile.username} · ${
+                profile.serverUrl || 'same origin as this page'
+              }${active ? ' · connected' : enabled ? '' : ' · switched off'}`}
             >
               <Switch
                 checked={enabled}
@@ -929,8 +979,14 @@ export function Settings() {
               ) : (
                 <button
                   className="pill"
-                  disabled={!enabled}
-                  title={enabled ? 'Connect to this server' : 'Switch it on first'}
+                  disabled={!enabled || incomplete}
+                  title={
+                    incomplete
+                      ? 'Add a username and password first'
+                      : enabled
+                        ? 'Connect to this server'
+                        : 'Switch it on first'
+                  }
                   onClick={() => void auth.switchProfile(profile.id)}
                 >
                   Connect
@@ -938,12 +994,9 @@ export function Settings() {
               )}
               <button
                 className="pill pill-icon"
-                aria-label={`Rename ${profile.label}`}
-                title="Rename"
-                onClick={() => {
-                  const next = window.prompt('Name for this server', profile.label)
-                  if (next !== null) auth.renameProfile(profile.id, next)
-                }}
+                aria-label={`Edit ${profile.label}`}
+                title="Edit this server"
+                onClick={() => setEditing(profile.id)}
               >
                 <Pencil size={14} />
               </button>
@@ -977,9 +1030,9 @@ export function Settings() {
             Reset everything
           </button>
         </Row>
-      </Section>
+      </Panel>
 
-      <Section
+      <Panel
         title="About"
         icon={<Info size={16} />}
         description="Kultr was vibecoded with Claude Code — designed, written, tested and deployed by prompting Anthropic's CLI rather than by hand. The whole thing, from the tempo detection to the reverse proxy, came out of that conversation."
@@ -1010,11 +1063,52 @@ export function Settings() {
             target="_blank"
             rel="noreferrer"
           >
-            <MessageCircle size={14} />
+            <DiscordIcon size={14} />
             @evropiani
           </a>
         </Row>
-      </Section>
+      </Panel>
+
+      <ServerDialog id={editing} onClose={() => setEditing(null)} />
+
+      <Modal
+        open={confirmServerExport}
+        onClose={() => setConfirmServerExport(false)}
+        title="Export with servers?"
+        footer={
+          <>
+            <button className="pill" onClick={() => setConfirmServerExport(false)}>
+              Cancel
+            </button>
+            <button
+              className="pill pill-accent"
+              onClick={() => {
+                const name = downloadSettingsFile(
+                  buildSettingsFile(settings, __KULTR_VERSION__, auth.profiles),
+                )
+                setConfirmServerExport(false)
+                toast.show(`Saved ${name}.`, 'success')
+              }}
+            >
+              <Download size={14} />
+              Export with servers
+            </button>
+          </>
+        }
+      >
+        <p className="row__hint" style={{ fontSize: 13 }}>
+          The file will list the name and address of each of your
+          {' '}
+          {auth.profiles.length === 1 ? 'server' : `${auth.profiles.length} servers`}. Usernames and
+          passwords are <strong>never</strong> included, so nobody could sign in with it — but the
+          addresses say where your music lives, and for a server reachable from the internet that is
+          worth keeping to yourself.
+        </p>
+        <p className="row__hint" style={{ fontSize: 13, marginTop: 10 }}>
+          <strong>Do not share this file.</strong> Use the plain export if you want something you can
+          pass on or paste into an issue.
+        </p>
+      </Modal>
 
       <Modal
         open={confirmReset}
@@ -1146,5 +1240,165 @@ function HomeTileEditor({
         </>
       ) : null}
     </>
+  )
+}
+
+/* ------------------------------------------------------------------ servers */
+
+/**
+ * Edit a saved server's connection details.
+ *
+ * The password box starts empty and a blank one means "leave it alone" — the
+ * stored password is never rendered back into the DOM. Changing the address or
+ * the username makes this a different server as far as Kultr is concerned, so
+ * the dialog says so rather than letting it look like a cosmetic edit.
+ */
+function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void }) {
+  const auth = useAuth()
+  const toast = useToast()
+  const profile = auth.profiles.find((entry) => entry.id === id) ?? null
+
+  const [label, setLabel] = useState('')
+  const [serverUrl, setServerUrl] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [plainAuth, setPlainAuth] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  // Reload the fields whenever a different server is opened.
+  useEffect(() => {
+    if (!profile) return
+    setLabel(profile.label)
+    setServerUrl(profile.serverUrl)
+    setUsername(profile.username)
+    setPassword('')
+    setPlainAuth(profile.authMode === 'plain')
+  }, [profile?.id])
+
+  if (!profile) return null
+
+  const identityChanged =
+    serverUrl.trim().replace(/\/+$/, '') !== profile.serverUrl || username.trim() !== profile.username
+
+  const save = async () => {
+    setBusy(true)
+    const ok = await auth.updateProfile(profile.id, {
+      label,
+      serverUrl,
+      username,
+      password,
+      authMode: plainAuth ? 'plain' : 'token',
+    })
+    setBusy(false)
+    if (ok) {
+      toast.show(`${label.trim() || profile.label} saved.`, 'success')
+      onClose()
+    } else {
+      toast.show(auth.error ?? 'Could not connect with those details.', 'error')
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Edit ${profile.label}`}
+      footer={
+        <>
+          <button className="pill" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="pill pill-accent"
+            disabled={busy || !username.trim()}
+            onClick={() => void save()}
+          >
+            {busy ? <Spinner /> : null}
+            {busy ? 'Saving…' : 'Save'}
+          </button>
+        </>
+      }
+    >
+      <div className="login__field">
+        <label htmlFor="edit-label">Name</label>
+        <div className="field">
+          <Tag size={16} opacity={0.6} />
+          <input
+            id="edit-label"
+            value={label}
+            placeholder={profile.serverUrl}
+            spellCheck={false}
+            onChange={(event) => setLabel(event.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="login__field" style={{ marginTop: 12 }}>
+        <label htmlFor="edit-url">Server address</label>
+        <div className="field">
+          <Server size={16} opacity={0.6} />
+          <input
+            id="edit-url"
+            value={serverUrl}
+            placeholder="https://music.example.com"
+            autoComplete="url"
+            spellCheck={false}
+            onChange={(event) => setServerUrl(event.target.value)}
+          />
+        </div>
+        <span className="login__hint">
+          Leave empty if Kultr is served from the same address as Navidrome.
+        </span>
+      </div>
+
+      <div className="login__field" style={{ marginTop: 12 }}>
+        <label htmlFor="edit-user">Username</label>
+        <div className="field">
+          <User size={16} opacity={0.6} />
+          <input
+            id="edit-user"
+            value={username}
+            autoComplete="username"
+            spellCheck={false}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="login__field" style={{ marginTop: 12 }}>
+        <label htmlFor="edit-pass">
+          Password <span className="login__optional">leave empty to keep the current one</span>
+        </label>
+        <div className="field">
+          <ShieldCheck size={16} opacity={0.6} />
+          <input
+            id="edit-pass"
+            type="password"
+            value={password}
+            autoComplete="current-password"
+            placeholder={profile.password ? '••••••••' : 'Not set'}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="row" style={{ borderTop: 0, paddingBottom: 0 }}>
+        <div className="row__text">
+          <span className="row__label">Send the password in plain form</span>
+          <span className="row__hint">
+            Only needed if your server has token authentication disabled.
+          </span>
+        </div>
+        <Switch checked={plainAuth} onChange={setPlainAuth} label="Plain password" />
+      </div>
+
+      {identityChanged ? (
+        <p className="row__hint" style={{ marginTop: 4 }}>
+          Changing the address or the username points this entry at a different
+          account, so Kultr treats it as a different server. The local library mirror is
+          replaced the next time you sync.
+        </p>
+      ) : null}
+    </Modal>
   )
 }

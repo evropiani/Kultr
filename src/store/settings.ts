@@ -129,6 +129,11 @@ export interface SettingsState {
   favouriteRadios: string[]
   /** Stylesheet injected verbatim, last, so it can override anything. */
   customCss: string
+  /**
+   * Titles of the Settings sections left expanded. Everything starts closed —
+   * the page is long enough that a list of headings is the more useful view.
+   */
+  openSettingsSections: string[]
   /** Right-hand pane of the full-screen player. */
   showPlayerPanel: boolean
   discordLikeRichPresence: boolean
@@ -206,6 +211,7 @@ export const DEFAULT_SETTINGS = {
   homeTiles: ['mostPlayedSongs', 'mostPlayedAlbums', 'randomSongs', 'mostPlayedArtists'],
   favouriteRadios: [] as string[],
   customCss: '',
+  openSettingsSections: [] as string[],
   showPlayerPanel: true,
   discordLikeRichPresence: false,
   keyboardShortcuts: true,

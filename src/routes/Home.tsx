@@ -19,7 +19,7 @@ import { useAsync } from '@/lib/hooks'
 import { formatCount, formatRelative } from '@/lib/format'
 import { HOME_TILES, resolveHomeTiles, type HomeTile } from '@/lib/homeTiles'
 import { usePlayer } from '@/store/player'
-import { useSettings } from '@/store/settings'
+import { useSettings, type GridSize } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { buildAutoQueue } from '@/audio/injekt'
 import { AlbumCard, ArtistCard, Grid, PlaylistCard } from '@/components/Cards'
@@ -54,7 +54,15 @@ const TILE_ICONS: Record<string, React.ReactNode> = {
 }
 
 const SONG_LIMIT = 10
-const CARD_LIMIT = 12
+
+/**
+ * How many cards fill a shelf, per grid size.
+ *
+ * Small and medium cards pack more per row, so a fixed count left a ragged
+ * gap on the last line. These are the lowest common multiples that come out
+ * even at the column counts each size produces on a normal window.
+ */
+const CARD_LIMITS: Record<GridSize, number> = { large: 12, medium: 16, small: 20 }
 
 export function Home() {
   const navigate = useNavigate()
@@ -63,6 +71,10 @@ export function Home() {
   const run = useSync((state) => state.run)
   const tileIds = useSettings((state) => state.homeTiles)
   const favouriteRadios = useSettings((state) => state.favouriteRadios)
+  const gridSize = useSettings((state) => state.gridSize)
+  const openSections = useSettings((state) => state.openSettingsSections)
+  const setSetting = useSettings((state) => state.set)
+  const cardLimit = CARD_LIMITS[gridSize] ?? 12
 
   const tiles = useMemo(() => resolveHomeTiles(tileIds), [tileIds])
   const wantsRadio = tiles.some((tile) => tile.kind === 'radios')
@@ -102,9 +114,9 @@ export function Home() {
   const randomKey = `${data.songs.length}:${data.albums.length}:${shuffleSeed.current}`
 
   const content = useMemo(
-    () => buildShelves(tiles, data, stations, favouriteRadios),
+    () => buildShelves(tiles, data, stations, favouriteRadios, cardLimit),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tiles, data, stations, favouriteRadios, randomKey],
+    [tiles, data, stations, favouriteRadios, cardLimit, randomKey],
   )
 
   if (!loading && data.albums.length === 0) {
@@ -190,7 +202,17 @@ export function Home() {
           ) : null}
 
           <div style={{ marginTop: 32, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className="pill" onClick={() => navigate('/settings')}>
+            <button
+              className="pill"
+              onClick={() => {
+                // Settings sections start collapsed, so open the relevant one
+                // rather than landing on a page of shut headings.
+                if (!openSections.includes('Home page')) {
+                  setSetting('openSettingsSections', [...openSections, 'Home page'])
+                }
+                navigate('/settings')
+              }}
+            >
               <SettingsIcon size={14} />
               Customise this page
             </button>
@@ -243,6 +265,7 @@ function buildShelves(
   data: LibraryData,
   stations: RadioStation[],
   favouriteRadios: string[],
+  cardLimit: number,
 ): { tile: HomeTile; body: React.ReactNode }[] {
   const out: { tile: HomeTile; body: React.ReactNode }[] = []
 
@@ -298,7 +321,7 @@ function buildShelves(
         body = songList(byPlayCount(data.songs, SONG_LIMIT), 'Played the most')
         break
       case 'mostPlayedAlbums':
-        body = albumGrid(byPlayCount(data.albums, CARD_LIMIT))
+        body = albumGrid(byPlayCount(data.albums, cardLimit))
         break
       case 'mostPlayedArtists': {
         // Artists carry no play count of their own, so it is summed from the
@@ -311,7 +334,7 @@ function buildShelves(
         const ranked = data.artists
           .filter((artist) => totals.has(artist.id))
           .sort((a, b) => (totals.get(b.id) ?? 0) - (totals.get(a.id) ?? 0))
-          .slice(0, CARD_LIMIT)
+          .slice(0, cardLimit)
         body = artistGrid(ranked)
         break
       }
@@ -325,7 +348,7 @@ function buildShelves(
         const ranked = data.playlists
           .filter((playlist) => totals.has(playlist.id))
           .sort((a, b) => (totals.get(b.id) ?? 0) - (totals.get(a.id) ?? 0))
-          .slice(0, CARD_LIMIT)
+          .slice(0, cardLimit)
         body = playlistGrid(ranked)
         break
       }
@@ -333,16 +356,16 @@ function buildShelves(
         body = songList(sample(data.songs, SONG_LIMIT), 'Something else')
         break
       case 'randomAlbums':
-        body = albumGrid(sample(data.albums, CARD_LIMIT))
+        body = albumGrid(sample(data.albums, cardLimit))
         break
       case 'randomArtists':
-        body = artistGrid(sample(data.artists, CARD_LIMIT))
+        body = artistGrid(sample(data.artists, cardLimit))
         break
       case 'recentlyAdded':
         body = albumGrid(
           [...data.albums]
             .sort((a, b) => (b.created ?? '').localeCompare(a.created ?? ''))
-            .slice(0, CARD_LIMIT),
+            .slice(0, cardLimit),
         )
         break
       case 'favouriteSongs':
@@ -352,16 +375,16 @@ function buildShelves(
         )
         break
       case 'favouriteAlbums':
-        body = albumGrid(data.albums.filter((album) => album.starred).slice(0, CARD_LIMIT))
+        body = albumGrid(data.albums.filter((album) => album.starred).slice(0, cardLimit))
         break
       case 'favouriteArtists':
-        body = artistGrid(data.artists.filter((artist) => artist.starred).slice(0, CARD_LIMIT))
+        body = artistGrid(data.artists.filter((artist) => artist.starred).slice(0, cardLimit))
         break
       case 'favouritePlaylists':
         body = playlistGrid(
           [...data.playlists]
             .sort((a, b) => (b.changed ?? b.created ?? '').localeCompare(a.changed ?? a.created ?? ''))
-            .slice(0, CARD_LIMIT),
+            .slice(0, cardLimit),
         )
         break
       case 'favouriteRadios': {

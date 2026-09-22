@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { ChevronDown, X } from 'lucide-react'
 import clsx from 'clsx'
 import { initials } from '@/lib/format'
 import { useDismiss } from '@/lib/hooks'
@@ -148,28 +148,66 @@ export function Row({
   )
 }
 
+/**
+ * A titled panel.
+ *
+ * With `collapsible`, the heading becomes the toggle and only the title,
+ * description and actions stay visible when it is shut. The body is left out
+ * of the DOM entirely rather than hidden, so a long settings page costs
+ * nothing to render while its sections are closed.
+ */
 export function Section({
   title,
   icon,
   description,
   actions,
+  collapsible,
+  open = true,
+  onToggle,
   children,
 }: {
   title: string
   icon?: ReactNode
   description?: ReactNode
   actions?: ReactNode
+  collapsible?: boolean
+  open?: boolean
+  onToggle?: (open: boolean) => void
   children: ReactNode
 }) {
+  if (!collapsible) {
+    return (
+      <section className="section glass">
+        <div className="section__head">
+          {icon}
+          <h3>{title}</h3>
+          {actions}
+        </div>
+        {description ? <p className="section__desc">{description}</p> : null}
+        {children}
+      </section>
+    )
+  }
+
   return (
-    <section className="section glass">
+    <section className="section glass" data-open={open}>
       <div className="section__head">
-        {icon}
-        <h3>{title}</h3>
-        {actions}
+        <button
+          type="button"
+          className="section__toggle"
+          aria-expanded={open}
+          onClick={() => onToggle?.(!open)}
+        >
+          {icon}
+          <h3>{title}</h3>
+          <ChevronDown className="section__chevron" size={18} aria-hidden="true" />
+        </button>
+        {/* Outside the toggle: a button inside a button is invalid, and these
+            are their own actions rather than ways to open the section. */}
+        {open ? actions : null}
       </div>
       {description ? <p className="section__desc">{description}</p> : null}
-      {children}
+      {open ? children : null}
     </section>
   )
 }

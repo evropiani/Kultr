@@ -7,6 +7,55 @@ only fixed.
 
 ---
 
+## 1.3.0 — 2026-09-22
+
+### 2026-09-22 15:08 — Settings is a list you can skim
+
+Every section collapses. The page shows its headings and descriptions, and you
+open the one you want with the arrow on the right. What is open is remembered,
+and the body of a closed section is not rendered at all rather than hidden.
+
+The order now follows how often things get touched: **Appearance, Home page,
+Crossfade, InjeKt, Audio, Equaliser, Offline, Player, Custom CSS, Backup,
+Servers, About**. *Interface* is now *Player*, which is what it was always
+about.
+
+### 2026-09-22 15:08 — Shelves fill the row at every grid size
+
+A shelf always showed twelve cards. Twelve fills the row at the large size and
+leaves a ragged gap at the other two, so it is now **12 large, 16 medium, 20
+small**.
+
+### 2026-09-22 15:08 — The pen edits the server, not just its name
+
+It used to open a browser prompt that could only rename. It now opens a proper
+dialog with the name, the **server address**, the **username**, the
+**password** and the plain-password switch.
+
+The stored password is never rendered back into the page — the box starts
+empty and leaving it that way keeps the existing one. Changing the address or
+the username makes this a different account, so the dialog says so before you
+save, and saving reconnects if it is the server you are on.
+
+### 2026-09-22 15:08 — Exporting your servers, if you ask
+
+A second button beside **Export**: *Export with servers*. It asks first, and
+says plainly that the file names where your music lives and should not be
+shared.
+
+**Usernames and passwords are never in it** — not just passwords. The list is
+rebuilt field by field from the label, the address and the auth mode, so a
+profile growing a new property later cannot start leaking into exports by
+accident, and anything credential-shaped in a file being imported is ignored
+rather than trusted. Imported servers arrive needing a username and password,
+which the new dialog is how you supply.
+
+### 2026-09-22 15:08 — The Discord link has the Discord mark
+
+It was a generic speech bubble.
+
+---
+
 ## 1.2.1 — 2026-09-22
 
 ### 2026-09-22 14:44 — Discord handle corrected

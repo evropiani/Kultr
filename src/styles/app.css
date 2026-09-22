@@ -1555,6 +1555,47 @@
   margin: -4px 0 12px;
   line-height: 1.55;
 }
+
+/* Collapsed sections keep their heading and description, so the page reads as
+   a table of contents until you open something. */
+.section[data-open='false'] {
+  gap: 0;
+}
+.section[data-open='false'] .section__head {
+  margin-bottom: 0;
+}
+.section[data-open='false'] .section__desc {
+  margin-bottom: 0;
+}
+.section__toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-align: left;
+  color: inherit;
+  border-radius: var(--r-xs);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.section__toggle h3 {
+  flex: 1;
+  min-width: 0;
+}
+.section__toggle:hover {
+  color: var(--accent);
+}
+.section__chevron {
+  flex: none;
+  color: var(--ink-3);
+  transition: transform var(--dur) var(--ease-spring);
+}
+.section[data-open='true'] .section__chevron {
+  transform: rotate(180deg);
+}
+:root[data-motion='reduced'] .section__chevron {
+  transition: none;
+}
 .row {
   display: flex;
   align-items: center;

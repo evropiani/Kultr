@@ -63,7 +63,7 @@ Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/3
 | **Cast** | Send playback to a Chromecast or an AirPlay device, where the browser supports it. |
 | **Make it yours** | Light and dark, three corner styles, six playhead designs, borders that take the accent colour, opacity sliders for both, and an accent you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
 | **Custom CSS** | A box in Settings for your own stylesheet, applied last so it overrides everything. |
-| **Settings backup** | Export every preference to a small JSON file and import it on another machine. Servers and passwords are never in it. |
+| **Settings backup** | Export every preference to a small JSON file and import it on another machine. Passwords and usernames are never in it; the list of servers is left out too unless you explicitly ask for it. |
 | **Equaliser** | Ten bands, nine presets, pre-amp. |
 | **Volume levelling** | ReplayGain, per track or per album, with clipping protection. |
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |

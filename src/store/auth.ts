@@ -66,6 +66,16 @@ export interface AuthState {
   removeProfile: (id: string) => void
   setProfileEnabled: (id: string, enabled: boolean) => void
   renameProfile: (id: string, label: string) => void
+  /**
+   * Change a saved server's connection details. A blank password keeps the
+   * one already stored, so the dialog never has to show it back.
+   */
+  updateProfile: (
+    id: string,
+    patch: Partial<Pick<ServerProfile, 'label' | 'serverUrl' | 'username' | 'password' | 'authMode'>>,
+  ) => Promise<boolean>
+  /** Add servers from a settings export. They arrive without credentials. */
+  importProfiles: (servers: { label: string; serverUrl: string; authMode?: Credentials['authMode'] }[]) => number
   logout: (options?: { forget?: boolean }) => void
   activeProfile: () => ServerProfile | null
 }
@@ -189,6 +199,83 @@ export const useAuth = create<AuthState>()(
             profile.id === id ? { ...profile, label: label.trim() || profile.label } : profile,
           ),
         }))
+      },
+
+      async updateProfile(id, patch) {
+        const existing = get().profiles.find((entry) => entry.id === id)
+        if (!existing) return false
+
+        const password = patch.password?.length ? patch.password : existing.password
+        const creds: Credentials = {
+          serverUrl: (patch.serverUrl ?? existing.serverUrl).trim().replace(/\/+$/, ''),
+          username: (patch.username ?? existing.username).trim(),
+          password,
+          authMode: patch.authMode ?? existing.authMode ?? 'token',
+        }
+        // The id is derived from the address and the username, so editing
+        // either of those makes this a different profile as far as the store
+        // and the session secrets are concerned.
+        const client = new SubsonicClient(creds)
+        const nextId = makeId(client.baseUrl, creds.username)
+        const profile: ServerProfile = {
+          ...creds,
+          serverUrl: client.baseUrl,
+          id: nextId,
+          label: (patch.label ?? existing.label).trim() || hostLabel(client.baseUrl),
+          enabled: existing.enabled,
+        }
+
+        const wasActive = get().activeId === id
+        if (nextId !== id) {
+          clearSessionSecret(id)
+          if (!get().remember && password) writeSessionSecret(nextId, password)
+        } else if (!get().remember && password) {
+          writeSessionSecret(nextId, password)
+        }
+
+        set((state) => ({
+          // Drop both the old entry and anything already sitting on the new
+          // id, so editing one server onto another's address merges them
+          // rather than leaving a duplicate.
+          profiles: [...state.profiles.filter((p) => p.id !== id && p.id !== nextId), profile],
+          activeId: wasActive ? nextId : state.activeId,
+          error: null,
+        }))
+
+        if (!wasActive) return true
+        if (profile.enabled === false || !password) {
+          setClient(null)
+          set({ status: 'idle', serverInfo: null })
+          return true
+        }
+        return get().reconnect()
+      },
+
+      importProfiles(servers) {
+        let added = 0
+        set((state) => {
+          const profiles = [...state.profiles]
+          for (const server of servers) {
+            const url = (server.serverUrl ?? '').trim().replace(/\/+$/, '')
+            // Credentials are deliberately absent from an export, so these
+            // arrive as entries waiting for a username and password.
+            const id = makeId(url, '')
+            if (profiles.some((entry) => entry.id === id)) continue
+            if (profiles.some((entry) => entry.serverUrl === url)) continue
+            profiles.push({
+              id,
+              label: server.label?.trim() || hostLabel(url),
+              serverUrl: url,
+              username: '',
+              password: '',
+              authMode: server.authMode ?? 'token',
+              enabled: true,
+            })
+            added++
+          }
+          return { profiles }
+        })
+        return added
       },
 
       removeProfile(id) {

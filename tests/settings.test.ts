@@ -59,6 +59,39 @@ assert('over-long eq trimmed to the real band count', ((hostile.patch as Record<
 assert('a free list keeps every entry', ((hostile.patch as Record<string, unknown>).homeTiles as string[]).length === 5, `-> ${((hostile.patch as Record<string, unknown>).homeTiles as string[] | undefined)?.length}`)
 assert('a list of the wrong element type is refused', why('favouriteRadios') === 'wrong shape', `-> ${why('favouriteRadios')}`)
 
+console.log('\n== Servers are only exported when asked for, and never with credentials ==')
+const plain = buildSettingsFile(state, '1.2.1')
+assert('a plain export has no servers field at all', plain.servers === undefined, `-> ${JSON.stringify(plain.servers)}`)
+
+const withServers = buildSettingsFile(state, '1.2.1', [
+  { label: 'Living room', serverUrl: 'https://music.example.com', authMode: 'token', username: 'senad', password: 'hunter2', id: 'x', enabled: true } as never,
+])
+assert('servers are included when asked for', withServers.servers?.length === 1)
+const exportedServer = JSON.stringify(withServers.servers)
+assert('no username survives the export', !/senad|username/i.test(exportedServer), `-> ${exportedServer}`)
+assert('no password survives the export', !/hunter2|password/i.test(exportedServer), `-> ${exportedServer}`)
+assert('only label, address and auth mode are written', Object.keys(withServers.servers![0]).sort().join(',') === 'authMode,label,serverUrl', `-> ${Object.keys(withServers.servers![0]).join(',')}`)
+assert('the address is kept', withServers.servers![0].serverUrl === 'https://music.example.com')
+
+console.log('\n== Servers are scrubbed again on the way back in ==')
+const back2 = readSettingsFile({
+  kind: 'kultr.settings',
+  version: 1,
+  settings: { theme: 'dark' },
+  servers: [
+    { label: 'Home', serverUrl: 'http://192.168.1.10:4533', username: 'sneaky', password: 'sneaky', authMode: 'plain' },
+    { label: 'No address', authMode: 'token' },
+    'not an object',
+  ],
+})
+assert('a well-formed server is read', back2.servers.length === 1, `-> ${back2.servers.length}`)
+assert('one without an address is dropped', !back2.servers.some((s) => !s.serverUrl))
+assert('credentials in the file are ignored', Object.keys(back2.servers[0]).sort().join(',') === 'authMode,label,serverUrl', `-> ${Object.keys(back2.servers[0]).join(',')}`)
+assert('a declared auth mode is honoured', back2.servers[0].authMode === 'plain', `-> ${back2.servers[0].authMode}`)
+assert('a file with servers but no usable settings still imports', (() => {
+  try { return readSettingsFile({ kind: 'kultr.settings', version: 1, settings: {}, servers: [{ label: 'a', serverUrl: 'http://x' }] }).servers.length === 1 } catch { return false }
+})())
+
 console.log('\n== Files that are not ours are refused outright ==')
 for (const [name, value] of [['null', null], ['a string', 'nope'], ['other json', { kind: 'something.else', settings: {} }], ['no settings', { kind: 'kultr.settings' }]] as [string, unknown][]) {
   let threw = false
