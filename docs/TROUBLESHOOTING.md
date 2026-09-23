@@ -29,6 +29,22 @@ working and showing the splash.
 
 Switching Source to **GitHub Actions** stops the Jekyll build running at all.
 
+### It broke right after I added a custom domain
+
+The build was made for the old address. A build bakes in the path it is
+served from — `/<repo>/` on `github.io`, `/` on a custom domain — and changing
+the domain under **Settings → Pages** does not start a new build. So the page
+asks for its files at `/<repo>/assets/…`, where nothing exists any more, and
+gets the 404 page back.
+
+Run **Actions → Deploy to GitHub Pages → Run workflow** once. It asks GitHub
+where the site now lives and builds for that. The page also tells you when this
+is the problem: it names the path it was built for next to the address it is
+being served from.
+
+After moving, sign in and sync again — the local library belongs to the old
+address — and update any CORS rule on your server that named the old origin.
+
 ---
 
 ## I cannot log in

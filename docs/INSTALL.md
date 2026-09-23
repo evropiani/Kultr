@@ -419,12 +419,44 @@ last wins. The site then works after one push and breaks after the next, for no
 reason visible in the diff. Switching Source to *GitHub Actions* stops the
 Jekyll build running at all, which is what removes the race.
 
-The workflow now checks this and fails with that message rather than
-publishing into a coin flip.
+The workflow checks this on every run. It cannot change the setting itself —
+the token a workflow gets may create a Pages site but not re-point one — so
+it warns, then waits for GitHub's Jekyll build to finish before publishing, so
+its own deploy always lands last. That makes the site correct, but only the
+setting makes the race go away.
 
 After that, pushing to `main` publishes to
 `https://<your-username>.github.io/<repo>/`. The workflow works out the
 sub-path on its own and copies `index.html` to `404.html` so deep links work.
+
+### Custom domains: rebuild after changing one
+
+The build bakes in the path it will be served from — `/<repo>/` on
+`github.io`, `/` on a custom domain — because every link to its own files
+depends on it. The workflow asks GitHub for that path each time it runs, so
+it always gets it right *for the address at that moment*.
+
+What it cannot do is notice the address changing afterwards. Adding, changing
+or removing a custom domain under **Settings → Pages** does not start a build,
+so the site keeps serving files built for the old address: the page asks for
+`/<repo>/assets/…` on a domain where they live at `/assets/…`, gets the 404
+page back instead, and the splash never goes away.
+
+The fix is one click, straight after changing the domain: **Actions → Deploy to
+GitHub Pages → Run workflow**. The page itself also says so — if its files
+are missing it names the path it was built for and the one it is being served
+from, instead of leaving the splash pulsing.
+
+Two side effects of moving address, both because a browser keys everything to
+the address it came from:
+
+- **Local data does not follow.** The library mirror, settings and saved
+  servers belong to the old address. Sign in and sync again on the new one;
+  **Settings → Backup and reset → Export** from the old address first carries
+  your settings over, if it still opens.
+- **CORS rules that name the old origin stop matching.** Anyone who allowed the
+  old address on their Navidrome needs to allow the new one — see
+  [CORS.md](CORS.md).
 
 A note on what you are publishing: the demo is only the client. It contains no
 music, no credentials and no server. Visitors type in their own Navidrome

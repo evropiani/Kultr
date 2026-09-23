@@ -1,6 +1,6 @@
 name: Deploy to GitHub Pages
 
-# Publishes the live demo at https://evropiani.github.io/Kultr/ so people can
+# Publishes the live demo at https://web.kultr.cc/ so people can
 # try Kultr before installing anything. The demo is just the client — it holds
 # no music and no credentials; visitors point it at their own Navidrome.
 

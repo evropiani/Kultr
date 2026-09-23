@@ -126,16 +126,19 @@ For example, using the hosted demo against your own server. You then have to
 add the headers in front of Navidrome. Be deliberate about it: this is telling
 browsers that a page you do not control may talk to your music server.
 
-Allow **one specific origin**, never `*`:
+Allow **one specific origin**, never `*`. The origin is the address of the
+page, with no path — for the hosted demo that is `https://web.kultr.cc`. It
+used to be `https://evropiani.github.io`; if you allowed that before, it no
+longer matches and needs changing:
 
 <details>
 <summary>Caddy</summary>
 
 ```caddy
 music.example.com {
-	@cors header Origin https://evropiani.github.io
+	@cors header Origin https://web.kultr.cc
 	handle /rest/* {
-		header @cors Access-Control-Allow-Origin "https://evropiani.github.io"
+		header @cors Access-Control-Allow-Origin "https://web.kultr.cc"
 		header @cors Vary "Origin"
 		reverse_proxy navidrome:4533
 	}
@@ -149,7 +152,7 @@ music.example.com {
 
 ```nginx
 location /rest/ {
-    if ($http_origin = "https://evropiani.github.io") {
+    if ($http_origin = "https://web.kultr.cc") {
         add_header Access-Control-Allow-Origin "$http_origin" always;
         add_header Vary "Origin" always;
     }

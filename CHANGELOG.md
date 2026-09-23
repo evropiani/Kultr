@@ -7,6 +7,43 @@ only fixed.
 
 ---
 
+## 1.4.1 — 2026-09-23
+
+### 2026-09-23 10:11 — Moving to web.kultr.cc, and a splash that says why
+
+The demo moved to a custom domain, **<https://web.kultr.cc/>**, and came up as
+nothing but a pulsing “KULTR”.
+
+Nothing was wrong with the app. A build bakes in the path it will be served
+from, and the one live at the time had been made for
+`evropiani.github.io/Kultr/`. On the new domain the site lives at `/`, so the
+page asked for `/Kultr/assets/…`, got GitHub's 404 page back, and the browser —
+rightly — refused to run a web page as a script. Changing the domain in the
+Pages settings does not start a build, so nothing noticed. Re-running the
+deploy was the whole fix: the workflow asks GitHub where the site lives and
+this time was told `/`.
+
+So that this is never a mystery again:
+
+- **The page diagnoses it in a fraction of a second.** A file of its own
+  failing to load is now caught as it happens, rather than after an
+  eight-second wait. If the path the build expects does not match the address
+  it is being served from, it says exactly that, names both, and says to re-run
+  the deploy. Checked against every shape it can be served in; it never fires
+  on a healthy one.
+- **Documented** in INSTALL.md (a new *Custom domains* section) and
+  TROUBLESHOOTING.md, including the two side effects of moving address: local
+  data stays with the old one, and CORS rules that named the old origin stop
+  matching.
+- **Links updated** — README, FAQ and the CORS examples now use the new
+  address. CORS.md calls out that `https://evropiani.github.io` no longer
+  matches, since anyone who allowed it on their server needs to change it.
+
+Also corrects INSTALL.md, which still said the deploy *fails* when Pages is
+set to a branch; it warns and wins the race instead, as of 1.2.1.
+
+---
+
 ## 1.4.0 — 2026-09-22
 
 ### 2026-09-22 15:36 — Settings grouped by what you are actually doing

@@ -8,8 +8,8 @@ and you can use both.
 
 ### Do I have to install it? What is the demo?
 
-The demo at <https://evropiani.github.io/Kultr/> is the same app, served from
-GitHub Pages. It has no backend, stores no data on any server, and connects to
+The demo at <https://web.kultr.cc/> is the same app, served from GitHub
+Pages. It has no backend, stores no data on any server, and connects to
 whatever Navidrome you point it at. It is there so you can see the thing before
 committing to an install.
 

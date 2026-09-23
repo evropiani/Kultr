@@ -84,8 +84,46 @@
           );
         });
 
-        // Everything else — a failed download, a wrong base path — can only be
-        // diagnosed by waiting to see whether the app ever takes over.
+        // The app's own files failing to load is also visible straight away:
+        // resource errors do not bubble, but they can be caught on the way
+        // down. The usual cause is a build made for one address being served
+        // from another — e.g. built for /Kultr/ on github.io, then moved to a
+        // custom domain at / without being rebuilt. Every asset URL then
+        // points at a folder that does not exist, and the host answers with
+        // its 404 page, which the browser refuses to run as a script.
+        function escapeHtml(text) {
+          return String(text).replace(/[&<>"]/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+          });
+        }
+        window.addEventListener(
+          'error',
+          function (event) {
+            var el = event.target;
+            if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
+            var url = el.src || el.href || '';
+            var path = url ? new URL(url, location.href).pathname : '';
+            var at = path.indexOf('/assets/');
+            if (at === -1) return;
+            var built = path.slice(0, at + 1);
+            var here = location.host + location.pathname;
+            if (location.pathname.indexOf(built) !== 0) {
+              explain(
+                'This copy of Kultr was built to live at <code>' + escapeHtml(built) + '</code>, but it is being served from <code>' + escapeHtml(here) + '</code>, so none of its files are where it looks for them. That happens when the address changes after the last build — adding or removing a custom domain, for example.',
+                'Rebuild it for the new address. On GitHub Pages: <strong>Actions → Deploy to GitHub Pages → Run workflow</strong>; it asks GitHub where the site lives and builds for that. Self-hosted: rebuild with <code>KULTR_BASE</code> set to the path you serve it from.'
+              );
+            } else {
+              explain(
+                'The app’s files could not be loaded — <code>' + escapeHtml(url) + '</code> failed.',
+                'If this site’s address changed recently (a custom domain added or removed), the build is out of date: on GitHub Pages, re-run <strong>Actions → Deploy to GitHub Pages</strong>. Otherwise check your connection, and the browser console for the failing request.'
+              );
+            }
+          },
+          true
+        );
+
+        // Anything else can only be diagnosed by waiting to see whether the
+        // app ever takes over.
         window.addEventListener('load', function () {
           setTimeout(function () {
             explain(

@@ -10,7 +10,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
-[Try the live demo](https://evropiani.github.io/Kultr/) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Try the live demo](https://web.kultr.cc/) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
