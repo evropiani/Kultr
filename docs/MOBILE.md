@@ -1,5 +1,11 @@
 # Phones and tablets
 
+> **On Android, there is a native app:
+> [Kultr for Android](https://github.com/evropiani/Kultr_Android).** Get the
+> APK from its [latest release](https://github.com/evropiani/Kultr_Android/releases/latest).
+> The rest of this page is about installing the web app, which works on every
+> platform, and about the iOS app still to come.
+
 ## Today: install it as an app
 
 Kultr is a progressive web app. Installed, it runs full-screen with no browser
@@ -43,7 +49,9 @@ Worth being straight about, because these are the reasons to build native:
 
 ## Next: native apps
 
-Planned, and the codebase is already arranged for it.
+Android is out — [Kultr for Android](https://github.com/evropiani/Kultr_Android)
+is a native Kotlin app. iOS is planned, and the codebase is already arranged
+for it.
 
 ### Why it ports cleanly
 

@@ -9,6 +9,15 @@ only fixed.
 
 ## 1.4.1 — 2026-09-23
 
+### 2026-09-23 11:23 — Pointing to the Android app
+
+**[Kultr for Android](https://github.com/evropiani/Kultr_Android)** is out, and
+the README now says so: a link at the top beside the demo, and the *Phones*
+section leads with it and its latest release. That section, and MOBILE.md, used
+to say native apps were only planned; that is now true of iOS alone.
+
+Documentation only; the app itself is unchanged.
+
 ### 2026-09-23 10:11 — Moving to web.kultr.cc, and a splash that says why
 
 The demo moved to a custom domain, **<https://web.kultr.cc/>**, and came up as

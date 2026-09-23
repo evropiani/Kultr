@@ -10,7 +10,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
-[Try the live demo](https://web.kultr.cc/) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Try the live demo](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
@@ -382,14 +382,23 @@ paste CSS you are willing to run.
 
 ## Phones
 
-Kultr is a PWA, so you can install it today: **Share → Add to Home Screen** on
-iOS, or **Install app** from the Chrome menu on Android. It runs full-screen,
-keeps working offline for anything you have downloaded, and shows up on the
-lock screen.
+**Android: there is a native app.**
+**[Kultr for Android](https://github.com/evropiani/Kultr_Android)** is a proper
+Android music app with the same behaviour: crossfade, InjeKt, the library
+mirror, downloads, several servers — plus background playback, a media
+notification, lock-screen and Bluetooth controls, and Android Auto. Download
+the APK from its
+[latest release](https://github.com/evropiani/Kultr_Android/releases/latest)
+(Android 8.0 or later). A settings file exported from one opens in the other.
 
-Native iOS and Android apps are planned and the codebase is laid out for it —
-the player, the sync engine and all of the InjeKt DSP are plain TypeScript
-with no DOM dependencies, so they port as-is.
+**Everywhere else**, Kultr is a PWA, so you can install it today: **Share →
+Add to Home Screen** on iOS, or **Install app** from the Chrome or Edge menu.
+It runs full-screen, keeps working offline for anything you have downloaded,
+and shows up on the lock screen.
+
+A native iOS app is planned, and the codebase is laid out for it — the player,
+the sync engine and all of the InjeKt DSP are plain TypeScript with no DOM
+dependencies, so they port as-is.
 See **[docs/MOBILE.md](docs/MOBILE.md)**.
 
 ---
