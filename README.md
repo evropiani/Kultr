@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/logo-light.png" width="104" alt="Kultr" />
+<img src="public/logo.png" width="104" alt="Kultr" />
 
 # Kultr
 
@@ -34,7 +34,7 @@ Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/3
 | ![Choosing the home page shelves](docs/screenshots/home-settings.png) | ![The home page](docs/screenshots/home.png) |
 | **Choose your home page.** Fifteen shelves, switched on and off and put in the order you want. | **And here it is.** Empty shelves are skipped, so it never looks half-finished. |
 | ![The light theme](docs/screenshots/albums-light.png) | ![Signing in](docs/screenshots/login.png) |
-| **Light theme.** The same cut-out mark reads on either background. | **One screen to connect.** Name the server, or let it use its address. |
+| **Light theme.** The same app icon, in the corner, reads on either background. | **One screen to connect.** Name the server, or let it use its address. |
 
 <div align="center">
 

@@ -7,6 +7,32 @@ only fixed.
 
 ---
 
+## 1.4.2 — 2026-09-23
+
+### 2026-09-23 22:37 — A new app icon
+
+The K is now engraved in a grey tile and lit from inside, blue through violet
+to amber. It replaces the cut-out chrome K everywhere: the browser tab, the
+installed-app icons, the Apple touch icon, the sidebar, the sign-in screen and
+the top of the README. It is still one image for both themes.
+
+Each icon is cut from the same artwork to suit where it is shown:
+
+- **Favicon, sidebar, sign-in, and the regular app icons** show the tile with
+  its own rounded corners and a transparent background.
+- **The Apple touch icon** fills the whole square. iOS rounds the corners
+  itself, to almost the same radius as the tile, so the tile's edge is
+  carried out into the corners for iOS to trim.
+- **The maskable icon** (Android home screens) scales the K down to sit
+  inside the circle Android always keeps, and extends the tile's grey out to
+  the edges. The launcher can crop it to a circle, a squircle or a teardrop
+  without touching the letter.
+
+`logo-light.png` is now `logo.png`. The README screenshots were retaken, since
+the sidebar and sign-in screen show the icon.
+
+---
+
 ## 1.4.1 — 2026-09-23
 
 ### 2026-09-23 11:23 — Pointing to the Android app
