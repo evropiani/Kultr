@@ -23,7 +23,7 @@ export const HOME_TILES: HomeTile[] = [
   {
     id: 'recentlyPlayed',
     title: 'Jump back in',
-    note: 'Tracks you played most recently.',
+    note: 'Tracks you played most recently, on any device.',
     kind: 'songs',
   },
   {

@@ -78,6 +78,7 @@
 
 .sidebar {
   grid-area: sidebar;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -125,6 +126,7 @@
   font-size: 13.5px;
   font-weight: 550;
   position: relative;
+  z-index: 1;
   transition:
     color var(--dur-fast) var(--ease-out),
     background-color var(--dur-fast) var(--ease-out);
@@ -136,10 +138,29 @@
 .navitem[data-active='true'],
 .navitem.is-active {
   color: var(--ink);
-  background: var(--accent-soft);
 }
-.navitem[data-active='true']::before,
-.navitem.is-active::before {
+.navitem.is-active:hover {
+  background: transparent;
+}
+/* The active item's background is one element that slides from item to item
+   (see useSlidingIndicator), rather than a background on the item itself. */
+.sidebar__mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 320ms var(--ease-glide),
+    width 320ms var(--ease-glide),
+    height 320ms var(--ease-glide),
+    opacity var(--dur-fast) var(--ease-out);
+}
+.sidebar__mark::before {
   content: '';
   position: absolute;
   left: -12px;
@@ -989,6 +1010,17 @@
 :root[data-theme='light'] .npv {
   background: rgb(255 255 255 / 0.4);
 }
+/* Closing slides back down the way it came, instead of vanishing. */
+.npv[data-leaving='true'] {
+  animation: npv-out 300ms var(--ease-in) forwards;
+  pointer-events: none;
+}
+@keyframes npv-out {
+  to {
+    opacity: 0;
+    transform: translateY(64px) scale(0.985);
+  }
+}
 @keyframes npv-in {
   from {
     opacity: 0;
@@ -1110,14 +1142,51 @@
   height: 100%;
 }
 .npv__tabs {
+  position: relative;
   display: flex;
   gap: 6px;
+}
+.npv__tabs .pill {
+  position: relative;
+  z-index: 1;
+}
+.npv__tabs .pill[data-active='true'] {
+  background: transparent;
+  border-color: transparent;
+}
+.npv__tabmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.55);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 300ms var(--ease-glide),
+    width 300ms var(--ease-glide),
+    height 300ms var(--ease-glide),
+    opacity var(--dur-fast) var(--ease-out);
 }
 .npv__pane {
   min-height: 0;
   overflow: hidden auto;
   border-radius: var(--r-lg);
   padding: 14px;
+}
+.npv__panebody {
+  animation: pane-in 240ms var(--ease-out);
+}
+@keyframes pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @media (max-width: 1080px) {
   .npv__body {
@@ -1219,6 +1288,16 @@
   border-radius: var(--r-xl);
   overflow: hidden;
   animation: slide-in var(--dur) var(--ease-spring);
+}
+.queue[data-leaving='true'] {
+  animation: slide-out 220ms var(--ease-in) forwards;
+  pointer-events: none;
+}
+@keyframes slide-out {
+  to {
+    opacity: 0;
+    transform: translateX(28px);
+  }
 }
 @keyframes slide-in {
   from {
@@ -1417,6 +1496,16 @@
     transform: none;
   }
 }
+.toast[data-leaving='true'] {
+  animation: toast-out 200ms var(--ease-in) forwards;
+  pointer-events: none;
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
 .toast[data-kind='error'] {
   border-color: rgb(255 95 87 / 0.5);
 }
@@ -1453,6 +1542,24 @@
   }
   to {
     opacity: 1;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+.scrim[data-leaving='true'] {
+  animation: fade-out 200ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+.scrim[data-leaving='true'] .sheet {
+  animation: sheet-out 200ms var(--ease-in) forwards;
+}
+@keyframes sheet-out {
+  to {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
   }
 }
 .sheet {
@@ -1500,6 +1607,16 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+.menu[data-leaving='true'] {
+  animation: menu-out 130ms var(--ease-in) forwards;
+  pointer-events: none;
+}
+@keyframes menu-out {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }
 .menu__item {
@@ -1585,6 +1702,39 @@
 .section__toggle:hover {
   color: var(--accent);
 }
+.section__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  animation: fade-in var(--dur) var(--ease-out);
+}
+/* A section's body grows open and shrinks shut. Animating grid rows between
+   0fr and 1fr reaches the content's natural height without measuring it. */
+.collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 300ms var(--ease-glide),
+    opacity 240ms var(--ease-out);
+}
+.collapse[data-phase='entering'],
+.collapse[data-phase='closing'] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.collapse[data-phase='closing'] {
+  transition:
+    grid-template-rows 300ms var(--ease-glide),
+    opacity 180ms var(--ease-out);
+}
+.collapse__inner {
+  min-height: 0;
+  display: grid;
+  gap: 4px;
+}
+.collapse:not([data-phase='open']) .collapse__inner {
+  overflow: hidden;
+}
 .section__chevron {
   flex: none;
   color: var(--ink-3);
@@ -1644,6 +1794,7 @@
 }
 
 .seg {
+  position: relative;
   display: inline-flex;
   padding: 3px;
   border-radius: var(--r-pill);
@@ -1660,10 +1811,28 @@
   color: var(--ink-3);
   transition: all var(--dur-fast) var(--ease-out);
 }
+.seg button {
+  position: relative;
+  z-index: 1;
+}
 .seg button[data-active='true'] {
   color: var(--ink);
+}
+/* The selected option's background slides between options. */
+.seg__mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--r-pill);
   background: var(--glass-tint-strong);
   box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    transform 300ms var(--ease-glide),
+    width 300ms var(--ease-glide),
+    height 300ms var(--ease-glide),
+    opacity var(--dur-fast) var(--ease-out);
 }
 
 /* Equaliser. */
@@ -1859,6 +2028,11 @@
     background: rgb(0 0 0 / 0.5);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    animation: fade-in var(--dur) var(--ease-out);
+  }
+  .sidebar-scrim[data-leaving='true'] {
+    animation: fade-out 240ms var(--ease-out) forwards;
+    pointer-events: none;
   }
   .main {
     margin: 8px;
@@ -1972,7 +2146,29 @@
   padding: 10px 14px;
   border-radius: var(--r-pill);
   max-width: calc(100vw - 24px);
-  animation: toast-in var(--dur) var(--ease-spring);
+  /* Its own keyframes: the shared ones would replace the translateX(-50%)
+     that centres it, so it used to lurch sideways as it appeared. */
+  animation: selbar-in var(--dur) var(--ease-spring);
+}
+.selbar[data-leaving='true'] {
+  animation: selbar-out 200ms var(--ease-in) forwards;
+  pointer-events: none;
+}
+@keyframes selbar-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+@keyframes selbar-out {
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scale(0.97);
+  }
 }
 .selbar__actions {
   display: flex;

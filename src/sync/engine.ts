@@ -122,8 +122,8 @@ async function fetchAllAlbums(
  *
  * `full`  — re-read every album's track list. Slow but exhaustive.
  * `check` — re-read the album index (cheap) and only pull tracks for albums
- *           that are new or whose `changed`/`songCount` moved. This is the
- *           "is everything up to date?" button.
+ *           that are new, whose `changed`/`songCount` moved, or that have been
+ *           played since. This is the "is everything up to date?" button.
  */
 export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
   const { mode, signal } = options
@@ -176,6 +176,11 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
       if ((previous.songCount ?? -1) !== (album.songCount ?? -1)) return true
       if ((previous.changed ?? '') !== (album.changed ?? '')) return true
       if ((previous.duration ?? -1) !== (album.duration ?? -1)) return true
+      // Played since the last look — here or on another device. Re-reading
+      // the tracks is what brings their play counts and last-played times
+      // across, which is what "Jump back in" and "Played the most" use.
+      if ((previous.playCount ?? 0) !== (album.playCount ?? 0)) return true
+      if ((previous.played ?? '') !== (album.played ?? '')) return true
       return false
     })
 

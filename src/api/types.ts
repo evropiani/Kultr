@@ -67,6 +67,8 @@ export interface Album {
   songCount?: number
   duration?: number
   playCount?: number
+  /** When any of its tracks was last played (OpenSubsonic; Navidrome sends it). */
+  played?: string
   created?: string
   changed?: string
   starred?: string

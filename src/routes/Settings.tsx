@@ -59,6 +59,7 @@ import {
 } from '@/store/settings'
 import { useToast, useUi } from '@/store/ui'
 import { Modal, Row, Section, Segmented, SliderRow, Spinner, Switch } from '@/components/ui'
+import { useFlip } from '@/lib/motion'
 import { DiscordIcon } from '@/components/icons'
 
 /**
@@ -416,7 +417,10 @@ export function Settings() {
             label="Resume on start"
           />
         </Row>
-        <Row label="Scrobble plays" hint="Tells Navidrome what you listened to, which feeds its own statistics.">
+        <Row
+          label="Send plays to Navidrome"
+          hint="Counts each play on your server, so recently and most played are the same on every device and survive clearing this browser. Plays made offline are sent, with their real time, once you are back."
+        >
           <Switch
             checked={settings.scrobble}
             onChange={(value) => settings.set('scrobble', value)}
@@ -538,7 +542,7 @@ export function Settings() {
         </Row>
         <Row
           label="Analyse ahead"
-          hint="Analyses the next track while the current one plays, so the first transition is already ready."
+          hint="The current and next track are always analysed the moment a track starts. This also analyses the one after, so skipping ahead lands on a transition that is ready too."
         >
           <Switch
             checked={settings.injektAnalyseAhead}
@@ -1165,6 +1169,10 @@ function HomeTileEditor({
 }) {
   const enabled = resolveHomeTiles(value)
   const available = availableHomeTiles(value)
+  // Moving a shelf slides both rows into their new places, so you can see
+  // what swapped with what.
+  const listRef = useRef<HTMLOListElement>(null)
+  useFlip(listRef, [enabled.map((tile) => tile.id).join(',')])
 
   const move = (index: number, by: number) => {
     const next = enabled.map((tile) => tile.id)
@@ -1183,9 +1191,9 @@ function HomeTileEditor({
         </p>
       ) : null}
 
-      <ol className="tiles">
+      <ol className="tiles" ref={listRef}>
         {enabled.map((tile, index) => (
-          <li key={tile.id} className="tile">
+          <li key={tile.id} className="tile" data-flip-key={tile.id}>
             <div className="tile__order">
               <button
                 className="iconbtn"

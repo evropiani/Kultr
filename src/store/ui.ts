@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { prefersReducedMotion } from '@/lib/motion'
 
 export type ToastKind = 'info' | 'success' | 'warning' | 'error'
 
@@ -6,7 +7,11 @@ export interface Toast {
   id: number
   message: string
   kind: ToastKind
+  /** Set for the moment between dismissal and removal, while it animates out. */
+  leaving?: boolean
 }
+
+const TOAST_EXIT_MS = 200
 
 interface ToastState {
   toasts: Toast[]
@@ -25,7 +30,17 @@ export const useToast = create<ToastState>((set, get) => ({
     window.setTimeout(() => get().dismiss(id), timeout)
   },
   dismiss(id) {
-    set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }))
+    const toast = get().toasts.find((entry) => entry.id === id)
+    if (!toast || toast.leaving) return
+    const remove = () => set((state) => ({ toasts: state.toasts.filter((entry) => entry.id !== id) }))
+    if (prefersReducedMotion()) {
+      remove()
+      return
+    }
+    set((state) => ({
+      toasts: state.toasts.map((entry) => (entry.id === id ? { ...entry, leaving: true } : entry)),
+    }))
+    window.setTimeout(remove, TOAST_EXIT_MS)
   },
 }))
 

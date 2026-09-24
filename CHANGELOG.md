@@ -7,6 +7,83 @@ only fixed.
 
 ---
 
+## 1.5.0 — 2026-09-24
+
+### 2026-09-24 13:50 — Listening data lives on your server
+
+Recently played and the Listening page used to come from a history kept only
+in the browser, so clearing its storage wiped them, and a phone and a laptop
+never agreed. Navidrome already keeps what matters — each track's play count
+and when it was last played — so Kultr now uses that, in both directions.
+
+- **Out.** Every play is written down as *pending* and sent to Navidrome with
+  the time it actually happened. If the server cannot be reached, it stays
+  pending and goes out later — on the next sync, when the browser is back
+  online, or from **Refresh from server** — still with its original time, and
+  exactly once.
+- **In.** Albums come back from the server with their own play count and
+  last-played time. When those have moved, the album was played somewhere, so
+  **Check for updates** re-reads its tracks. The same cheap check runs when you
+  come back to the tab, which is usually when you come back from another device.
+- **Jump back in** merges the server's last-played times with this browser's
+  history, so plays from every device appear, and all of it returns after a
+  fresh sync.
+- **The Listening page** is rebuilt on the server's numbers: recently played,
+  played the most, and top artists by plays, with a refresh button and a count
+  of plays waiting to be sent. The day-by-day chart stays per-browser —
+  Navidrome keeps a count per track, not a log of every play — and says so.
+  Clearing it keeps plays that have not been sent yet.
+- The setting is now called **Send plays to Navidrome** and explains what it is
+  for. Internet radio is no longer sent: it is not a library track.
+
+### 2026-09-24 13:50 — InjeKt plans as soon as a track starts
+
+Transitions were planned about 35 seconds before the end of a track. For a
+track InjeKt had not seen before, that left the analysis racing the clock, and
+the planner could only choose a mix-out point from whatever was left.
+
+Now the next transition is planned the moment a track starts playing: both
+tracks are analysed then, and the plan — with its start point, overlap and
+tempo changes — shows in the InjeKt panel within seconds. The next track's
+audio is still only loaded into the spare deck about 30 seconds before the mix,
+so no stream is held open for minutes. Editing the queue, shuffling, changing
+repeat or seeking throws the plan away and makes a new one, and a change that
+lands while a plan is being made is no longer lost. **Analyse ahead** now looks
+one track further, so skipping lands on a ready transition too.
+
+The InjeKt panel also used to keep saying *Not analysed yet* about a track the
+plan had just been built from; it refreshes when a plan arrives.
+
+### 2026-09-24 13:50 — Motion that goes both ways
+
+Things animated in and then simply vanished. Now:
+
+- **The full player** slides back down when you close it, as it slid up.
+- **The sidebar highlight** slides from the page you were on to the one you
+  picked. The slide starts on the click, before the new page renders, so it
+  stays smooth even on a heavy page.
+- **Switchers** — every segmented control in Settings and the tabs in the full
+  player — slide their highlight the same way, and a new tab's content fades
+  in.
+- **Settings sections** grow open and shrink shut instead of appearing.
+- **Pages** rise into place on navigation.
+- **The queue, dialogs, menus, notices, the selection bar and the phone menu's
+  backdrop** animate out as well as in. Menus grow from the corner nearest the
+  pointer.
+- **Reordering home shelves** in Settings slides the two rows past each other.
+- The selection bar used to lurch sideways as it appeared; fixed.
+
+All of it is quick, and **Reduce motion** (or the system setting) turns it off.
+
+### 2026-09-24 13:50 — One search, in the top bar
+
+The top bar's field and the Search page did the same thing. The Search entry is
+gone from the sidebar; typing in the top bar now opens the results and updates
+them as you type. The query is kept in the address, so Back returns to where you
+were in one step, and Forward brings the search back.
+
+---
+
 ## 1.4.2 — 2026-09-23
 
 ### 2026-09-23 22:37 — A new app icon

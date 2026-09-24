@@ -91,7 +91,7 @@ Everything lives in IndexedDB under the origin you loaded Kultr from.
 | `songs`, `albums`, `artists`, `playlists`, `genres` | The library mirror |
 | `analysis` | InjeKt measurements, one row per analysed track |
 | `offline` | Audio files you explicitly saved, as blobs |
-| `history` | What you played, when, and for how long |
+| `history` | What you played in this browser, when, and for how long; plays not yet delivered to the server are marked pending |
 | `meta` | Sync state |
 
 Rough sizes: the mirror is about 1 KB per track, so 50,000 tracks is ~50 MB.
@@ -110,8 +110,26 @@ unlikely, install Kultr as an app (PWA) — installed apps get persistent storag
   offline files, history and analysis are kept. Sync again to rebuild.
 - **Settings → Reset Kultr** — removes everything, including saved servers.
 
-Neither touches your Navidrome server. Favourites, ratings, playlists and play
-counts live there and come back on the next sync.
+Neither touches your Navidrome server. Favourites, ratings, playlists, play
+counts and last-played times live there and come back on the next sync.
+
+---
+
+## Listening data
+
+Play counts are the server's, not the browser's. Each play is written to the
+local history marked *pending* and scrobbled to Navidrome with the time it
+happened; once Navidrome has it, the mark is cleared. If the server cannot be
+reached, the play stays pending and is sent later — on the next sync, when the
+browser comes back online, or from **Listening → Refresh from server** — still
+with its original time. **Clear** on the Listening page keeps pending plays, so
+clearing never loses one.
+
+Coming the other way, albums arrive with their own play count and last-played
+time. When those differ from the mirror, the album was played somewhere — here
+or on another device — so **Check for updates** re-reads its tracks, which brings
+their counts and last-played times across. The same check runs, cheaply, when
+you come back to the Kultr tab after a while away.
 
 ---
 

@@ -77,6 +77,10 @@
   /* Motion — iOS-ish springs. */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Leaving: starts gently and gets out of the way. */
+  --ease-in: cubic-bezier(0.45, 0, 0.9, 0.55);
+  /* Travelling between two places: quick off the mark, soft landing. */
+  --ease-glide: cubic-bezier(0.25, 1, 0.5, 1);
   --dur-fast: 140ms;
   --dur: 260ms;
   --dur-slow: 520ms;

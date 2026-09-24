@@ -4,6 +4,7 @@ import { EMPTY_SYNC_STATE } from '@/db'
 import { quickCheck, syncLibrary, type SyncProgress, type SyncSummary } from '@/sync/engine'
 import { settings } from './settings'
 import { maybeClient } from '@/api/subsonic'
+import { syncListening } from '@/sync/listening'
 
 interface SyncStoreState {
   running: boolean
@@ -13,8 +14,12 @@ interface SyncStoreState {
   error: string | null
   hint: string | null
   controller: AbortController | null
+  /** Bumped when listening data changed on the way in, so views re-read it. */
+  listeningAt: number
 
   refreshState: () => Promise<void>
+  /** Send queued plays and read back play counts from the server. */
+  refreshListening: () => Promise<void>
   run: (mode: 'full' | 'check') => Promise<SyncSummary | null>
   cancel: () => void
   probe: () => Promise<void>
@@ -31,6 +36,7 @@ export const useSync = create<SyncStoreState>((set, get) => ({
   error: null,
   hint: null,
   controller: null,
+  listeningAt: 0,
 
   async refreshState() {
     const [state, currentCounts] = await Promise.all([getSyncState(), counts()])
@@ -54,6 +60,9 @@ export const useSync = create<SyncStoreState>((set, get) => ({
       })
       set({ lastSummary: summary, running: false, controller: null })
       await get().refreshState()
+      // Plays made offline go up, and anything played elsewhere since the
+      // album index was read comes down.
+      void get().refreshListening()
       return summary
     } catch (err) {
       const cancelled = (err as Error)?.name === 'Cancelled' || (err as Error)?.name === 'AbortError'
@@ -66,6 +75,12 @@ export const useSync = create<SyncStoreState>((set, get) => ({
       await get().refreshState()
       return null
     }
+  },
+
+  async refreshListening() {
+    if (!maybeClient()) return
+    const result = await syncListening()
+    if (result.sent || result.albumsChanged) set({ listeningAt: Date.now() })
   },
 
   cancel() {

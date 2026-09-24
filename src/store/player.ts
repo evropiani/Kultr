@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import type { Song } from '@/api/types'
 import { maybeClient } from '@/api/subsonic'
-import { addHistory, patchSong } from '@/db'
+import { addHistory, getAlbum, patchAlbum, patchSong } from '@/db'
+import { flushPendingScrobbles, sendPlay } from '@/sync/listening'
 import { engine, type EngineMode, type PlaybackState } from '@/audio/engine'
 import { analyseTrack } from '@/audio/analysis'
 import { buildAutoQueue, planTransition, type TransitionPlan } from '@/audio/injekt'
@@ -468,22 +469,37 @@ function trackListening(currentTime: number, duration: number): void {
 }
 
 async function submitScrobble(song: Song, seconds: number, completed: boolean): Promise<void> {
-  await addHistory({
+  // Internet radio is not a library track: nothing to count, nothing to send.
+  if (song.kultrStreamUrl) return
+  const playedAt = Date.now()
+  const send = settings().scrobble
+  // Written as pending first, so a play that cannot be sent right now is
+  // queued rather than lost; it goes out later with this timestamp.
+  const entryId = await addHistory({
     songId: song.id,
-    playedAt: Date.now(),
+    playedAt,
     seconds: Math.round(seconds),
     completed,
     source: usePlayer.getState().source,
-  }).catch(() => {})
-  await patchSong(song.id, {
-    playCount: (song.playCount ?? 0) + 1,
-    played: new Date().toISOString(),
-  }).catch(() => {})
-  if (!settings().scrobble) return
+    pending: send || undefined,
+  }).catch(() => undefined)
+
+  // Counted locally straight away, so the home page and the Listening page
+  // reflect it without waiting for the next sync to read the server's count.
+  const played = new Date(playedAt).toISOString()
+  await patchSong(song.id, { playCount: (song.playCount ?? 0) + 1, played }).catch(() => {})
+  if (song.albumId) {
+    const album = await getAlbum(song.albumId).catch(() => undefined)
+    if (album) await patchAlbum(album.id, { playCount: (album.playCount ?? 0) + 1, played }).catch(() => {})
+  }
+
+  if (!send) return
   try {
-    await maybeClient()?.scrobble(song.id, true)
+    await sendPlay(entryId, song.id, playedAt)
+    // Evidently online: anything that queued up while we were not goes too.
+    void flushPendingScrobbles()
   } catch {
-    /* offline; Navidrome will miss this play */
+    /* stays pending; sent on the next sync, reconnect or return online */
   }
 }
 
@@ -502,11 +518,13 @@ function onTrackStarted(state: PlayerState): void {
       .catch(() => {})
   }
 
-  // Warm up the analysis for what is coming so the next transition is ready.
+  // This track and the next are analysed straight away by the transition
+  // planner, which the engine asks for as soon as playback is under way.
+  // Looking one further ahead means a skip lands on a track that is ready too.
   if (settings().injektEnabled && settings().injektAnalyseAhead) {
-    const next = usePlayer.getState().peekNext()
-    if (next) void analyseTrack(next)
-    void analyseTrack(song)
+    const { queue, index } = usePlayer.getState()
+    const afterNext = queue[index + 2]
+    if (afterNext && !afterNext.kultrStreamUrl) void analyseTrack(afterNext)
   }
 }
 
@@ -525,9 +543,22 @@ async function extendQueue(state: PlayerState): Promise<boolean> {
 }
 
 let preparing = false
+let prepareAgain = false
 
+/**
+ * Plan the hand-over to the next track. Called by the engine as soon as a
+ * track starts playing — analysing both tracks and planning then, rather
+ * than near the end, leaves the whole track to choose a mix point from and
+ * plenty of time for a first-time analysis. Anything that changes what comes
+ * next (a queue edit, shuffle, a seek) clears the plan and it is made again.
+ */
 async function prepareNextTransition(): Promise<void> {
-  if (preparing) return
+  // Asked again while a plan is being made (the queue changed under it):
+  // finish this one, then start over with the new situation.
+  if (preparing) {
+    prepareAgain = true
+    return
+  }
   preparing = true
   try {
     const state = usePlayer.getState()
@@ -546,15 +577,20 @@ async function prepareNextTransition(): Promise<void> {
       durationA: engine.duration,
       currentTime: engine.currentTime,
     })
-    // Bail out if the user moved on while we were planning.
+    // Bail out if the track or what follows it changed while we were planning.
     const fresh = usePlayer.getState()
-    if (fresh.current()?.id !== current.id) return
+    if (fresh.current()?.id !== current.id || fresh.peekNext()?.id !== next.id) return
+    if (prepareAgain) return
     engine.setPendingTransition(next, plan)
     usePlayer.setState({ lastPlan: { plan, fromId: current.id } })
   } catch (err) {
     console.warn('[kultr] could not plan the next transition', err)
   } finally {
     preparing = false
+    if (prepareAgain) {
+      prepareAgain = false
+      void prepareNextTransition()
+    }
   }
 }
 

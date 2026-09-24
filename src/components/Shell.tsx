@@ -36,6 +36,7 @@ import { useSync } from '@/store/sync'
 import { useToast, useUi } from '@/store/ui'
 import { Menu, useMenu, type MenuItem } from './ui'
 import { OfflineProgressBar } from './Offline'
+import { afterNextPaint, usePresence, useSlidingIndicator } from '@/lib/motion'
 import { Logo } from './Logo'
 
 /* ------------------------------------------------------------------ backdrop */
@@ -125,9 +126,11 @@ export function Backdrop() {
 
 /* ------------------------------------------------------------------- sidebar */
 
+// No Search entry: the field in the top bar is always there and shows its
+// results as you type, so a page that only held a second copy of it was
+// just a detour.
 const NAV_MAIN = [
   { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/search', label: 'Search', icon: Search },
   { to: '/radio', label: 'Radio', icon: Radio },
 ]
 
@@ -140,6 +143,13 @@ export function Sidebar() {
   const location = useLocation()
 
   useEffect(() => setSidebar(false), [location.pathname, setSidebar])
+  const scrim = usePresence(open, 240)
+
+  // One highlight that slides to the page you picked, instead of one item
+  // losing its background as another gains it.
+  const navRef = useRef<HTMLElement>(null)
+  const markRef = useRef<HTMLDivElement>(null)
+  const slideTo = useSlidingIndicator(navRef, markRef, '.navitem.is-active', [location.pathname])
 
   const library = [
     { to: '/albums', label: 'Albums', icon: Disc3, count: counts.albums },
@@ -153,8 +163,11 @@ export function Sidebar() {
 
   return (
     <>
-      {open ? <div className="sidebar-scrim" onClick={() => setSidebar(false)} /> : null}
-      <nav className="sidebar glass" data-open={open} aria-label="Main navigation">
+      {scrim.present ? (
+        <div className="sidebar-scrim" data-leaving={scrim.leaving} onClick={() => setSidebar(false)} />
+      ) : null}
+      <nav className="sidebar glass" data-open={open} aria-label="Main navigation" ref={navRef}>
+        <div className="sidebar__mark" ref={markRef} aria-hidden="true" />
         <div className="sidebar__brand">
           <Logo size={32} />
           <span className="sidebar__name">Kultr</span>
@@ -169,18 +182,18 @@ export function Sidebar() {
         </div>
 
         {NAV_MAIN.map((item) => (
-          <NavItem key={item.to} {...item} />
+          <NavItem key={item.to} {...item} onPick={slideTo} />
         ))}
 
         <div className="sidebar__section">Library</div>
         {library.map((item) => (
-          <NavItem key={item.to} {...item} />
+          <NavItem key={item.to} {...item} onPick={slideTo} />
         ))}
 
         <div className="sidebar__section">Server</div>
-        <NavItem to="/sync" label="Sync" icon={RefreshCw} />
-        <NavItem to="/stats" label="Listening" icon={BarChart3} />
-        <NavItem to="/settings" label="Settings" icon={SettingsIcon} />
+        <NavItem to="/sync" label="Sync" icon={RefreshCw} onPick={slideTo} />
+        <NavItem to="/stats" label="Listening" icon={BarChart3} onPick={slideTo} />
+        <NavItem to="/settings" label="Settings" icon={SettingsIcon} onPick={slideTo} />
 
         <div className="sidebar__footer">
           <OfflineProgressBar />
@@ -203,18 +216,31 @@ function NavItem({
   icon: Icon,
   count,
   end,
+  onPick,
 }: {
   to: string
   label: string
   icon: typeof Home
   count?: number
   end?: boolean
+  onPick?: (element: HTMLElement) => void
 }) {
+  const navigate = useNavigate()
+  const location = useLocation()
   return (
     <NavLink
       to={to}
       end={end}
       className={({ isActive }) => (isActive ? 'navitem is-active' : 'navitem')}
+      onClick={(event) => {
+        // Plain clicks only; a new-tab click does not change this page.
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
+        event.preventDefault()
+        onPick?.(event.currentTarget)
+        // Like a plain link: clicking the page you are on does not add a
+        // second copy of it to the history.
+        afterNextPaint(() => navigate(to, { replace: location.pathname === to && !location.search }))
+      }}
     >
       <Icon size={17} />
       {label}
@@ -227,6 +253,7 @@ function NavItem({
 
 export function TopBar() {
   const navigate = useNavigate()
+  const location = useLocation()
   const setSidebar = useUi((state) => state.setSidebar)
   const setShortcuts = useUi((state) => state.setShortcuts)
   const theme = useSettings((state) => state.theme)
@@ -235,7 +262,29 @@ export function TopBar() {
   const auth = useAuth()
   const menu = useMenu()
   const profileButton = useRef<HTMLButtonElement>(null)
-  const [query, setQuery] = useState('')
+
+  // The field is the search page's input. Typing anywhere opens the results
+  // and updates them live; the text is kept in the address, so Back and
+  // Forward bring a search back with its results.
+  const onSearchPage = location.pathname === '/search'
+  const urlQuery = onSearchPage ? (new URLSearchParams(location.search).get('q') ?? '') : ''
+  const [query, setQuery] = useState(urlQuery)
+  useEffect(() => {
+    if (onSearchPage) {
+      if (urlQuery !== query) setQuery(urlQuery)
+    } else if (query) {
+      setQuery('')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSearchPage, urlQuery])
+
+  const typeQuery = (value: string) => {
+    setQuery(value)
+    const target = value ? `/search?q=${encodeURIComponent(value)}` : '/search'
+    // The first keystroke is a new page you can go Back from; the rest just
+    // refine it, so they replace rather than pile up in the history.
+    navigate(target, { replace: onSearchPage })
+  }
 
   const profileItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = auth.profiles.map((profile) => ({
@@ -292,9 +341,12 @@ export function TopBar() {
 
       <form
         className="field topbar__search"
+        role="search"
         onSubmit={(event) => {
           event.preventDefault()
-          if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+          if (!onSearchPage) navigate(`/search?q=${encodeURIComponent(query)}`)
+          // Dismiss the on-screen keyboard so the results are visible.
+          event.currentTarget.querySelector('input')?.blur()
         }}
       >
         <Search size={16} opacity={0.6} />
@@ -302,9 +354,10 @@ export function TopBar() {
           type="search"
           value={query}
           placeholder="Search your library…  (press /)"
-          aria-label="Search"
+          aria-label="Search your library"
           data-search-input="true"
-          onChange={(event) => setQuery(event.target.value)}
+          enterKeyHint="search"
+          onChange={(event) => typeQuery(event.target.value)}
         />
       </form>
 
@@ -365,7 +418,12 @@ export function Toasts() {
       {toasts.map((toast) => {
         const Icon = TOAST_ICONS[toast.kind]
         return (
-          <div key={toast.id} className="toast glass glass-strong" data-kind={toast.kind}>
+          <div
+            key={toast.id}
+            className="toast glass glass-strong"
+            data-kind={toast.kind}
+            data-leaving={Boolean(toast.leaving)}
+          >
             <Icon size={16} className="toast__icon" />
             <span>{toast.message}</span>
             <button

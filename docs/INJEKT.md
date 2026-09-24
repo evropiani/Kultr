@@ -50,8 +50,13 @@ planner snaps against whichever anchor is closer to the point it is using.
 
 ## How a transition is planned
 
-About 35 seconds before the end of a track, Kultr looks at what is next and
-builds a plan.
+As soon as a track starts playing, Kultr looks at what is next, analyses both
+tracks if it has not already, and builds a plan. Planning at the start rather
+than near the end means a first-time analysis has minutes to finish instead of
+seconds, and the planner can choose its mix-out point from the whole track.
+The next track's audio is only loaded into the spare deck about 30 seconds
+before the mix begins. Anything that changes what comes next — a queue edit,
+shuffle, repeat, a seek — throws the plan away and makes a new one.
 
 **1. Can they be beat-matched, and at what tempo?**
 
@@ -135,7 +140,7 @@ and you can see the measurements for both tracks and exactly what was decided.
 | Harmonic mixing | on | Uses the detected key |
 | Skip long intros | on | Enter at the first real downbeat |
 | Keep playing similar music | on | Continue when the queue empties |
-| Analyse ahead | on | Analyse the next track while this one plays |
+| Analyse ahead | on | Also analyse the track after next, so a skip lands on a ready transition |
 
 ### Starting points
 
@@ -177,10 +182,10 @@ Two tracks at a time, each streamed once at 96 kbps and decoded to mono at
 22 kHz. The FFT work runs in a Web Worker, so the UI stays responsive and
 playback is unaffected. You can stop and resume at any point.
 
-You do not have to do this. With **Analyse ahead** on, Kultr analyses the next
-track while the current one plays, so transitions come good within a track or
-two of normal listening. Bulk analysis just means the *first* transition is
-already perfect.
+You do not have to do this. Kultr analyses the current and next track the
+moment a track starts, and with **Analyse ahead** on, the one after that too,
+so transitions come good from the first one of normal listening. Bulk analysis
+just means no track ever has to be analysed on the spot.
 
 The cache lives in your browser, so each device builds its own.
 

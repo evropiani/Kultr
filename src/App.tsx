@@ -25,6 +25,7 @@ import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { useOffline } from '@/store/offline'
 import { useSelection } from '@/store/selection'
+import { prefersReducedMotion } from '@/lib/motion'
 
 /** Keep the document's data-* attributes in step with the settings store. */
 function useThemeEffects(): void {
@@ -121,6 +122,9 @@ function useBootstrap(): void {
       if (!connected) return
 
       await useSync.getState().refreshState()
+      // Listening data is cheap to bring across, so it does not wait for the
+      // library check (which does it too, when it runs).
+      if (!autoSyncOnStart) void useSync.getState().refreshListening()
       if (autoSyncOnStart) {
         // Give the UI a moment to settle before hitting the network.
         window.setTimeout(() => {
@@ -132,6 +136,32 @@ function useBootstrap(): void {
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.hydrated])
+
+  // Coming back to the tab is usually coming back from another device, so
+  // that is when to look for plays made elsewhere; and back online is when
+  // plays queued offline can finally go.
+  useEffect(() => {
+    let last = 0
+    const refresh = () => {
+      if (useAuth.getState().status !== 'connected' || useSync.getState().running) return
+      if (Date.now() - last < 90_000) return
+      last = Date.now()
+      void useSync.getState().refreshListening()
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    const onOnline = () => {
+      last = 0
+      refresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', onOnline)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', onOnline)
+    }
+  }, [])
 
   useEffect(() => {
     if (!autoSyncMinutes || autoSyncMinutes <= 0) return
@@ -170,6 +200,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 function Shell() {
   const location = useLocation()
   const contentRef = useRef<HTMLDivElement>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
 
   // Lets the stylesheet know a player bar exists (toast placement, mostly).
   useEffect(() => {
@@ -184,6 +215,17 @@ function Shell() {
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 })
     useSelection.getState().clear()
+    // The new page rises into place rather than replacing the old one in a
+    // single frame. Short enough that it never feels like waiting.
+    if (!prefersReducedMotion()) {
+      pageRef.current?.animate(
+        [
+          { opacity: 0, transform: 'translateY(10px)' },
+          { opacity: 1, transform: 'none' },
+        ],
+        { duration: 260, easing: 'cubic-bezier(0.25, 1, 0.5, 1)' },
+      )
+    }
   }, [location.pathname])
 
   const flush = /^\/(album|artist|playlist)\//.test(location.pathname)
@@ -194,26 +236,28 @@ function Shell() {
       <main className="main glass">
         <TopBar />
         <div className={flush ? 'content content--flush' : 'content'} ref={contentRef}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/albums" element={<Albums />} />
-            <Route path="/album/:id" element={<AlbumPage />} />
-            <Route path="/artists" element={<Artists />} />
-            <Route path="/artist/:id" element={<ArtistPage />} />
-            <Route path="/songs" element={<Songs />} />
-            <Route path="/genres" element={<Genres />} />
-            <Route path="/genre/:name" element={<GenrePage />} />
-            <Route path="/playlists" element={<Playlists />} />
-            <Route path="/playlist/:id" element={<PlaylistPage />} />
-            <Route path="/favourites" element={<Favourites />} />
-            <Route path="/downloads" element={<Downloads />} />
-            <Route path="/radio" element={<Radio />} />
-            <Route path="/sync" element={<SyncPage />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <div className="page" ref={pageRef}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/albums" element={<Albums />} />
+              <Route path="/album/:id" element={<AlbumPage />} />
+              <Route path="/artists" element={<Artists />} />
+              <Route path="/artist/:id" element={<ArtistPage />} />
+              <Route path="/songs" element={<Songs />} />
+              <Route path="/genres" element={<Genres />} />
+              <Route path="/genre/:name" element={<GenrePage />} />
+              <Route path="/playlists" element={<Playlists />} />
+              <Route path="/playlist/:id" element={<PlaylistPage />} />
+              <Route path="/favourites" element={<Favourites />} />
+              <Route path="/downloads" element={<Downloads />} />
+              <Route path="/radio" element={<Radio />} />
+              <Route path="/sync" element={<SyncPage />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
         </div>
       </main>
       <PlayerBar />

@@ -97,6 +97,18 @@ own mirror.
 Kultr scrobbles to Navidrome, and Navidrome forwards to whatever you have
 configured there. So set Last.fm or ListenBrainz up in Navidrome and it works.
 
+### Is my listening history lost if I clear the browser?
+
+No. Every play is sent to Navidrome, with the time it actually happened, and
+Navidrome keeps each track's play count and last-played time. Recently played,
+most played and the Listening page are built from those, so they come back with
+the next sync and match what you see on other devices. A play made while the
+server is unreachable waits in the browser and is sent once it is back.
+
+The one thing that is per-browser is the day-by-day chart on the Listening
+page: Navidrome keeps a count per track rather than a log of every play, so
+there is nothing on the server to draw it from.
+
 ### Can it edit tags or delete tracks?
 
 No, by design. Kultr reads your library and writes only the things Subsonic
@@ -108,8 +120,10 @@ in a tagger; deletion belongs nowhere near a music player.
 Streaming is streaming. Two things are Kultr-specific:
 
 - During a crossfade two tracks stream at once, briefly.
-- InjeKt analysis streams each track once at 96 kbps. On a metered connection,
-  turn off **Analyse ahead** and do the analysis at home.
+- InjeKt analysis streams each track once at 96 kbps, the first time it is
+  played or comes up next. On a metered connection, run the bulk analysis at
+  home first (analysis is cached), or turn off **Analyse ahead** so only the
+  current and next track are ever fetched for it.
 
 The blur effects cost GPU. Set **Surface blur** to **Reduced** or **Off** on a
 laptop running on battery.

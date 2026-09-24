@@ -1,6 +1,7 @@
 import { FolderDown, Heart, ListPlus, Play, Trash2, X } from 'lucide-react'
 import { toggleStarSong } from '@/lib/actions'
 import { formatCount } from '@/lib/format'
+import { useLastWhile, usePresence } from '@/lib/motion'
 import { useOffline } from '@/store/offline'
 import { usePlayer } from '@/store/player'
 import { useSelection } from '@/store/selection'
@@ -18,16 +19,26 @@ export function SelectionBar() {
   const removeOffline = useOffline((state) => state.remove)
   const offlineIds = useOffline((state) => state.ids)
 
-  if (!selected.length) return null
+  const { present, leaving } = usePresence(selected.length > 0, 200)
+  // Clearing the selection is what dismisses the bar, so it would otherwise
+  // read "0 tracks selected" on its way out.
+  const shownCount = useLastWhile(selected.length, selected.length > 0)
+
+  if (!present) return null
   const songs = selectedSongs()
   const storedCount = songs.filter((song) => offlineIds.has(song.id)).length
 
   return (
-    <div className="selbar glass glass-strong" role="toolbar" aria-label="Selection actions">
+    <div
+      className="selbar glass glass-strong"
+      role="toolbar"
+      aria-label="Selection actions"
+      data-leaving={leaving}
+    >
       <button className="iconbtn" aria-label="Clear selection" onClick={clear}>
         <X size={16} />
       </button>
-      <strong style={{ fontSize: 13 }}>{formatCount(selected.length, 'track')} selected</strong>
+      <strong style={{ fontSize: 13 }}>{formatCount(shownCount, 'track')} selected</strong>
 
       <div className="selbar__actions">
         <button

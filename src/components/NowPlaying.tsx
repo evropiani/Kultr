@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ChevronDown,
@@ -22,6 +22,7 @@ import { formatTime } from '@/lib/format'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useUi } from '@/store/ui'
+import { usePresence, useSlidingIndicator } from '@/lib/motion'
 import { Art } from './ui'
 import { Scrubber, overlapRegion } from './Scrubber'
 import { Lyrics } from './Lyrics'
@@ -47,8 +48,18 @@ export function NowPlaying() {
   const setSetting = useSettings((state) => state.set)
   const [tab, setTab] = useState<Tab>('queue')
   const [starred, setStarred] = useState(Boolean(song?.starred))
+  // Stays mounted for the slide back down, rather than vanishing on close.
+  const { present, leaving } = usePresence(open && Boolean(song), 300)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const tabMarkRef = useRef<HTMLSpanElement>(null)
+  const slideTab = useSlidingIndicator(tabsRef, tabMarkRef, "button[data-active='true']", [
+    tab,
+    present,
+    showPlayerPanel,
+    showLyrics,
+  ])
 
-  if (!open || !song) return null
+  if (!present || !song) return null
 
   const playing = player.playback === 'playing'
   const duration = player.duration || song.duration || 0
@@ -67,7 +78,7 @@ export function NowPlaying() {
   ]
 
   return (
-    <div className="npv" role="dialog" aria-label="Now playing">
+    <div className="npv" role="dialog" aria-label="Now playing" data-leaving={leaving}>
       <div className="npv__bar">
         <button className="iconbtn" aria-label="Close" onClick={() => setNowPlaying(false)}>
           <ChevronDown size={20} />
@@ -202,7 +213,8 @@ export function NowPlaying() {
 
         {showPlayerPanel ? (
         <div className="npv__right">
-          <div className="npv__tabs">
+          <div className="npv__tabs" ref={tabsRef}>
+            <span className="npv__tabmark" ref={tabMarkRef} aria-hidden="true" />
             {tabs
               .filter((entry) => !entry.hidden)
               .map((entry) => (
@@ -210,7 +222,10 @@ export function NowPlaying() {
                   key={entry.id}
                   className="pill"
                   data-active={tab === entry.id}
-                  onClick={() => setTab(entry.id)}
+                  onClick={(event) => {
+                    slideTab(event.currentTarget)
+                    setTab(entry.id)
+                  }}
                 >
                   {entry.label}
                 </button>
@@ -218,9 +233,12 @@ export function NowPlaying() {
           </div>
 
           <div className="npv__pane glass">
-            {tab === 'queue' ? <UpNext /> : null}
-            {tab === 'lyrics' ? <Lyrics song={song} /> : null}
-            {tab === 'injekt' ? <InjektPanel /> : null}
+            {/* Keyed so a new tab fades in rather than swapping in place. */}
+            <div className="npv__panebody" key={tab}>
+              {tab === 'queue' ? <UpNext /> : null}
+              {tab === 'lyrics' ? <Lyrics song={song} /> : null}
+              {tab === 'injekt' ? <InjektPanel /> : null}
+            </div>
           </div>
         </div>
         ) : null}

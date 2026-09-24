@@ -6,6 +6,7 @@ import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useUi } from '@/store/ui'
 import { useDismiss } from '@/lib/hooks'
+import { usePresence } from '@/lib/motion'
 import { Art } from './ui'
 
 export function QueuePanel() {
@@ -16,13 +17,14 @@ export function QueuePanel() {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const ref = useDismiss<HTMLElement>(open, () => setQueue(false))
+  const { present, leaving } = usePresence(open, 220)
 
-  if (!open) return null
+  if (!present) return null
 
   const upcoming = player.queue.slice(player.index + 1)
 
   return (
-    <aside className="queue glass glass-strong" ref={ref} aria-label="Play queue">
+    <aside className="queue glass glass-strong" ref={ref} aria-label="Play queue" data-leaving={leaving}>
       <header className="queue__head">
         <h3>Queue</h3>
         <span className="badge">{player.queue.length}</span>

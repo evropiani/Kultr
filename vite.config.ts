@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      __KULTR_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.4.2'),
+      __KULTR_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.5.0'),
       __KULTR_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
     },
     server: {

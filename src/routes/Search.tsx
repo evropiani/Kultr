@@ -21,20 +21,20 @@ function score(haystack: string | undefined, needle: string): number {
   return 0
 }
 
+/**
+ * Search results. The input is the field in the top bar, which keeps the
+ * query in the address (`?q=`); this page only reads it.
+ */
 export function Search() {
-  const [params, setParams] = useSearchParams()
-  const [query, setQuery] = useState(params.get('q') ?? '')
-  const search = useDebounced(query.trim().toLowerCase(), 220)
+  const [params] = useSearchParams()
+  const query = params.get('q') ?? ''
+  const search = useDebounced(query.trim().toLowerCase(), 180)
   const [serverResults, setServerResults] = useState<{
     artist: Artist[]
     album: Album[]
     song: Song[]
   } | null>(null)
   const [serverBusy, setServerBusy] = useState(false)
-
-  useEffect(() => {
-    setParams(query.trim() ? { q: query.trim() } : {}, { replace: true })
-  }, [query, setParams])
 
   const { data: library, loading } = useAsync(
     async () => {
@@ -108,31 +108,20 @@ export function Search() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Search</h1>
+          <h1>{query.trim() ? `Results for “${query.trim()}”` : 'Search'}</h1>
           <span className="page-head__sub">
             Searches your local mirror instantly. Ask the server if something is missing.
           </span>
         </div>
       </div>
 
-      <div className="field" style={{ marginBottom: 22, maxWidth: 560 }}>
-        <SearchIcon size={16} opacity={0.6} />
-        <input
-          value={query}
-          autoFocus
-          placeholder="Artists, albums, tracks…"
-          aria-label="Search"
-          data-search-input="true"
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </div>
-
       {loading ? (
         <Spinner />
       ) : !search ? (
-        <Empty icon={<SearchIcon size={24} />} title="Start typing">
-          Results appear as you type. Everything comes from the copy of your library stored in this
-          browser, so it is instant even over a slow connection.
+        <Empty icon={<SearchIcon size={24} />} title="Type in the search bar above">
+          Results appear here as you type. Everything comes from the copy of your library stored in
+          this browser, so it is instant even over a slow connection. Press <strong>/</strong> from
+          anywhere to jump to it.
         </Empty>
       ) : (
         <>

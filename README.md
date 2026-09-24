@@ -58,6 +58,7 @@ Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/3
 | **Offline sync** | A sync button on every page — albums, artists, songs, genres, playlists, favourites, or the whole library. It is incremental: run it again and it only fetches what you do not already have. Downloads go into the browser, or into a real folder you pick, with readable `Artist - Album - Track` filenames. |
 | **Select and act in bulk** | Tick boxes on tracks and cards (shift-click for a range), then download, delete, queue, favourite or add to a playlist in one go. |
 | **Drag and drop** | Drag any track, album or artist onto a target: play next, add to queue, favourite, sync offline, or delete downloads. |
+| **Listening, kept on your server** | Every play is sent to Navidrome with the time it happened, so *recently played*, *most played* and the Listening page are the same on every device and come back after clearing the browser. Plays made offline are queued and sent when the connection returns; plays made on other devices show up when you come back to the tab. |
 | **Many servers** | Add as many Navidrome servers as you like, give each one a name, switch between them, and turn one off without deleting it. |
 | **A home page you choose** | Fifteen shelves — most played, random, favourite and recently added, across tracks, albums, artists, playlists and radio — switched on, off and reordered to taste. A shelf with nothing to show is skipped rather than left empty. |
 | **Cast** | Send playback to a Chromecast or an AirPlay device, where the browser supports it. |
@@ -67,10 +68,18 @@ Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/3
 | **Equaliser** | Ten bands, nine presets, pre-amp. |
 | **Volume levelling** | ReplayGain, per track or per album, with clipping protection. |
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |
-| **Everything else** | Queue with drag-to-reorder, favourites, ratings, playlists, scrobbling, sleep timer, internet radio, listening stats, keyboard shortcuts, light and dark themes, and a PWA install on desktop, Android and iOS. |
+| **Everything else** | Queue with drag-to-reorder, favourites, ratings, playlists, sleep timer, internet radio, keyboard shortcuts, light and dark themes, and a PWA install on desktop, Android and iOS. |
 
 The interface takes its colour from whatever is playing — the surfaces, the
-highlights and the backdrop all retint from the album art.
+highlights and the backdrop all retint from the album art. It moves, too, but
+quickly: the highlight in the sidebar and in every switcher slides to what you
+picked, settings sections grow open and shut, pages rise into place, and the
+full player, the queue, dialogs, menus and notices leave the way they came
+instead of vanishing. **Reduce motion** in Settings (or the system setting)
+turns all of it off.
+
+Search lives in the top bar: type anywhere, and results appear as you type.
+Press <kbd>/</kbd> to jump to it.
 
 ---
 
@@ -369,8 +378,12 @@ paste CSS you are willing to run.
   it to hash a token on every request. Turn off **Stay signed in** and it is
   dropped when you close the tab. It is never sent anywhere except your own
   server.
-- The library mirror, InjeKt analysis and listening history live in IndexedDB
-  in your browser. **Settings → Reset Kultr** erases the lot.
+- The library mirror, InjeKt analysis and this browser's own play history live
+  in IndexedDB. **Settings → Reset Kultr** erases the lot.
+- Play counts and last-played times live on your Navidrome server, which is
+  where Kultr sends each play (**Settings → Playback → Send plays to
+  Navidrome**). That is why recently and most played survive clearing the
+  browser, and match across devices.
 - Downloaded audio goes wherever you told it to: inside the browser, or a
   folder you picked. A page can only write where you have explicitly pointed
   it, so "choose a download path" means picking that folder once — there is no

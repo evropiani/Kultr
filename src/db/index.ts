@@ -22,6 +22,12 @@ export interface PlayHistoryEntry {
   seconds: number
   completed: boolean
   source: string
+  /**
+   * True while this play still has to reach the server — it was made offline,
+   * or the scrobble failed. Cleared once Navidrome has it. Absent on plays
+   * that were never meant to be sent (scrobbling off) and on older records.
+   */
+  pending?: boolean
 }
 
 export interface OfflineTrack {
@@ -304,8 +310,30 @@ export async function patchArtist(id: string, patch: Partial<Artist>): Promise<v
 
 // ----------------------------------------------------------------- history --
 
-export async function addHistory(entry: PlayHistoryEntry): Promise<void> {
-  await (await db()).add('history', entry)
+export async function addHistory(entry: PlayHistoryEntry): Promise<number> {
+  return (await db()).add('history', entry)
+}
+
+/** Plays still waiting to be sent to the server, oldest first. */
+export async function pendingHistory(): Promise<PlayHistoryEntry[]> {
+  const all = await (await db()).getAllFromIndex('history', 'playedAt')
+  return all.filter((entry) => entry.pending)
+}
+
+/** Mark plays as delivered (or as not worth retrying). */
+export async function settleHistory(ids: number[]): Promise<void> {
+  if (!ids.length) return
+  const database = await db()
+  const tx = database.transaction('history', 'readwrite')
+  await Promise.all(
+    ids.map(async (id) => {
+      const entry = await tx.store.get(id)
+      if (!entry?.pending) return
+      const { pending: _pending, ...settled } = entry
+      await tx.store.put(settled)
+    }),
+  )
+  await tx.done
 }
 
 export async function recentHistory(limit = 200): Promise<PlayHistoryEntry[]> {
@@ -319,8 +347,20 @@ export async function recentHistory(limit = 200): Promise<PlayHistoryEntry[]> {
   return out
 }
 
+/**
+ * Forget this browser's history — except plays still waiting to be sent,
+ * which are the queue for the server rather than a record, and clearing them
+ * would lose them for good.
+ */
 export async function clearHistory(): Promise<void> {
-  await (await db()).clear('history')
+  const database = await db()
+  const tx = database.transaction('history', 'readwrite')
+  let cursor = await tx.store.openCursor()
+  while (cursor) {
+    if (!cursor.value.pending) await cursor.delete()
+    cursor = await cursor.continue()
+  }
+  await tx.done
 }
 
 // ----------------------------------------------------------------- offline --

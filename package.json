@@ -1,7 +1,7 @@
 {
   "name": "kultr",
   "private": true,
-  "version": "1.4.2",
+  "version": "1.5.0",
   "type": "module",
   "description": "Kultr \u2014 a modern, minimalist web client for Navidrome with crossfade and InjeKt mixing",
   "license": "Apache-2.0",

@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, X } from 'lucide-react'
 import clsx from 'clsx'
 import { initials } from '@/lib/format'
 import { useDismiss } from '@/lib/hooks'
+import { prefersReducedMotion, useLastWhile, usePresence, useSlidingIndicator } from '@/lib/motion'
 
 /** Artwork with a graceful fallback when the image is missing or blocked. */
 export function Art({
@@ -71,8 +72,12 @@ export function Segmented<T extends string>({
   options: { value: T; label: string }[]
   onChange: (value: T) => void
 }) {
+  const box = useRef<HTMLDivElement>(null)
+  const mark = useRef<HTMLSpanElement>(null)
+  const slideTo = useSlidingIndicator(box, mark, "button[data-active='true']", [value, options.length])
   return (
-    <div className="seg" role="tablist">
+    <div className="seg" role="tablist" ref={box}>
+      <span className="seg__mark" ref={mark} aria-hidden="true" />
       {options.map((option) => (
         <button
           key={option.value}
@@ -80,7 +85,13 @@ export function Segmented<T extends string>({
           role="tab"
           aria-selected={value === option.value}
           data-active={value === option.value}
-          onClick={() => onChange(option.value)}
+          onClick={(event) => {
+            // Started here rather than after the re-render the change causes.
+            // The change itself is not delayed: a setting must never depend
+            // on how quickly frames arrive.
+            slideTo(event.currentTarget)
+            onChange(option.value)
+          }}
         >
           {option.label}
         </button>
@@ -204,11 +215,61 @@ export function Section({
         </button>
         {/* Outside the toggle: a button inside a button is invalid, and these
             are their own actions rather than ways to open the section. */}
-        {open ? actions : null}
+        {open && actions ? <span className="section__actions">{actions}</span> : null}
       </div>
       {description ? <p className="section__desc">{description}</p> : null}
-      {open ? children : null}
+      <Collapse open={open}>{children}</Collapse>
     </section>
+  )
+}
+
+const COLLAPSE_MS = 300
+
+/**
+ * Height-animated disclosure.
+ *
+ * The body is still not in the DOM while shut; it is mounted at zero height,
+ * grown to its natural height, and removed again once it has shrunk away.
+ */
+export function Collapse({ open, children }: { open: boolean; children: ReactNode }) {
+  const [phase, setPhase] = useState<'closed' | 'entering' | 'opening' | 'open' | 'closing'>(
+    open ? 'open' : 'closed',
+  )
+
+  useEffect(() => {
+    if (open) {
+      if (phase === 'open' || phase === 'opening' || phase === 'entering') return
+      setPhase(prefersReducedMotion() ? 'open' : 'entering')
+    } else {
+      if (phase === 'closed' || phase === 'closing') return
+      setPhase(prefersReducedMotion() ? 'closed' : 'closing')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  useEffect(() => {
+    if (phase === 'entering') {
+      // Paint it at zero height first, or there is nothing to grow from.
+      let second = 0
+      const first = requestAnimationFrame(() => {
+        second = requestAnimationFrame(() => setPhase('opening'))
+      })
+      return () => {
+        cancelAnimationFrame(first)
+        cancelAnimationFrame(second)
+      }
+    }
+    if (phase === 'opening' || phase === 'closing') {
+      const timer = window.setTimeout(() => setPhase(phase === 'opening' ? 'open' : 'closed'), COLLAPSE_MS)
+      return () => window.clearTimeout(timer)
+    }
+  }, [phase])
+
+  if (phase === 'closed') return null
+  return (
+    <div className="collapse" data-phase={phase}>
+      <div className="collapse__inner">{children}</div>
+    </div>
   )
 }
 
@@ -226,18 +287,24 @@ export function Modal({
   footer?: ReactNode
 }) {
   const ref = useDismiss<HTMLDivElement>(open, onClose)
-  if (!open) return null
+  const { present, leaving } = usePresence(open, 200)
+  // What a dialog shows usually comes from the state that closes it, so hold
+  // on to the last of it for the exit rather than animating an empty sheet.
+  const shown = useLastWhile({ title, children, footer }, open)
+  if (!present) return null
   return createPortal(
-    <div className="scrim" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="scrim" role="dialog" aria-modal="true" aria-label={shown.title} data-leaving={leaving}>
       <div className="sheet glass glass-strong" ref={ref}>
         <div className="sheet__head">
-          <h2>{title}</h2>
+          <h2>{shown.title}</h2>
           <button className="iconbtn" onClick={onClose} aria-label="Close">
             <X size={18} />
           </button>
         </div>
-        {children}
-        {footer ? <div style={{ marginTop: 18, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>{footer}</div> : null}
+        {shown.children}
+        {shown.footer ? (
+          <div style={{ marginTop: 18, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>{shown.footer}</div>
+        ) : null}
       </div>
     </div>,
     document.body,
@@ -265,6 +332,8 @@ export function Menu({
 }) {
   const ref = useDismiss<HTMLDivElement>(Boolean(anchor), onClose)
   const [position, setPosition] = useState({ left: -9999, top: -9999 })
+  const { present, leaving } = usePresence(Boolean(anchor), 130)
+  const shownItems = useLastWhile(items, Boolean(anchor))
 
   useLayoutEffect(() => {
     if (!anchor || !ref.current) return
@@ -272,13 +341,17 @@ export function Menu({
     const left = Math.min(anchor.x, window.innerWidth - rect.width - 12)
     const top = Math.min(anchor.y, window.innerHeight - rect.height - 12)
     setPosition({ left: Math.max(12, left), top: Math.max(12, top) })
+    // Grow out of the corner nearest the pointer, not out of the middle.
+    const originX = anchor.x - Math.max(12, left)
+    const originY = anchor.y - Math.max(12, top)
+    ref.current.style.transformOrigin = `${originX}px ${originY}px`
   }, [anchor, ref])
 
-  if (!anchor) return null
+  if (!present) return null
 
   return createPortal(
-    <div className="menu glass glass-strong" ref={ref} style={position} role="menu">
-      {items.map((item, index) => (
+    <div className="menu glass glass-strong" ref={ref} style={position} role="menu" data-leaving={leaving}>
+      {shownItems.map((item, index) => (
         <div key={`${item.label}-${index}`}>
           {item.separatorBefore ? <div className="menu__sep" /> : null}
           <button

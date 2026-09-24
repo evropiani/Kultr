@@ -18,6 +18,7 @@ import { allAlbums, allArtists, allPlaylists, allSongs, recentHistory } from '@/
 import { useAsync } from '@/lib/hooks'
 import { formatCount, formatRelative } from '@/lib/format'
 import { HOME_TILES, resolveHomeTiles, type HomeTile } from '@/lib/homeTiles'
+import { recentPlays } from '@/lib/listening'
 import { usePlayer } from '@/store/player'
 import { useSettings, type GridSize } from '@/store/settings'
 import { useSync } from '@/store/sync'
@@ -69,6 +70,7 @@ export function Home() {
   const syncState = useSync((state) => state.state)
   const running = useSync((state) => state.running)
   const run = useSync((state) => state.run)
+  const listeningAt = useSync((state) => state.listeningAt)
   const tileIds = useSettings((state) => state.homeTiles)
   const favouriteRadios = useSettings((state) => state.favouriteRadios)
   const gridSize = useSettings((state) => state.gridSize)
@@ -90,7 +92,7 @@ export function Home() {
       ])
       return { albums, songs, artists, playlists, history }
     },
-    [syncState.lastCheck],
+    [syncState.lastCheck, listeningAt],
     {
       albums: [] as Album[],
       songs: [] as Song[],
@@ -322,21 +324,15 @@ function buildShelves(
     let body: React.ReactNode = null
 
     switch (tile.id) {
-      case 'recentlyPlayed': {
-        const byId = new Map(data.songs.map((song) => [song.id, song]))
-        const seen = new Set<string>()
-        const picks: Song[] = []
-        for (const entry of data.history) {
-          if (seen.has(entry.songId)) continue
-          const song = byId.get(entry.songId)
-          if (!song) continue
-          seen.add(entry.songId)
-          picks.push(song)
-          if (picks.length >= SONG_LIMIT) break
-        }
-        body = songList(picks, 'Recently played')
+      case 'recentlyPlayed':
+        // The server's last-played times as well as this browser's history,
+        // so plays from other devices show, and none of it is lost when this
+        // browser's storage is.
+        body = songList(
+          recentPlays(data.songs, data.history, SONG_LIMIT).map((entry) => entry.song),
+          'Recently played',
+        )
         break
-      }
       case 'mostPlayedSongs':
         body = songList(byPlayCount(data.songs, SONG_LIMIT), 'Played the most')
         break

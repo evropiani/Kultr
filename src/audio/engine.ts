@@ -50,8 +50,16 @@ const DEFAULT_CALLBACKS: EngineCallbacks = {
   onModeChange: noop,
 }
 
-/** How early we ask the app for the next track's transition plan. */
-const PREPARE_LEAD_SECONDS = 35
+/**
+ * The next transition is asked for as soon as a track is under way, not near
+ * its end: analysing a track the first time takes a few seconds, and a plan
+ * made late could only choose from what was left of the track. Loading the
+ * next track's audio into the spare deck waits until this long before the
+ * mix starts, so no stream is held open for minutes doing nothing.
+ */
+const PRIME_LEAD_SECONDS = 30
+/** Played this far into a track before its successor is planned. */
+const PREPARE_AFTER_SECONDS = 0.5
 const CURVE_POINTS = 256
 
 interface Deck {
@@ -125,6 +133,8 @@ export class AudioEngine {
   private transitioning = false
   private preparedFor: string | null = null
   private pending: { song: Song; plan: TransitionPlan } | null = null
+  /** Whether the spare deck has been loaded with the pending track. */
+  private pendingPrimed = false
   private elementFades: {
     deck: Deck
     from: number
@@ -543,12 +553,21 @@ export class AudioEngine {
   /** Hand the engine a plan produced by the InjeKt planner. */
   setPendingTransition(song: Song, plan: TransitionPlan): void {
     this.pending = { song, plan }
-    if (plan.type === 'gapless' || plan.duration > 0) {
-      // Warm up the idle deck so the transition starts instantly.
-      void this.prime(this.idle, song, plan.inStartOffset).then(() => {
-        this.setDeckLevel(this.idle, 0)
-      })
-    }
+    this.pendingPrimed = false
+    this.primeIfDue(this.currentTime)
+  }
+
+  /** Warm up the idle deck shortly before the transition, so it starts instantly. */
+  private primeIfDue(currentTime: number): void {
+    const pending = this.pending
+    if (!pending || this.pendingPrimed) return
+    const { song, plan } = pending
+    if (plan.type !== 'gapless' && plan.duration <= 0) return
+    if (currentTime < plan.startAt - PRIME_LEAD_SECONDS) return
+    this.pendingPrimed = true
+    void this.prime(this.idle, song, plan.inStartOffset).then(() => {
+      this.setDeckLevel(this.idle, 0)
+    })
   }
 
   clearPendingTransition(): void {
@@ -801,6 +820,7 @@ export class AudioEngine {
       const remaining = duration - currentTime
 
       if (this.pending) {
+        this.primeIfDue(currentTime)
         const plan = this.pending.plan
         const startAt = Math.min(plan.startAt, duration - 0.05)
         if (
@@ -820,7 +840,7 @@ export class AudioEngine {
         if (currentTime >= startAt) {
           this.executeTransition(this.pending.song, this.pending.plan)
         }
-      } else if (remaining <= PREPARE_LEAD_SECONDS && this.preparedFor !== deck.song.id) {
+      } else if (currentTime >= PREPARE_AFTER_SECONDS && this.preparedFor !== deck.song.id) {
         this.preparedFor = deck.song.id
         this.callbacks.prepareNext(remaining)
       }

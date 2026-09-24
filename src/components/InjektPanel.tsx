@@ -24,19 +24,22 @@ export function InjektPanel() {
   const [analysisB, setAnalysisB] = useState<TrackAnalysis | null>(null)
   const [busy, setBusy] = useState(false)
 
+  // Re-read whenever a plan arrives too: planning is what analyses the next
+  // track, so the panel would otherwise keep saying "Not analysed yet" about
+  // a track the plan was just built from.
   useEffect(() => {
     let cancelled = false
-    const load = async () => {
-      setAnalysisA(current ? ((await getAnalysis(current.id)) ?? null) : null)
-      setAnalysisB(next ? ((await getAnalysis(next.id)) ?? null) : null)
-    }
-    void load().then(() => {
+    void (async () => {
+      const a = current ? ((await getAnalysis(current.id)) ?? null) : null
+      const b = next ? ((await getAnalysis(next.id)) ?? null) : null
       if (cancelled) return
-    })
+      setAnalysisA(a)
+      setAnalysisB(b)
+    })()
     return () => {
       cancelled = true
     }
-  }, [current?.id, next?.id, busy])
+  }, [current?.id, next?.id, busy, player.lastPlan])
 
   const analyse = async (song: Song | null) => {
     if (!song) return
@@ -129,8 +132,9 @@ export function InjektPanel() {
         </>
       ) : (
         <p className="row__hint">
-          The transition is planned about {35} seconds before the end of the track. Settings currently
-          allow a {injektMaxTempoShift}% tempo shift over {injektBars} bars.
+          The next transition is planned as soon as a track starts playing, and shows here once both
+          tracks are analysed — the first time a track is heard that takes a few seconds. Settings
+          currently allow a {injektMaxTempoShift}% tempo shift over {injektBars} bars.
         </p>
       )}
     </div>
