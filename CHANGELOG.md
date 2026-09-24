@@ -7,6 +7,37 @@ only fixed.
 
 ---
 
+## 1.5.1 — 2026-09-24
+
+### 2026-09-24 14:54 — Plays made in the background are counted again
+
+Some plays never reached Navidrome: the first few tracks would show up in its
+recently played, then nothing. The ones that went missing were the ones played
+while Kultr was not on screen — another tab in front, the window minimised,
+the phone locked.
+
+Kultr's playback loop ran on animation frames, and browsers stop sending
+those entirely to a page nobody is looking at. So in the background nothing
+measured how long a track had been heard, no track ever reached the point
+where it counts as played, and nothing was sent. The same loop starts InjeKt
+transitions, so those were skipped in the background as well, and tracks
+simply ran to their end.
+
+- **The loop keeps going in the background.** When frames stop arriving, a
+  timer takes over. Browsers keep timers running for a page that is playing
+  audio.
+- **Listening is measured by how far the track moved on**, not by how often
+  the loop ran. Before, any gap of a second or more between two checks was
+  thrown away, which is exactly what a background tab produces. A jump in
+  position that the clock cannot account for is a seek, and still does not
+  count.
+
+Tested with animation frames switched off entirely: 1.5.0 never sent the play;
+1.5.1 sends it once 50 seconds of a 100-second track have been heard, and
+playback carries on into the next track.
+
+---
+
 ## 1.5.0 — 2026-09-24
 
 ### 2026-09-24 13:50 — Listening data lives on your server

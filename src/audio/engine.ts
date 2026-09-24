@@ -129,6 +129,8 @@ export class AudioEngine {
 
   private callbacks: EngineCallbacks = DEFAULT_CALLBACKS
   private rafHandle = 0
+  private backupTimer = 0
+  private lastFrameAt = 0
   private state: PlaybackState = 'idle'
   private transitioning = false
   private preparedFor: string | null = null
@@ -212,6 +214,15 @@ export class AudioEngine {
     for (const deck of [this.decks.a, this.decks.b]) this.wireDeckEvents(deck)
     this.setVolume(settings().muted ? 0 : settings().volume)
     this.loop()
+    // Animation frames stop completely in a background tab, a minimised
+    // window or behind a locked screen — which is where music mostly plays.
+    // Without this, transitions never fired and listening time was never
+    // counted (so plays were never sent) until the tab was looked at again.
+    // Browsers still run timers for a page that is playing audio, so when
+    // frames stop arriving this carries on instead.
+    this.backupTimer = window.setInterval(() => {
+      if (performance.now() - this.lastFrameAt > 200) this.tick()
+    }, 200)
   }
 
   private buildGraph(ctx: AudioContext): void {
@@ -736,6 +747,11 @@ export class AudioEngine {
 
   private loop = (): void => {
     this.rafHandle = requestAnimationFrame(this.loop)
+    this.lastFrameAt = performance.now()
+    this.tick()
+  }
+
+  private tick = (): void => {
     const now = performance.now()
 
     // With nothing playing and nothing scheduled there is genuinely no work to
@@ -907,6 +923,7 @@ export class AudioEngine {
 
   destroy(): void {
     cancelAnimationFrame(this.rafHandle)
+    window.clearInterval(this.backupTimer)
     this.stop()
   }
 }

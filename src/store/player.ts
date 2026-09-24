@@ -75,6 +75,8 @@ let scrobbledFor: string | null = null
 let nowPlayingFor: string | null = null
 let listenedSeconds = 0
 let lastTickAt = 0
+/** Position in the track at the previous tick, or null right after a seek or a new track. */
+let lastMediaTime: number | null = null
 let saveTimer = 0
 let timeThrottle = 0
 
@@ -309,6 +311,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   },
 
   seek(seconds) {
+    lastMediaTime = null
     engine.seek(seconds)
     set({ currentTime: seconds })
   },
@@ -450,13 +453,25 @@ export const usePlayer = create<PlayerState>((set, get) => ({
 
 // --------------------------------------------------------------- internals --
 
+/**
+ * Count how much of the track has actually been heard.
+ *
+ * Measured by how far the track moved on, not by how often this is called:
+ * in a background tab ticks arrive once a second or less, and the old rule
+ * (wall-clock gaps under a second) threw all of that listening away, so
+ * tracks played with Kultr in the background were never counted or sent.
+ * A jump the wall clock cannot account for is a seek and is not counted.
+ */
 function trackListening(currentTime: number, duration: number): void {
   const now = performance.now()
-  const delta = lastTickAt ? (now - lastTickAt) / 1000 : 0
+  const wall = lastTickAt ? (now - lastTickAt) / 1000 : 0
   lastTickAt = now
-  if (delta > 0 && delta < 1 && usePlayer.getState().playback === 'playing') {
-    listenedSeconds += delta
+  if (lastMediaTime !== null && usePlayer.getState().playback === 'playing') {
+    const advanced = currentTime - lastMediaTime
+    // Allow for tempo-matched playback (a few percent fast) and timer jitter.
+    if (advanced > 0 && advanced <= wall * 1.15 + 0.5) listenedSeconds += advanced
   }
+  lastMediaTime = currentTime
 
   const song = usePlayer.getState().current()
   if (!song) return
@@ -508,6 +523,7 @@ function onTrackStarted(state: PlayerState): void {
   if (!song) return
   listenedSeconds = 0
   lastTickAt = 0
+  lastMediaTime = null
   scrobbledFor = null
   setMediaSessionMetadata(song)
 
