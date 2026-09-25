@@ -101,7 +101,7 @@ export function AlbumPage() {
             <button
               className="pill pill-lg"
               data-active={starred}
-              onClick={async () => setStarred(await toggleStarAlbum(album))}
+              onClick={async () => setStarred(await toggleStarAlbum(album, starred))}
             >
               <Heart size={15} fill={starred ? 'currentColor' : 'none'} />
               {starred ? 'Favourited' : 'Favourite'}
@@ -260,7 +260,7 @@ export function ArtistPage() {
             <button
               className="pill pill-lg"
               data-active={starred}
-              onClick={async () => setStarred(await toggleStarArtist(artist))}
+              onClick={async () => setStarred(await toggleStarArtist(artist, starred))}
             >
               <Heart size={15} fill={starred ? 'currentColor' : 'none'} />
               {starred ? 'Following' : 'Follow'}

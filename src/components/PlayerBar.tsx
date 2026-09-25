@@ -99,7 +99,7 @@ export function PlayerBar() {
           className="iconbtn"
           data-active={starred}
           aria-label={starred ? 'Remove from favourites' : 'Add to favourites'}
-          onClick={async () => setStarred(await toggleStarSong(song))}
+          onClick={async () => setStarred(await toggleStarSong(song, starred))}
         >
           <Heart size={16} fill={starred ? 'currentColor' : 'none'} />
         </button>

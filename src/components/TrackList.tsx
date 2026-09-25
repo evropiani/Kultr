@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Check,
@@ -226,6 +226,8 @@ function TrackRow({
   const currentId = usePlayer((state) => state.current()?.id)
   const playback = usePlayer((state) => state.playback)
   const [starred, setStarred] = useState(Boolean(song.starred))
+  // A reused row, or a list that re-read the mirror, brings a new truth.
+  useEffect(() => setStarred(Boolean(song.starred)), [song.id, song.starred])
   const menu = useMenu()
   const isCurrent = currentId === song.id
 
@@ -256,7 +258,7 @@ function TrackRow({
     {
       label: starred ? 'Remove from favourites' : 'Add to favourites',
       icon: <Heart size={15} />,
-      onSelect: async () => setStarred(await toggleStarSong(song)),
+      onSelect: async () => setStarred(await toggleStarSong(song, starred)),
     },
     {
       label: 'Analyse for InjeKt',
@@ -399,7 +401,7 @@ function TrackRow({
           className="iconbtn"
           data-active={starred}
           aria-label={starred ? 'Remove from favourites' : 'Add to favourites'}
-          onClick={async () => setStarred(await toggleStarSong(song))}
+          onClick={async () => setStarred(await toggleStarSong(song, starred))}
           style={{ width: 28, height: 28, opacity: starred ? 1 : undefined }}
         >
           <Heart size={14} fill={starred ? 'currentColor' : 'none'} />

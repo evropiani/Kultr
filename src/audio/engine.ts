@@ -366,10 +366,16 @@ export class AudioEngine {
       }
     }
     const { preferredBitrate, preferredFormat } = settings()
+    // No `estimateContentLength`. When the server transcodes, it would
+    // announce a size worked out from the bitrate, and when the real output
+    // came out larger (VBR, container overhead, any lossless source) it cut the
+    // connection at that size: the track stalled a moment before its end and
+    // never advanced, and seeking failed. Without it the browser reads the
+    // stream to its real end, and the duration comes from the track's
+    // metadata. Originals (including FLAC sent as FLAC) were never affected.
     const url = getClient().streamUrl(song.id, {
       maxBitRate: preferredBitrate || undefined,
       format: preferredFormat || undefined,
-      estimateContentLength: true,
     })
     return { url, objectUrl: null }
   }

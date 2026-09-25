@@ -7,6 +7,41 @@ only fixed.
 
 ---
 
+## 1.5.2 — 2026-09-25
+
+### 2026-09-25 05:48 — Favourites can be taken back
+
+Favouriting a track, an album or an artist and then clicking the heart again
+did not remove it: the second click favourited it again. Every heart kept its
+own idea of the state, but the toggle decided what to do from the copy of the
+track the page was drawn with, which a click never updated. It now decides
+from what the heart is showing. Fixed on track rows and their menu, the
+album's **Favourite** button and the artist's **Follow** button. The full
+player's heart also kept the previous track's state after a skip while it was
+open; it now follows the track.
+
+### 2026-09-25 05:48 — Transcoded streams play to the end
+
+With **Streaming quality** or **Transcode format** set to something the server
+has to convert (MP3, Opus or AAC from a FLAC library, for example), tracks
+stalled a second or two before their end and never moved on to the next one,
+and seeking could fail.
+
+Kultr asked Navidrome to announce the size of each converted stream in
+advance. Navidrome works that out from the bitrate, and when the real output
+came out larger it cut the connection at the announced size — the browser was
+left waiting for the rest. Tested against Navidrome 0.64 with its transcode
+cache off: with the request, 17 of 18 converted streams were cut short;
+without it, every one arrives whole, plays to its end, carries on into the
+next track and seeks correctly. The duration still shows, from the track's
+own metadata.
+
+Original files were never affected, and **FLAC** as the transcode format is
+not either: Navidrome sends FLAC files exactly as they are. The setting's
+description now says so, and that Navidrome can make FLAC out of the box.
+
+---
+
 ## 1.5.1 — 2026-09-24
 
 ### 2026-09-24 14:54 — Plays made in the background are counted again

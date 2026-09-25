@@ -612,7 +612,7 @@ export function Settings() {
         </Row>
         <Row
           label="Transcode format"
-          hint="Leave empty to let the server decide. Useful if your browser cannot play the original format. FLAC and ALAC stay lossless, so they are large — and your server has to be set up to produce them."
+          hint="Leave empty to let the server decide. Useful if your browser cannot play the original format. FLAC stays lossless: FLAC files are sent exactly as they are and anything else is converted, which Navidrome can do out of the box. ALAC needs a transcoding rule adding on the server."
         >
           <select
             className="field"

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ChevronDown,
@@ -48,6 +48,8 @@ export function NowPlaying() {
   const setSetting = useSettings((state) => state.set)
   const [tab, setTab] = useState<Tab>('queue')
   const [starred, setStarred] = useState(Boolean(song?.starred))
+  // The full player stays open across tracks; the heart has to follow them.
+  useEffect(() => setStarred(Boolean(song?.starred)), [song?.id, song?.starred])
   // Stays mounted for the slide back down, rather than vanishing on close.
   const { present, leaving } = usePresence(open && Boolean(song), 300)
   const tabsRef = useRef<HTMLDivElement>(null)
@@ -174,7 +176,7 @@ export function NowPlaying() {
                   className="iconbtn"
                   data-active={starred}
                   aria-label="Favourite"
-                  onClick={async () => setStarred(await toggleStarSong(song))}
+                  onClick={async () => setStarred(await toggleStarSong(song, starred))}
                 >
                   <Heart size={18} fill={starred ? 'currentColor' : 'none'} />
                 </button>

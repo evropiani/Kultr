@@ -22,9 +22,16 @@ function patchQueue(songId: string, patch: Partial<Song>): void {
   })
 }
 
-/** Star/unstar, writing through to the server and the local mirror. */
-export async function toggleStarSong(song: Song): Promise<boolean> {
-  const starred = Boolean(song.starred)
+/**
+ * Star/unstar, writing through to the server and the local mirror.
+ *
+ * Pass `isStarred` — what the heart on screen currently shows — whenever the
+ * caller keeps its own state. The object a list or page was rendered with is
+ * not updated by a toggle, so deciding from `song.starred` alone made the
+ * second click star it again instead of removing it.
+ */
+export async function toggleStarSong(song: Song, isStarred = Boolean(song.starred)): Promise<boolean> {
+  const starred = isStarred
   try {
     const client = getClient()
     if (starred) await client.unstar({ id: song.id })
@@ -39,8 +46,8 @@ export async function toggleStarSong(song: Song): Promise<boolean> {
   }
 }
 
-export async function toggleStarAlbum(album: Album): Promise<boolean> {
-  const starred = Boolean(album.starred)
+export async function toggleStarAlbum(album: Album, isStarred = Boolean(album.starred)): Promise<boolean> {
+  const starred = isStarred
   try {
     const client = getClient()
     if (starred) await client.unstar({ albumId: album.id })
@@ -53,8 +60,8 @@ export async function toggleStarAlbum(album: Album): Promise<boolean> {
   }
 }
 
-export async function toggleStarArtist(artist: Artist): Promise<boolean> {
-  const starred = Boolean(artist.starred)
+export async function toggleStarArtist(artist: Artist, isStarred = Boolean(artist.starred)): Promise<boolean> {
+  const starred = isStarred
   try {
     const client = getClient()
     if (starred) await client.unstar({ artistId: artist.id })
