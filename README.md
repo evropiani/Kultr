@@ -10,7 +10,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
-[Try the live demo](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Try the live demo](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [iOS app](https://github.com/evropiani/Kultr_iOS) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
@@ -408,16 +408,22 @@ mirror, downloads, several servers — plus background playback, a media
 notification, lock-screen and Bluetooth controls, and Android Auto. Download
 the APK from its
 [latest release](https://github.com/evropiani/Kultr_Android/releases/latest)
-(Android 8.0 or later). A settings file exported from one opens in the other.
+(Android 8.0 or later).
 
-**Everywhere else**, Kultr is a PWA, so you can install it today: **Share →
-Add to Home Screen** on iOS, or **Install app** from the Chrome or Edge menu.
-It runs full-screen, keeps working offline for anything you have downloaded,
-and shows up on the lock screen.
+**iPhone: there is a native app too.**
+**[Kultr for iOS](https://github.com/evropiani/Kultr_iOS)** has the same
+behaviour, plus background playback, lock-screen and Control Center controls,
+and AirPlay. It isn't on the App Store: download the IPA from its
+[latest release](https://github.com/evropiani/Kultr_iOS/releases/latest) and
+install it with a free Apple ID (iOS 17 or later) —
+[step by step](https://github.com/evropiani/Kultr_iOS/blob/main/docs/INSTALL.md).
+A settings file exported from any Kultr opens in the others.
 
-A native iOS app is planned, and the codebase is laid out for it — the player,
-the sync engine and all of the InjeKt DSP are plain TypeScript with no DOM
-dependencies, so they port as-is.
+**Or skip the apps:** Kultr is a PWA, so **Share → Add to Home Screen** on iOS,
+or **Install app** from the Chrome or Edge menu, gives you a full-screen app
+that keeps working offline for anything you have downloaded and shows up on
+the lock screen.
+
 See **[docs/MOBILE.md](docs/MOBILE.md)**.
 
 ---
@@ -450,7 +456,7 @@ Architecture, where everything lives, and how to add a feature:
 | [INJEKT.md](docs/INJEKT.md) | The DSP and the mixing rules |
 | [SYNC.md](docs/SYNC.md) | What sync does, and what it costs your server |
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Architecture and contributing |
-| [MOBILE.md](docs/MOBILE.md) | Installing it on a phone, the Android app, and iOS to come |
+| [MOBILE.md](docs/MOBILE.md) | Installing it on a phone, and the Android and iOS apps |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | When something is broken |
 | [FAQ.md](docs/FAQ.md) | Short answers |
 | [CHANGELOG.md](CHANGELOG.md) | What changed, and when |

@@ -1,10 +1,12 @@
 # Phones and tablets
 
-> **On Android, there is a native app:
-> [Kultr for Android](https://github.com/evropiani/Kultr_Android).** Get the
-> APK from its [latest release](https://github.com/evropiani/Kultr_Android/releases/latest).
+> **There are native apps:
+> [Kultr for Android](https://github.com/evropiani/Kultr_Android)** (the APK
+> from its [latest release](https://github.com/evropiani/Kultr_Android/releases/latest))
+> **and [Kultr for iOS](https://github.com/evropiani/Kultr_iOS)** (sideloaded
+> with a free Apple ID — [how](https://github.com/evropiani/Kultr_iOS/blob/main/docs/INSTALL.md)).
 > The rest of this page is about installing the web app, which works on every
-> platform, and about the iOS app still to come.
+> platform, and how the native apps came about.
 
 ## Today: install it as an app
 
@@ -47,11 +49,11 @@ Worth being straight about, because these are the reasons to build native:
 
 ---
 
-## Next: native apps
+## Native apps
 
-Android is out — [Kultr for Android](https://github.com/evropiani/Kultr_Android)
-is a native Kotlin app. iOS is planned, and the codebase is already arranged
-for it.
+Both are out: [Kultr for Android](https://github.com/evropiani/Kultr_Android)
+is a native Kotlin app and [Kultr for iOS](https://github.com/evropiani/Kultr_iOS)
+a native Swift app. What follows is how the port was planned.
 
 ### Why it ports cleanly
 

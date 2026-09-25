@@ -9,6 +9,15 @@ only fixed.
 
 ## 1.5.2 — 2026-09-25
 
+### 2026-09-25 10:29 — Kultr for iOS, in the README
+
+The README and MOBILE.md still called a native iOS app planned. It is out:
+**[Kultr for iOS](https://github.com/evropiani/Kultr_iOS)** is now linked at
+the top beside the Android app, and the *Phones* section says how to get it
+(the IPA from its latest release, sideloaded with a free Apple ID).
+
+Documentation only; the app itself is unchanged.
+
 ### 2026-09-25 06:07 — The docs catch up, and stop giving advice that breaks things
 
 The README and the guides said Navidrome does not allow cross-origin requests
