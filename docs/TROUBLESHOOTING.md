@@ -53,14 +53,18 @@ address — and update any CORS rule on your server that named the old origin.
 
 The browser never got a reply. In order of likelihood:
 
-1. **Cross-origin block.** The usual cause. Fix it properly by putting Kultr
-   and Navidrome on one address — see [CORS.md](CORS.md).
+1. **Mixed content.** An HTTPS page — the hosted app, for one — cannot call
+   an `http://` address. Either both over HTTPS, or both over plain HTTP.
 2. **Wrong address.** Include the scheme and the port:
    `http://192.168.1.10:4533`, not `192.168.1.10`.
-3. **`localhost` from another device.** On your phone, `localhost` is the
+3. **Something in front of the server.** A reverse proxy that adds its own
+   CORS header (Navidrome already sends one, and two are rejected), or a login
+   gateway that answers `/rest` with a login page. See [CORS.md](CORS.md).
+4. **`localhost` from another device.** On your phone, `localhost` is the
    phone. Use the server's LAN address.
-4. **Mixed content.** An HTTPS page cannot call an `http://` address. Either
-   both over HTTPS, or both over plain HTTP.
+5. **A server that does not allow cross-origin requests.** Navidrome does;
+   some other Subsonic servers do not. Put Kultr and the server on one
+   address — see [CORS.md](CORS.md).
 
 Test the server itself from a terminal:
 
@@ -139,10 +143,11 @@ Transcode format** to `mp3` or `opus` and Navidrome will convert on the fly.
 
 ### The equaliser does nothing
 
-Kultr is in compatibility mode because it cannot read the audio data. There is
-a note under **Settings → Audio** confirming which mode is active. The fix is
-same-origin audio — see [CORS.md](CORS.md). Playback and crossfade are
-unaffected; the EQ and InjeKt's bass swap are.
+Kultr is in compatibility mode, which does not use Web Audio. **Settings →
+Audio → Audio engine** says which mode is active: set it to Auto and reload.
+If it drops back to compatibility on its own, the browser could not run Web
+Audio or Kultr heard the audio come through it silent. Playback and crossfade
+are unaffected either way; the EQ and InjeKt's bass swap are.
 
 ### Volume jumps between tracks
 
@@ -167,8 +172,9 @@ tags there is nothing to level with — tag your library with a tool like
 
 Open the **InjeKt** tab in the full-screen player; it says exactly why.
 
-- **"Not analysed yet"** → it will analyse just-in-time, or press **Analyse
-  now**. For the whole library: **Sync → Analyse missing**.
+- **"Not analysed yet"** → it is analysed within seconds of the track
+  starting (the first time a track is heard); or press **Analyse now**. For
+  the whole library: **Sync → Analyse missing**.
 - **"tempos too far apart to match"** → correct behaviour. Raise **Maximum
   tempo shift** if you want it to try harder, at the cost of audible stretching.
 - Low confidence → the track has no steady pulse (classical, ambient, live

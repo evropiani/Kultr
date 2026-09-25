@@ -13,10 +13,11 @@ Pages. It has no backend, stores no data on any server, and connects to
 whatever Navidrome you point it at. It is there so you can see the thing before
 committing to an install.
 
-Two caveats: your browser will block the connection unless your Navidrome
-allows cross-origin requests ([CORS.md](CORS.md)), and you are trusting a page
-on the internet with your password. Self-hosting takes about a minute and has
-neither problem.
+Two caveats: your server has to be reachable over HTTPS, because an HTTPS page
+cannot talk to a plain `http://` address (Navidrome itself already allows the
+connection — [CORS.md](CORS.md) covers what can get in the way), and you are
+trusting a page on the internet with your password. Self-hosting takes about a
+minute and has neither problem.
 
 ### Where is my password stored?
 
@@ -68,17 +69,23 @@ browser. Nothing is uploaded and nothing is written to your server.
 
 ### Why is the equaliser greyed out?
 
-Kultr is in compatibility mode, which happens when the browser cannot read the
-audio data — a cross-origin restriction. Playback and crossfade work; the EQ,
-and InjeKt bass swap need Web Audio. [CORS.md](CORS.md) explains
-the fix.
+Kultr is in compatibility mode, which plays through the browser's plain audio
+element instead of Web Audio. Playback and crossfade work; the EQ and InjeKt's
+bass swap need Web Audio. It happens when **Settings → Audio → Audio engine**
+is set to Compatibility, when the browser cannot run Web Audio, or when Kultr
+notices the audio coming through Web Audio silent and switches over to keep it
+playing. The row in Settings says which mode is active; set it back to Auto
+and reload.
 
 ### Does it work with Airsonic / Gonic / Ampache / other servers?
 
-Probably. Kultr speaks Subsonic 1.16.1 with OpenSubsonic extensions where
-available and degrades when they are missing. It is built and tested against
-Navidrome, so that is what is supported. Reports about other servers are
-welcome.
+Mostly — they were tested in September 2026. Gonic works but counts each play
+twice. Supysonic and Ampache work once you switch on **Send the password in
+plain form** under Advanced options on the login screen. Airsonic-Advanced does
+not connect. The details are under
+[Compatibility](../README.md#compatibility) in the README. Navidrome is what
+Kultr is built and tested against, so that is what is supported; reports about
+other servers are welcome.
 
 ### Can several people use one install?
 

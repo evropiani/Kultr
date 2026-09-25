@@ -224,9 +224,9 @@ with HTTPS: **[docs/INSTALL.md](docs/INSTALL.md)**.
 2. **Press “Sync my library”** on the Sync page. One request per album, so a
    few thousand albums take a minute or two. It only happens once.
 3. **Press “Analyse missing”** under InjeKt analysis if you want every
-   transition beat-matched from the very first play. This streams each track
-   once at a low bitrate to measure it — it is optional, and Kultr analyses
-   tracks on the fly anyway, just-in-time before each transition.
+   track measured in advance. This streams each track once at a low bitrate —
+   it is optional: Kultr also analyses the playing track and the next one the
+   moment a track starts, and plans the transition then.
 
 After that, **Check for updates** re-reads the album index and only pulls what
 actually changed. Kultr also does this automatically on startup and hourly,
@@ -236,27 +236,31 @@ which you can change on the Sync page.
 
 ## Why the server field can be blank
 
-This is the one thing that trips people up, so it is worth 30 seconds.
+Every install option above runs Kultr's own small server, which **forwards
+`/rest` and `/share` to Navidrome**. The app and the music server then share
+one address, so leave the field blank and the app talks to the address it was
+loaded from.
 
-A browser will not let a page served from one address make API calls to a
-different address unless that other server explicitly allows it. That rule is
-called CORS, and Navidrome does not opt in to it by default.
+Typing an address instead — or using the hosted app at
+[web.kultr.cc](https://web.kultr.cc/) — makes the browser talk to your server
+directly, across addresses. A browser only allows that when the server says it
+may (the rule is called CORS), and **Navidrome says so out of the box**: it has
+sent the header on every API and audio response for years. So a plain
+Navidrome works either way, the equaliser and InjeKt's bass swap included.
 
-Every install option above dodges the problem the same way: **Kultr's own
-server forwards `/rest` and `/share` to Navidrome**, so the browser only ever
-sees one address. Leave the field blank and the app talks to the page's own
-origin.
+When a direct connection fails, the usual reasons are:
 
-It is not only about convenience. Same-origin audio is also what lets the
-browser hand the audio data to Web Audio, which powers the **equaliser**, the
-and InjeKt's **bass swap**. Without it Kultr still plays and
-still crossfades, but those three go away and you will see a note saying so.
+- **An `http://` server with the HTTPS app.** An HTTPS page cannot call a
+  plain `http://` address, so the server needs HTTPS too.
+- **A proxy in front of Navidrome that adds its own CORS header.** Navidrome
+  already sends one, and browsers block responses that carry two.
+- **A login gateway** (Authelia, Authentik, Cloudflare Access…) that answers
+  `/rest` requests with its own login page.
+- **A server other than Navidrome** that does not send the header on its audio.
 
-Using the hosted demo, or typing a server address by hand, means the browser
-*does* make a cross-origin request — which works only if something in front of
-your Navidrome adds the right headers. Putting both behind one reverse proxy
-is the clean fix: see [docs/CORS.md](docs/CORS.md), plus ready-made
-[Caddy](deploy/Caddyfile) and [nginx](deploy/nginx.conf) configs.
+[docs/CORS.md](docs/CORS.md) has a diagnosis table and the fixes, and there
+are ready-made [Caddy](deploy/Caddyfile) and [nginx](deploy/nginx.conf)
+configs that put Kultr and Navidrome on one address.
 
 ---
 
@@ -267,8 +271,10 @@ next rather than laying one on top of the other.
 
 Kultr decodes each track once and measures it: tempo and beat grid, musical key
 (Camelot notation, for harmonic mixing), loudness and brightness, and the points
-where the intro ends and the outro begins. When one track is about to hand over
-to the next, it plans a transition from those numbers:
+where the intro ends and the outro begins. As soon as a track starts playing,
+it measures the next one too and plans the hand-over between them from those
+numbers — so there is the whole track's length to get it ready, and the plan
+is remade if the queue changes:
 
 - **Beat-matching, from both sides** — rather than dragging the new track onto
   the old one's tempo, Kultr picks a tempo between them and moves both. The
@@ -444,7 +450,7 @@ Architecture, where everything lives, and how to add a feature:
 | [INJEKT.md](docs/INJEKT.md) | The DSP and the mixing rules |
 | [SYNC.md](docs/SYNC.md) | What sync does, and what it costs your server |
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Architecture and contributing |
-| [MOBILE.md](docs/MOBILE.md) | PWA today, native apps next |
+| [MOBILE.md](docs/MOBILE.md) | Installing it on a phone, the Android app, and iOS to come |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | When something is broken |
 | [FAQ.md](docs/FAQ.md) | Short answers |
 | [CHANGELOG.md](CHANGELOG.md) | What changed, and when |
@@ -454,8 +460,21 @@ Architecture, where everything lives, and how to add a feature:
 ## Compatibility
 
 Kultr speaks the Subsonic API (v1.16.1) with the OpenSubsonic extensions
-Navidrome provides, so it will largely work against other Subsonic-compatible
-servers — but Navidrome is what it is built and tested against.
+Navidrome provides. Navidrome is what it is built for and tested against, but
+it was also tried against other Subsonic servers in September 2026, with a
+tagged test library and every feature Kultr uses:
+
+| Server | Result |
+|---|---|
+| **Navidrome** 0.64 | Everything works. |
+| **Gonic** 0.22 | Works. Gonic counts Kultr's "now playing" notice as a play, so each play is counted twice. |
+| **Supysonic** 0.7 | Works with **Send the password in plain form** switched on (login screen → Advanced options). No play counts. Its audio carries no CORS header, so run Kultr on the same address rather than using the hosted app. |
+| **Ampache** 7.10 | Works with the plain-password switch. Keeps play counts for albums but not for tracks. |
+| **Airsonic-Advanced** | Does not connect: it only accepts clients up to Subsonic API 1.15. |
+
+Where a server lacks something Navidrome has — synced lyrics, BPM tags, artist
+info, last-played times — Kultr falls back (plain lyrics, its own tempo
+detection, this browser's play history) rather than breaking.
 
 Needs a current browser: Chrome/Edge 111+, Firefox 113+, Safari 16.4+.
 Older browsers fall back to a simpler player rather than breaking.

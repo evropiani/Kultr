@@ -204,8 +204,9 @@ Worth knowing:
   answer, usually the dominant section.
 - **Time-stretching is the browser's**, not a studio algorithm. Under about 8%
   it is clean; push the limit to 20% and you will hear it.
-- **Bass swap needs Web Audio**, which needs same-origin
-  audio. See [CORS.md](CORS.md).
+- **Bass swap needs Web Audio**, which needs audio the browser lets it read:
+  from the same address as Kultr, or from a server that sends CORS headers
+  (Navidrome does). See [CORS.md](CORS.md).
 
 ---
 

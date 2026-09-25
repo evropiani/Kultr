@@ -5,44 +5,113 @@ If Kultr says
 > Could not reach the server. Check the address, that it is running, and that
 > cross-origin requests are allowed.
 
-…and you are certain the address is right and Navidrome is up, this page is for
-you. It is almost always the browser's same-origin rule, not a bug.
+…and you are certain the address is right and your server is up, this page is
+for you.
 
 ---
 
 ## The 30-second version
 
-A page loaded from `https://a.example` is not allowed to call an API at
-`https://b.example` unless `b.example` sends a header saying it is fine. That
-rule is **CORS**, and Navidrome does not send that header by default.
+A page loaded from one address may only call an API at another address if that
+server sends a header saying it is fine. That rule is **CORS**.
 
-**The fix is not to make Navidrome permissive. The fix is to stop making a
-cross-origin request at all** — put Kultr and Navidrome on one address, with
-one reverse proxy. Then the browser has nothing to object to.
+**Navidrome sends that header out of the box.** Every Subsonic API response,
+the audio included, comes with `Access-Control-Allow-Origin: *` — it has done
+so since at least version 0.40 (2021), and still does in 0.64. So the hosted
+app at <https://web.kultr.cc>, or an address typed into the login screen,
+normally just works with Navidrome as it is, equaliser and bass swap included.
 
-Every install option in [INSTALL.md](INSTALL.md) already does this for you.
+When it does not, it is almost always one of these:
 
----
+1. **An HTTPS page and an `http://` server.** The hosted app is HTTPS, and a
+   browser will not let an HTTPS page call a plain `http://` address (only
+   `http://localhost` is exempt). Put Navidrome behind HTTPS.
+2. **Something in front of Navidrome** — a reverse proxy that adds a *second*
+   `Access-Control-Allow-Origin` header (browsers reject a response with two),
+   or a login gateway such as Authelia, Authentik or Cloudflare Access that
+   answers `/rest` requests with its own login page.
+3. **A server other than Navidrome** that does not send the header — see
+   [Other servers](#other-servers) below.
 
-## Why same-origin is worth the small effort
-
-It is not only about the error message. When the audio comes from the page's
-own origin, the browser lets Web Audio read the samples. That is what powers:
-
-- the **10-band equaliser**
-- InjeKt's **bass swap** (the low-shelf filters on each deck)
-
-Cross-origin audio without CORS headers is played but not readable, so
-`MediaElementSource` outputs silence. Kultr detects that — it watches for the
-analyser reporting a flat zero while the track is clearly playing — and
-automatically rebuilds its decks without Web Audio, telling you what happened.
-Playback and crossfade keep working. Those three features do not.
-
-So: same origin gets you the full app, and no configuration anywhere.
+And one setup avoids all of it: **Kultr and your server on one address**, so
+the browser never makes a cross-origin request in the first place. Every
+install option in [INSTALL.md](INSTALL.md) already does this for you.
 
 ---
 
-## How to get to one address
+## Using the hosted app, or a typed address
+
+With a plain Navidrome there is nothing to configure. Check the three points
+above, in order:
+
+- **HTTPS.** Use an address starting with `https://`, with a certificate your
+  browser trusts — Caddy gets one from Let's Encrypt automatically. A
+  self-signed certificate just fails: a browser never asks about a certificate
+  for a request a page makes in the background.
+- **Login gateways.** Let `/rest/` and `/share/` through without the gateway's
+  login. Subsonic apps sign in with their own username and password on every
+  request; they cannot fill in a login page.
+- **Do not add CORS headers in front of Navidrome.** It already sends them;
+  a proxy that adds its own produces two, and the browser then blocks every
+  request. If a guide told you to add `add_header Access-Control-Allow-Origin`
+  (or Caddy's `header Access-Control-Allow-Origin`), take it out.
+
+### Allowing only the hosted app
+
+Navidrome's `*` lets any web page talk to your server — although only with a
+username and password that page would have to know. If you would rather allow
+just one origin, **replace** Navidrome's header in your proxy instead of adding
+another. The origin is the page's address with no path: `https://web.kultr.cc`.
+(It used to be `https://evropiani.github.io`; if you allowed that before, it no
+longer matches.)
+
+<details>
+<summary>Caddy</summary>
+
+```caddy
+music.example.com {
+	reverse_proxy navidrome:4533 {
+		# Replaces Navidrome's own header rather than adding a second one.
+		header_down Access-Control-Allow-Origin "https://web.kultr.cc"
+	}
+}
+```
+</details>
+
+<details>
+<summary>nginx</summary>
+
+```nginx
+location /rest/ {
+    proxy_pass http://127.0.0.1:4533;
+    proxy_set_header Host $host;
+    # Drop Navidrome's header, then send exactly one of our own.
+    proxy_hide_header Access-Control-Allow-Origin;
+    add_header Access-Control-Allow-Origin "https://web.kultr.cc" always;
+}
+```
+</details>
+
+Both were checked in front of Navidrome 0.64 with a browser on the allowed
+origin: the API and the audio load, and Web Audio can read the audio. The
+"add a header" versions of the same configs were blocked outright.
+
+---
+
+## Other servers
+
+Kultr speaks the Subsonic API, so it can connect to other servers, but not all
+of them send CORS headers everywhere Kultr needs them. Supysonic, for example,
+sends them on API responses but not on audio or cover art.
+
+Kultr asks for audio in a form Web Audio can read (that is what the equaliser
+and InjeKt's bass swap work on), so when the audio responses carry no header
+the browser refuses to load them and playback fails. With such a server, put
+Kultr and the server on one address, as below.
+
+---
+
+## One address: nothing for the browser to object to
 
 ### You are using Kultr's own server or the Docker image
 
@@ -120,66 +189,6 @@ labels:
 
 ---
 
-## If you really must stay cross-origin
-
-For example, using the hosted demo against your own server. You then have to
-add the headers in front of Navidrome. Be deliberate about it: this is telling
-browsers that a page you do not control may talk to your music server.
-
-Allow **one specific origin**, never `*`. The origin is the address of the
-page, with no path — for the hosted demo that is `https://web.kultr.cc`. It
-used to be `https://evropiani.github.io`; if you allowed that before, it no
-longer matches and needs changing:
-
-<details>
-<summary>Caddy</summary>
-
-```caddy
-music.example.com {
-	@cors header Origin https://web.kultr.cc
-	handle /rest/* {
-		header @cors Access-Control-Allow-Origin "https://web.kultr.cc"
-		header @cors Vary "Origin"
-		reverse_proxy navidrome:4533
-	}
-	handle { reverse_proxy navidrome:4533 }
-}
-```
-</details>
-
-<details>
-<summary>nginx</summary>
-
-```nginx
-location /rest/ {
-    if ($http_origin = "https://web.kultr.cc") {
-        add_header Access-Control-Allow-Origin "$http_origin" always;
-        add_header Vary "Origin" always;
-    }
-    # Preflight
-    if ($request_method = OPTIONS) {
-        add_header Access-Control-Allow-Origin "$http_origin" always;
-        add_header Access-Control-Allow-Headers "Accept, Range" always;
-        add_header Access-Control-Max-Age 86400 always;
-        return 204;
-    }
-    proxy_pass http://127.0.0.1:4533;
-    proxy_set_header Host $host;
-}
-```
-</details>
-
-Two things to know if you go this way:
-
-- **Mixed content.** An HTTPS page cannot call an `http://` address at all. If
-  Kultr is on HTTPS, Navidrome must be too. Browsers make an exception for
-  `http://localhost`.
-- The equaliser and bass swap still need the audio responses to
-  carry the header too, not just the API — which the `/rest/` block above does
-  cover, since streaming lives under `/rest/stream`.
-
----
-
 ## Quick diagnosis
 
 Open your browser's developer console (<kbd>F12</kbd>) and look at the failing
@@ -187,19 +196,23 @@ request.
 
 | What you see | What it means |
 |---|---|
-| `blocked by CORS policy` | Classic cross-origin block. Use a reverse proxy. |
-| `Mixed Content: ... was loaded over HTTPS, but requested an insecure resource` | HTTPS page, `http://` server. Put Navidrome behind HTTPS too. |
-| `ERR_CONNECTION_REFUSED` | Nothing is listening. Wrong port, or Navidrome is down. |
+| `Mixed Content: ... was loaded over HTTPS, but requested an insecure resource` | HTTPS page, `http://` server. Put Navidrome behind HTTPS. |
+| `The 'Access-Control-Allow-Origin' header contains multiple values` | Your proxy adds a header Navidrome already sends. Remove it, or replace Navidrome's (above). |
+| `blocked by CORS policy` … `No 'Access-Control-Allow-Origin' header` | Something in front of Navidrome answered instead of it (a login gateway, an error page), or the server does not send the header. |
+| `ERR_CERT_AUTHORITY_INVALID` or another certificate error | The certificate is not trusted. Use a real one. |
+| `ERR_CONNECTION_REFUSED` | Nothing is listening. Wrong port, or the server is down. |
 | `ERR_NAME_NOT_RESOLVED` | The hostname does not exist from where the browser is. |
-| `404` on `/rest/ping` | The address is not Navidrome, or a path prefix is missing. |
+| `404` on `/rest/ping` | The address is not the music server, or a path prefix is missing. |
 | `401`/`403`, or Kultr says "Wrong username or password" | You reached the server — this is just credentials. |
-| Works on your PC, fails on your phone | `localhost` means the phone itself. Use the machine's LAN address. |
+| Works on your PC, fails on your phone | `localhost` means the phone itself. Use the machine's LAN address or its domain. |
 
-A useful check from the machine running Kultr:
+A useful check from any terminal:
 
 ```bash
-curl -s "http://YOUR-NAVIDROME:4533/rest/ping?u=x&p=x&v=1.16.1&c=Kultr&f=json"
+curl -s -D - -o /dev/null -H "Origin: https://web.kultr.cc" \
+  "https://YOUR-SERVER/rest/ping?u=x&p=x&v=1.16.1&c=Kultr&f=json"
 ```
 
-If that returns JSON, the server is fine and the problem is in the browser's
-view of it — which is what this page is about.
+You want an `HTTP/… 200` and exactly one `Access-Control-Allow-Origin` line.
+None means something other than Navidrome answered; two means your proxy adds
+one.

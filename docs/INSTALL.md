@@ -461,9 +461,9 @@ the address it came from:
 A note on what you are publishing: the demo is only the client. It contains no
 music, no credentials and no server. Visitors type in their own Navidrome
 address, and their browser talks to their server directly — nothing passes
-through GitHub. They will, however, hit the cross-origin restriction described
-in [CORS.md](CORS.md) unless their server allows your Pages origin, which is
-why self-hosting is the better long-term answer for most people.
+through GitHub. Navidrome allows that out of the box, but their server does
+need HTTPS, since your Pages site is HTTPS; [CORS.md](CORS.md) covers that and
+the other things that can get in the way.
 
 ---
 

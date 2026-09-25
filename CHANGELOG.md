@@ -9,6 +9,38 @@ only fixed.
 
 ## 1.5.2 — 2026-09-25
 
+### 2026-09-25 06:07 — The docs catch up, and stop giving advice that breaks things
+
+The README and the guides said Navidrome does not allow cross-origin requests
+by default, so the hosted app would be blocked unless you added CORS headers
+in front of it. That is not true: Navidrome has sent
+`Access-Control-Allow-Origin: *` on its API and its audio since at least 0.40
+(2021) and still does in 0.64. Worse, the nginx and Caddy snippets in
+CORS.md *added* a second header — and a browser rejects a response with two,
+so following them broke a setup that was working. Checked in front of
+Navidrome 0.64 with real nginx and Caddy: the old snippets blocked the API and
+the audio, the corrected ones load both.
+
+- **CORS.md** is rewritten around what actually gets in the way: an `http://`
+  server with the HTTPS app, a proxy that adds a second header, a login
+  gateway answering `/rest` with a login page, or a server other than
+  Navidrome. It says not to add headers in front of Navidrome, shows how to
+  *replace* them if you want to allow only the hosted app, and has an updated
+  diagnosis table.
+- **README**, **FAQ**, **Troubleshooting**, **InjeKt** and **Install** say the
+  same, and no longer claim the equaliser needs Kultr and Navidrome on one
+  address. The FAQ and Troubleshooting now name the real causes of
+  compatibility mode.
+- **Compatibility** in the README lists how Kultr fared against Gonic,
+  Supysonic, Ampache and Airsonic-Advanced in testing, instead of "it will
+  largely work".
+- **When InjeKt plans**: the README and Troubleshooting still said transitions
+  were analysed just before they happen; since 1.5.0 that is as soon as a
+  track starts.
+- The README's documentation table now mentions the Android app.
+
+Documentation only; the app is unchanged.
+
 ### 2026-09-25 05:48 — Favourites can be taken back
 
 Favouriting a track, an album or an artist and then clicking the heart again
