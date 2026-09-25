@@ -6,12 +6,12 @@ No. Navidrome holds your music, scans it, and serves it. Kultr is a different
 front end for it. Navidrome's own interface keeps working exactly as before,
 and you can use both.
 
-### Do I have to install it? What is the demo?
+### Do I have to install it? What is web.kultr.cc?
 
-The demo at <https://web.kultr.cc/> is the same app, served from GitHub
-Pages. It has no backend, stores no data on any server, and connects to
-whatever Navidrome you point it at. It is there so you can see the thing before
-committing to an install.
+The web version at <https://web.kultr.cc/> is the same app, served from
+GitHub Pages. It has no backend, stores no data on any server, and connects to
+whatever Navidrome you point it at. Use it as it is, or as a way to see the
+thing before committing to an install.
 
 Two caveats: your server has to be reachable over HTTPS, because an HTTPS page
 cannot talk to a plain `http://` address (Navidrome itself already allows the
