@@ -9,6 +9,15 @@ only fixed.
 
 ## 1.5.2 — 2026-09-25
 
+### 2026-09-25 10:56 — The web version, not a demo
+
+web.kultr.cc is the full app running in the browser, so the README, FAQ,
+Install and Troubleshooting guides stop calling it a demo. The GitHub Pages
+section of INSTALL.md is now *Publishing your own copy on GitHub Pages*
+(links updated).
+
+Documentation only; the app itself is unchanged.
+
 ### 2026-09-25 10:29 — Kultr for iOS, in the README
 
 The README and MOBILE.md still called a native iOS app planned. It is out:

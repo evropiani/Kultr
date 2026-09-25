@@ -1,7 +1,7 @@
 name: Deploy to GitHub Pages
 
-# Publishes the live demo at https://web.kultr.cc/ so people can
-# try Kultr before installing anything. The demo is just the client — it holds
+# Publishes the web version at https://web.kultr.cc/, so Kultr runs
+# without installing anything. It is just the client — it holds
 # no music and no credentials; visitors point it at their own Navidrome.
 
 on:

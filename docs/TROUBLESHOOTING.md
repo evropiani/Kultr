@@ -16,7 +16,7 @@ rather than a build of it, and the page is asking the browser for
 
 On GitHub Pages this is one setting: **Settings → Pages → Build and deployment
 → Source → GitHub Actions**. See
-[INSTALL.md](INSTALL.md#publishing-your-own-demo-on-github-pages).
+[INSTALL.md](INSTALL.md#publishing-your-own-copy-on-github-pages).
 
 ### It worked yesterday and is broken today, with no relevant change
 

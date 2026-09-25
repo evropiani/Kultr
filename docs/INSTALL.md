@@ -393,7 +393,7 @@ Node server is tiny.
 
 ---
 
-## Publishing your own demo on GitHub Pages
+## Publishing your own copy on GitHub Pages
 
 Kultr is static files, so a fork can host its own copy for free. There is a
 workflow for it at `.github/workflows/deploy.yml` — it builds on every push to
@@ -458,7 +458,7 @@ the address it came from:
   old address on their Navidrome needs to allow the new one — see
   [CORS.md](CORS.md).
 
-A note on what you are publishing: the demo is only the client. It contains no
+A note on what you are publishing: the site is only the client. It contains no
 music, no credentials and no server. Visitors type in their own Navidrome
 address, and their browser talks to their server directly — nothing passes
 through GitHub. Navidrome allows that out of the box, but their server does

@@ -10,7 +10,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
-[Try the live demo](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [iOS app](https://github.com/evropiani/Kultr_iOS) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Open the web version](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [iOS app](https://github.com/evropiani/Kultr_iOS) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
@@ -18,7 +18,7 @@ Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/3
 
 ---
 
-> **The demo is the real app.** It runs entirely in your browser and connects to
+> **The web version is the full app.** It runs entirely in your browser and connects to
 > *your* Navidrome server. It stores nothing, ships no music, and has no backend
 > — if you would rather not trust a page on the internet with your password,
 > [run it yourself](#install); it takes about a minute.
