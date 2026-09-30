@@ -9,6 +9,13 @@ only fixed.
 
 ## 1.5.2 — 2026-09-25
 
+### 2026-09-30 07:00 — r/Kultr
+
+Kultr has a subreddit, [r/Kultr](https://www.reddit.com/r/Kultr/). The README
+links it next to Discord, both under the title and at the end.
+
+Documentation only; the app is unchanged.
+
 ### 2026-09-25 10:56 — The web version, not a demo
 
 web.kultr.cc is the full app running in the browser, so the README, FAQ,

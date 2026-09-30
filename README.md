@@ -12,7 +12,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 [Open the web version](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [iOS app](https://github.com/evropiani/Kultr_iOS) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-Questions or ideas? Find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
+Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, or find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
 </div>
 
@@ -499,7 +499,8 @@ tells you what kind of codebase this is: the comments explain *why* rather than
 the whole thing is structured to be readable by whoever (or whatever) picks it
 up next.
 
-Issues and pull requests are welcome either way — or find me on Discord,
+Issues and pull requests are welcome either way — or come and talk about it
+on [r/Kultr](https://www.reddit.com/r/Kultr/), or find me on Discord,
 [@evropiani](https://discord.com/users/319246364246540288).
 
 ## License
