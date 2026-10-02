@@ -7,6 +7,17 @@ only fixed.
 
 ---
 
+## 1.5.3 — 2026-10-02
+
+### 2026-10-02 22:10 — r/Kultr in the app
+
+**Settings → About → Get in touch** now links the subreddit,
+[r/Kultr](https://www.reddit.com/r/Kultr/), beside the Discord handle, each
+with its own mark. On a phone the two links move onto their own line under
+the description instead of squeezing it into a narrow column.
+
+---
+
 ## 1.5.2 — 2026-09-25
 
 ### 2026-09-30 07:00 — r/Kultr

@@ -60,7 +60,7 @@ import {
 import { useToast, useUi } from '@/store/ui'
 import { Modal, Row, Section, Segmented, SliderRow, Spinner, Switch } from '@/components/ui'
 import { useFlip } from '@/lib/motion'
-import { DiscordIcon } from '@/components/icons'
+import { DiscordIcon, RedditIcon } from '@/components/icons'
 
 /**
  * A settings section that remembers whether it is open.
@@ -1062,16 +1062,22 @@ export function Settings() {
             github.com/evropiani/Kultr
           </a>
         </Row>
-        <Row label="Get in touch" hint="Questions, ideas, or something broken.">
-          <a
-            className="pill"
-            href="https://discord.com/users/319246364246540288"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <DiscordIcon size={14} />
-            @evropiani
-          </a>
+        <Row label="Get in touch" hint="Questions, ideas, or something broken." wrap>
+          <div className="row__links">
+            <a className="pill" href="https://www.reddit.com/r/Kultr/" target="_blank" rel="noreferrer">
+              <RedditIcon size={14} />
+              r/Kultr
+            </a>
+            <a
+              className="pill"
+              href="https://discord.com/users/319246364246540288"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <DiscordIcon size={14} />
+              @evropiani
+            </a>
+          </div>
         </Row>
       </Panel>
 

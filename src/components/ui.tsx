@@ -142,14 +142,17 @@ export function Row({
   hint,
   children,
   stack,
+  wrap,
 }: {
   label: string
   hint?: ReactNode
   children: ReactNode
   stack?: boolean
+  /** Side by side when there is room; the control drops below on a phone. */
+  wrap?: boolean
 }) {
   return (
-    <div className={clsx('row', stack && 'row--stack')}>
+    <div className={clsx('row', stack && 'row--stack', wrap && 'row--wrap')}>
       <div className="row__text">
         <span className="row__label">{label}</span>
         {hint ? <span className="row__hint">{hint}</span> : null}
