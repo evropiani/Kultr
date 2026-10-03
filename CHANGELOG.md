@@ -7,6 +7,31 @@ only fixed.
 
 ---
 
+## 1.6.0 — 2026-10-03
+
+### 2026-10-03 22:11 — Night mode
+
+A new switch under **Settings → Appearance → Theme**: **Night mode**, the dark
+theme in pure black for OLED screens. On those, a black pixel is a pixel
+switched off, so it saves battery and is the easiest thing to look at in a
+dark room.
+
+- The background is black, and so are the panels — they are told apart by
+  their edges alone, which still take the accent colour if you have that on.
+- The artwork glow behind the app and the blur are switched off with it:
+  there is nothing left to blur, and both cost battery.
+- Menus, dialogs, the queue and the player bar are a solid near-black, so
+  nothing shows through them now that there is no blur to hide it.
+- It applies whenever the dark theme is showing, so with **Theme → System**
+  it comes on when your device goes dark and off when it goes light.
+- It is set before the app starts, so a reload goes straight to black rather
+  than flashing grey first, and the browser's address bar turns black too.
+
+Checked on the albums page with a track playing: pure-black pixels went from
+0% of the screen to everything but the cover art.
+
+---
+
 ## 1.5.3 — 2026-10-02
 
 ### 2026-10-02 22:10 — r/Kultr in the app

@@ -42,6 +42,11 @@ export const EQ_PRESETS: Record<string, number[]> = {
 export interface SettingsState {
   // ---- appearance
   theme: ThemeMode
+  /**
+   * Night mode: the dark theme in pure black, for OLED screens. Only takes
+   * effect while the dark theme is showing, so it also follows System.
+   */
+  nightMode: boolean
   glass: GlassLevel
   accentMode: 'artwork' | 'fixed'
   accent: string
@@ -148,6 +153,7 @@ export interface SettingsState {
 
 export const DEFAULT_SETTINGS = {
   theme: 'dark' as ThemeMode,
+  nightMode: false,
   glass: 'liquid' as GlassLevel,
   accentMode: 'artwork' as const,
   accent: '#7c8cff',

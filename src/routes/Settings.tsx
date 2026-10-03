@@ -145,6 +145,16 @@ export function Settings() {
           />
         </Row>
         <Row
+          label="Night mode"
+          hint="Pure black instead of dark grey, for OLED screens: black pixels are switched off, which saves battery and is easiest on the eyes in a dark room. Applies whenever the dark theme is showing, System included. The artwork glow and the blur go with it."
+        >
+          <Switch
+            checked={settings.nightMode}
+            onChange={(value) => settings.set('nightMode', value)}
+            label="Night mode"
+          />
+        </Row>
+        <Row
           label="Surface blur"
           hint="Full is the complete effect. Reduced blurs less, and Off removes the blur entirely — pick one of those if scrolling feels heavy on older hardware."
         >

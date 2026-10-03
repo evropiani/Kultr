@@ -130,6 +130,24 @@
   --glass-tint-strong: rgba(255, 255, 255, 0.99);
 }
 
+/* Night mode: the dark theme in pure black, for OLED screens, where a black
+   pixel is a pixel switched off. Panels are black too and are told apart by
+   their edges alone. Anything that floats over content (menus, dialogs, the
+   player bar) is a solid near-black, because with nothing behind to blur it
+   would otherwise be see-through. Blur is off: there is nothing to blur, and
+   it costs battery. Placed after the glass variants so it wins over them. */
+:root[data-night='true'] {
+  color-scheme: dark;
+  --bg: #000;
+  --bg-elevated: #0c0c0c;
+  --glass-tint: #000;
+  --glass-tint-strong: #0e0e0e;
+  --glass-blur: 0px;
+  --glass-saturate: 100%;
+  --glass-shadow: none;
+  --line: rgba(255, 255, 255, 0.08);
+}
+
 /* Borders picked up from the artwork accent instead of plain white. */
 :root[data-border='accent'] {
   --edge-rgb: var(--accent-r) var(--accent-g) var(--accent-b);

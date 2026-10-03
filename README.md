@@ -62,7 +62,7 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Many servers** | Add as many Navidrome servers as you like, give each one a name, switch between them, and turn one off without deleting it. |
 | **A home page you choose** | Fifteen shelves — most played, random, favourite and recently added, across tracks, albums, artists, playlists and radio — switched on, off and reordered to taste. A shelf with nothing to show is skipped rather than left empty. |
 | **Cast** | Send playback to a Chromecast or an AirPlay device, where the browser supports it. |
-| **Make it yours** | Light and dark, three corner styles, six playhead designs, borders that take the accent colour, opacity sliders for both, and an accent you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
+| **Make it yours** | Light and dark, plus **night mode**: the dark theme in pure black for OLED screens. Three corner styles, six playhead designs, borders that take the accent colour, opacity sliders for both, and an accent you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
 | **Custom CSS** | A box in Settings for your own stylesheet, applied last so it overrides everything. |
 | **Settings backup** | Export every preference to a small JSON file and import it on another machine. Passwords and usernames are never in it; the list of servers is left out too unless you explicitly ask for it. |
 | **Equaliser** | Ten bands, nine presets, pre-amp. |

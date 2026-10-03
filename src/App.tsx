@@ -31,6 +31,7 @@ import { prefersReducedMotion } from '@/lib/motion'
 function useThemeEffects(): void {
   const {
     theme,
+    nightMode,
     glass,
     gridSize,
     compactRows,
@@ -52,9 +53,14 @@ function useThemeEffects(): void {
             : 'dark'
           : theme
       root.dataset.theme = resolved
+      // Night mode is a variant of dark, so it switches off with it — and
+      // comes back with it when the system goes dark again.
+      const night = nightMode && resolved === 'dark'
+      if (night) root.dataset.night = 'true'
+      else delete root.dataset.night
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', resolved === 'light' ? '#eceef4' : '#0b0b0f')
+        ?.setAttribute('content', resolved === 'light' ? '#eceef4' : night ? '#000000' : '#0b0b0f')
     }
     applyTheme()
 
@@ -62,7 +68,7 @@ function useThemeEffects(): void {
     const media = window.matchMedia('(prefers-color-scheme: light)')
     media.addEventListener('change', applyTheme)
     return () => media.removeEventListener('change', applyTheme)
-  }, [theme])
+  }, [theme, nightMode])
 
   useEffect(() => {
     const root = document.documentElement

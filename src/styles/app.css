@@ -68,6 +68,11 @@
     linear-gradient(rgb(8 8 12 / 0.45), rgb(8 8 12 / 0.55)),
     radial-gradient(120% 90% at 50% 0%, transparent 30%, rgb(0 0 0 / 0.6) 100%);
 }
+/* Night mode: no glow behind the app at all — the background is black, and
+   the drifting gradient no longer has to be drawn. */
+:root[data-night='true'] .backdrop {
+  display: none;
+}
 :root[data-theme='light'] .backdrop__vignette {
   background:
     linear-gradient(rgb(236 238 244 / 0.42), rgb(236 238 244 / 0.5)),
@@ -1009,6 +1014,11 @@
 }
 :root[data-theme='light'] .npv {
   background: rgb(255 255 255 / 0.4);
+}
+:root[data-night='true'] .npv {
+  background: #000;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 /* Closing slides back down the way it came, instead of vanishing. */
 .npv[data-leaving='true'] {
