@@ -4,7 +4,7 @@ import clsx from 'clsx'
  * The Kultr mark: the app icon itself.
  *
  * The same artwork as the favicon and the installed-app icons, so the app
- * looks like one thing wherever you meet it. Its grey tile reads on light and
+ * looks like one thing wherever you meet it. Its dark tile reads on light and
  * dark alike, so there is nothing to swap when the theme changes, and nothing
  * to flash while a second image loads.
  */

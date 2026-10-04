@@ -7,6 +7,31 @@ only fixed.
 
 ---
 
+## 1.6.1 — 2026-10-04
+
+### 2026-10-04 22:55 — A new app icon
+
+The K is now a rounded blue outline on a dark grey tile. It replaces the
+engraved K everywhere: the browser tab, the installed-app icons, the Apple
+touch icon, the sidebar, the sign-in screen and the top of the README.
+
+The icons are rebuilt from the artwork's two colours and the K's traced
+outline rather than resized from the picture itself, so every size is crisp
+and free of compression noise, and each file is a fraction of the old size.
+They are cut as before:
+
+- **Favicon, sidebar, sign-in, and the regular app icons** show the tile with
+  rounded corners and a transparent background.
+- **The Apple touch icon** fills the whole square, for iOS to round.
+- **The maskable icon** (Android home screens) shrinks the K slightly so it
+  stays clear of any shape the launcher cuts, with the grey running out to
+  the edges.
+
+The README screenshots were retaken, since the sidebar and sign-in screen show
+the icon.
+
+---
+
 ## 1.6.0 — 2026-10-03
 
 ### 2026-10-03 22:11 — Night mode
