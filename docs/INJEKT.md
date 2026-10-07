@@ -139,7 +139,6 @@ and you can see the measurements for both tracks and exactly what was decided.
 | Bass swap | on | Needs Web Audio — see [CORS.md](CORS.md) |
 | Harmonic mixing | on | Uses the detected key |
 | Skip long intros | on | Enter at the first real downbeat |
-| Keep playing similar music | on | Continue when the queue empties |
 | Analyse ahead | on | Also analyse the track after next, so a skip lands on a ready transition |
 
 ### Starting points
@@ -157,20 +156,43 @@ and you can see the measurements for both tracks and exactly what was decided.
 
 ---
 
-## Continuing the queue
+## Karousel: when the queue runs out
 
-When the queue runs out and **Keep playing similar music** is on, Kultr picks
-what comes next from:
+Karousel keeps the music going: when the queue reaches its last track, ten or
+so songs like what has been playing are added after it, and again each time
+those run out. Tap the shuffle button twice to turn it on (off → shuffle →
+Karousel → off), or use **Settings → Playback → Karousel**. It is on by
+default. It is the same Karousel as in Kultr for Android, which got it from
+KultrDL.
 
-1. Your server's similarity endpoint, if it has one configured
-2. The same artist
-3. The same genre
-4. Anything in the library
+It goes by the track playing, the few before it and a couple of songs you
+chose yourself, and draws on, mostly in this order:
 
-…then re-ranks the candidates by *mixability* — tempo proximity (counting half
-and double time), Camelot distance, energy and brightness — using analysis it
-has already cached. It never analyses dozens of tracks just to sort them, and it
-shuffles among the best few so a session does not become repetitive.
+1. **Your server's similar songs** to the track playing — with InjeKt on, the
+   ones that mix best out of it come first, by tempo (counting half and double
+   time), Camelot distance, energy and brightness, as far as analyses already
+   made can tell
+2. **Artists like these** — their best-known songs (Navidrome needs Last.fm for
+   similar artists and top songs)
+3. **These artists** — their best-known songs, then anything of theirs in the
+   library
+4. Short of all that: **the same genres**, then **what you play most and have
+   hearted**
+
+Some rules keep it from getting repetitive: no more than two songs by one
+artist in a batch, never the same artist twice in a row where another can go
+between, and nothing already queued or played in the last three hours — the
+same song on another album, remastered or credited to "A feat. B" counts as
+the same song.
+
+- Its songs show under a **Karousel** heading in Up next. Anything you add to
+  the queue yourself goes ahead of them.
+- Turning Karousel off takes the songs it added that have not played yet out
+  of the queue. Turning it on after the queue has already run out plays on.
+- A repeating queue never runs out, so turning Karousel on switches repeat off,
+  and turning repeat on tells you Karousel waits until it is off again.
+- Offline, only songs you have downloaded are offered, since nothing else
+  would play.
 
 ---
 

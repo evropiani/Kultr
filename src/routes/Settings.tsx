@@ -420,6 +420,16 @@ export function Settings() {
             label="Gapless playback"
           />
         </Row>
+        <Row
+          label="Karousel"
+          hint="When the queue runs out, music like what's been playing keeps coming: similar songs, artists like these and your own favourites. Its songs show under their own heading in Up next, and leave the queue when you turn it off. Tapping the shuffle button twice turns it on too."
+        >
+          <Switch
+            checked={settings.injektAutoQueue}
+            onChange={(value) => settings.set('injektAutoQueue', value)}
+            label="Karousel"
+          />
+        </Row>
         <Row label="Resume where you left off" hint="Restores the queue and position when Kultr reopens.">
           <Switch
             checked={settings.resumeOnStart}
@@ -538,16 +548,6 @@ export function Settings() {
             checked={settings.injektSkipIntro}
             onChange={(value) => settings.set('injektSkipIntro', value)}
             label="Skip long intros"
-          />
-        </Row>
-        <Row
-          label="Keep playing similar music"
-          hint="When the queue runs out, Kultr continues with tracks that match the current one by tempo, key and energy."
-        >
-          <Switch
-            checked={settings.injektAutoQueue}
-            onChange={(value) => settings.set('injektAutoQueue', value)}
-            label="Keep playing similar music"
           />
         </Row>
         <Row

@@ -252,6 +252,26 @@ export async function songsByArtist(artistId: string): Promise<Song[]> {
   return (await db()).getAllFromIndex('songs', 'artistId', artistId)
 }
 
+/** Ids of artists with exactly this name. */
+export async function artistIdsNamed(name: string): Promise<string[]> {
+  return (await (await db()).getAllKeysFromIndex('artists', 'name', name)) as string[]
+}
+
+/** Ids of the songs in a genre, without loading the songs themselves. */
+export async function songIdsInGenre(genre: string): Promise<string[]> {
+  return (await (await db()).getAllKeysFromIndex('songs', 'genre', genre)) as string[]
+}
+
+/** Ids of every song in the library, without loading the songs themselves. */
+export async function allSongIds(): Promise<string[]> {
+  return (await (await db()).getAllKeys('songs')) as string[]
+}
+
+/** Every hearted song. */
+export async function starredSongs(): Promise<Song[]> {
+  return (await db()).getAllFromIndex('songs', 'starred')
+}
+
 export async function albumsByArtist(artistId: string): Promise<Album[]> {
   const albums = await (await db()).getAllFromIndex('albums', 'artistId', artistId)
   return albums.sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.name.localeCompare(b.name))
@@ -334,6 +354,12 @@ export async function settleHistory(ids: number[]): Promise<void> {
     }),
   )
   await tx.done
+}
+
+/** Songs played in this browser since `since` (a timestamp in ms). */
+export async function songIdsPlayedSince(since: number): Promise<string[]> {
+  const entries = await (await db()).getAllFromIndex('history', 'playedAt', IDBKeyRange.lowerBound(since))
+  return [...new Set(entries.map((entry) => entry.songId))]
 }
 
 export async function recentHistory(limit = 200): Promise<PlayHistoryEntry[]> {

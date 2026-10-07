@@ -55,6 +55,7 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Crossfade** | Real dual-deck overlap with a configurable length (0–20s) and four fade shapes. Not a volume trick on one player — two decks actually play at once. |
 | **InjeKt** | Beat-matched, key-aware transitions. Kultr works out each track's tempo, musical key, energy and where its intro and outro are, then blends like a DJ: it starts at the outro, eases *both* tracks onto a shared tempo, swaps the basslines over and skips long intros. [How it works →](docs/INJEKT.md) |
 | **Gapless** | Turn crossfade off and the next track starts the instant the current one ends. |
+| **Karousel** | Tap shuffle twice: when the queue runs out, music like what was playing keeps coming — your server's similar songs, songs by artists like the ones you're hearing and by those artists themselves, and your own favourites, which also keep it going offline. With InjeKt on, the songs that mix best come first. Its songs show under their own heading in Up next and leave the queue when you turn it off. |
 | **Offline sync** | A sync button on every page — albums, artists, songs, genres, playlists, favourites, or the whole library. It is incremental: run it again and it only fetches what you do not already have. Downloads go into the browser, or into a real folder you pick, with readable `Artist - Album - Track` filenames. |
 | **Select and act in bulk** | Tick boxes on tracks and cards (shift-click for a range), then download, delete, queue, favourite or add to a playlist in one go. |
 | **Drag and drop** | Drag any track, album or artist onto a target: play next, add to queue, favourite, sync offline, or delete downloads. |
@@ -294,8 +295,8 @@ is remade if the queue changes:
   track instead of blending into a muddy chord.
 - **Intro skipping** — brings the next track in at its first real downbeat
   rather than 20 seconds of ambient pad.
-- **Auto-continuation** — when the queue empties, it keeps going with tracks
-  chosen by tempo, key and energy proximity, so the set keeps flowing.
+- **Karousel, in the mix** — when Karousel keeps the music going, the similar
+  songs that mix best out of the track playing (tempo, key, energy) go first.
 
 Every part degrades gracefully. No analysis yet, tempos too far apart, or Web
 Audio unavailable, and it quietly becomes a good ordinary crossfade. Open the
@@ -336,7 +337,7 @@ to a folder the person has picked in a file dialog, so it is chosen in
 | | | | |
 |---|---|---|---|
 | <kbd>Space</kbd> | Play / pause | <kbd>M</kbd> | Mute |
-| <kbd>←</kbd> <kbd>→</kbd> | Seek 5s | <kbd>S</kbd> | Shuffle |
+| <kbd>←</kbd> <kbd>→</kbd> | Seek 5s | <kbd>S</kbd> | Shuffle, Karousel, off |
 | <kbd>Shift</kbd>+<kbd>←</kbd> <kbd>→</kbd> | Previous / next | <kbd>R</kbd> | Repeat |
 | <kbd>↑</kbd> <kbd>↓</kbd> | Volume | <kbd>L</kbd> | Favourite |
 | <kbd>/</kbd> | Search | <kbd>Q</kbd> | Queue |

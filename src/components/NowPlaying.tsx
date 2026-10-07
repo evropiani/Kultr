@@ -6,15 +6,13 @@ import {
   ListMusic,
   Pause,
   Play,
-  Repeat,
-  Repeat1,
-  Shuffle,
   SkipBack,
   SkipForward,
   PanelRightClose,
   PanelRightOpen,
   Sparkles,
 } from 'lucide-react'
+import type { Song } from '@/api/types'
 import { engine } from '@/audio/engine'
 import { artUrl } from '@/lib/artwork'
 import { toggleStarSong } from '@/lib/actions'
@@ -28,6 +26,8 @@ import { Scrubber, overlapRegion } from './Scrubber'
 import { Lyrics } from './Lyrics'
 import { InjektPanel } from './InjektPanel'
 import { CastButton } from './Cast'
+import { RepeatButton, ShuffleButton } from './ModeButtons'
+import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
 
 type Tab = 'queue' | 'lyrics' | 'injekt'
 
@@ -164,14 +164,7 @@ export function NowPlaying() {
                 many controls flank it. */}
             <div className="npv__buttons">
               <div className="npv__side">
-                <button
-                  className="iconbtn"
-                  data-active={player.shuffle}
-                  aria-label="Shuffle"
-                  onClick={() => player.setShuffle(!player.shuffle)}
-                >
-                  <Shuffle size={18} />
-                </button>
+                <ShuffleButton size={18} />
                 <button
                   className="iconbtn"
                   data-active={starred}
@@ -199,14 +192,7 @@ export function NowPlaying() {
                 <button className="iconbtn" aria-label="Next" onClick={() => void player.next(true)}>
                   <SkipForward size={24} fill="currentColor" />
                 </button>
-                <button
-                  className="iconbtn"
-                  data-active={player.repeat !== 'off'}
-                  aria-label={`Repeat: ${player.repeat}`}
-                  onClick={player.cycleRepeat}
-                >
-                  {player.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
-                </button>
+                <RepeatButton size={18} />
                 <CastButton size={18} />
               </div>
             </div>
@@ -251,36 +237,49 @@ export function NowPlaying() {
 
 function UpNext() {
   const player = usePlayer()
+  const karousel = useSettings((state) => state.injektAutoQueue)
   const upcoming = player.queue.slice(player.index + 1, player.index + 40)
+  // What Karousel added goes under its own heading.
+  const split = upcoming.findIndex((song) => song.kultrKarousel)
+  const firstKarousel = split >= 0 ? split : upcoming.length
+  // Waiting to top the queue up; a repeating queue never runs out, so not then.
+  const waiting = karousel && player.repeat === 'off' && split < 0 && !player.current()?.kultrStreamUrl
+
+  const row = (song: Song, offset: number) => (
+    <button
+      key={`${song.id}-${offset}`}
+      className="queue__item"
+      style={{ width: '100%' }}
+      onClick={() => void player.jumpTo(player.index + 1 + offset)}
+    >
+      <div className="queue__art">
+        <Art src={artUrl(song, 80)} alt={song.album ?? song.title} />
+      </div>
+      <div className="trackrow__text" style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+        <span className="trackrow__title">{song.title}</span>
+        <span className="trackrow__artist">{song.artist}</span>
+      </div>
+      <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{formatTime(song.duration)}</span>
+    </button>
+  )
 
   if (!upcoming.length) {
-    return (
+    return waiting ? (
+      <KarouselHeading text={KAROUSEL_WAITING} />
+    ) : (
       <p className="row__hint">
-        Nothing queued after this one. With “Keep playing similar music” on, Kultr picks the next
-        tracks by tempo, key and energy when this one ends.
+        Nothing queued after this one. Tap shuffle twice for Karousel, and music like this keeps
+        playing when the queue runs out.
       </p>
     )
   }
 
   return (
     <div style={{ display: 'grid', gap: 2 }}>
-      {upcoming.map((song, offset) => (
-        <button
-          key={`${song.id}-${offset}`}
-          className="queue__item"
-          style={{ width: '100%' }}
-          onClick={() => void player.jumpTo(player.index + 1 + offset)}
-        >
-          <div className="queue__art">
-            <Art src={artUrl(song, 80)} alt={song.album ?? song.title} />
-          </div>
-          <div className="trackrow__text" style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-            <span className="trackrow__title">{song.title}</span>
-            <span className="trackrow__artist">{song.artist}</span>
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{formatTime(song.duration)}</span>
-        </button>
-      ))}
+      {upcoming.slice(0, firstKarousel).map((song, offset) => row(song, offset))}
+      {split >= 0 ? <KarouselHeading text={KAROUSEL_ADDED} /> : null}
+      {upcoming.slice(firstKarousel).map((song, offset) => row(song, firstKarousel + offset))}
+      {waiting ? <KarouselHeading text={KAROUSEL_WAITING} /> : null}
       <p className="row__hint" style={{ marginTop: 8 }}>
         <ListMusic size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
         Drag to reorder in the queue panel.

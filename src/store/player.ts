@@ -5,11 +5,19 @@ import { addHistory, getAlbum, patchAlbum, patchSong } from '@/db'
 import { flushPendingScrobbles, sendPlay } from '@/sync/listening'
 import { engine, type EngineMode, type PlaybackState } from '@/audio/engine'
 import { analyseTrack } from '@/audio/analysis'
-import { buildAutoQueue, planTransition, type TransitionPlan } from '@/audio/injekt'
+import { planTransition, type TransitionPlan } from '@/audio/injekt'
+import { karouselNext } from '@/audio/karouselMusic'
 import { settings, useSettings } from './settings'
 import { useToast } from './ui'
 
 export type RepeatMode = 'off' | 'all' | 'one'
+
+/** The shuffle button's three states. Karousel keeps shuffle as it was. */
+export type ShuffleMode = 'off' | 'shuffle' | 'karousel'
+
+export function shuffleModeOf(shuffle: boolean, karousel: boolean): ShuffleMode {
+  return karousel ? 'karousel' : shuffle ? 'shuffle' : 'off'
+}
 
 const SESSION_KEY = 'kultr.session.queue'
 
@@ -58,6 +66,8 @@ export interface PlayerState {
   setVolume: (volume: number) => void
   toggleMute: () => void
   setShuffle: (shuffle: boolean) => void
+  /** The shuffle button: off → shuffle → Karousel → off. Returns the new mode. */
+  cycleShuffle: () => ShuffleMode
   cycleRepeat: () => void
   jumpTo: (index: number) => Promise<void>
 
@@ -79,11 +89,22 @@ let lastTickAt = 0
 let lastMediaTime: number | null = null
 let saveTimer = 0
 let timeThrottle = 0
+/** The queue ran out and playback stopped there, rather than being paused. */
+let ranOut = false
+/** A saved session is being put back; it is already saved, position and all. */
+let restoring = false
 
-function persistSession(state: PlayerState): void {
+/**
+ * Save the queue and position a moment from now. What is saved is the state
+ * at that moment, not when this was asked, so a burst of changes is one write
+ * and the last of them is the one kept.
+ */
+function persistSession(): void {
   if (saveTimer) return
   saveTimer = window.setTimeout(() => {
     saveTimer = 0
+    if (restoring) return
+    const state = usePlayer.getState()
     try {
       const payload: SavedSession = {
         queue: state.queue.slice(0, 500),
@@ -98,14 +119,24 @@ function persistSession(state: PlayerState): void {
   }, 1500)
 }
 
+function shuffled(songs: Song[]): Song[] {
+  const out = [...songs]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+/** Shuffles everything but the current track, keeping what Karousel added after what you chose. */
 function shuffleWithCurrentFirst(queue: Song[], index: number): { queue: Song[]; index: number } {
   const current = queue[index]
   const rest = queue.filter((_, i) => i !== index)
-  for (let i = rest.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[rest[i], rest[j]] = [rest[j], rest[i]]
-  }
-  return current ? { queue: [current, ...rest], index: 0 } : { queue: rest, index: 0 }
+  const ordered = [
+    ...shuffled(rest.filter((song) => !song.kultrKarousel)),
+    ...shuffled(rest.filter((song) => song.kultrKarousel)),
+  ]
+  return current ? { queue: [current, ...ordered], index: 0 } : { queue: ordered, index: 0 }
 }
 
 export const usePlayer = create<PlayerState>((set, get) => ({
@@ -160,7 +191,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         if (now - timeThrottle < 240) return
         timeThrottle = now
         set({ currentTime, duration })
-        persistSession(get())
+        persistSession()
         updatePositionState(currentTime, duration)
         checkSleepTimer()
       },
@@ -200,6 +231,12 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     set({ engineMode: engine.mode })
     setupMediaSession(get)
 
+    // Queue edits are saved too, not only while a track plays: added while
+    // paused, Karousel's songs (or yours) would otherwise be gone on a reload.
+    usePlayer.subscribe((state, previous) => {
+      if (state.queue !== previous.queue || state.index !== previous.index) persistSession()
+    })
+
     // Keep the engine in step with settings changes.
     useSettings.subscribe((state, previous) => {
       if (state.volume !== previous.volume || state.muted !== previous.muted) {
@@ -226,6 +263,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         // A pending plan was built with the old settings; rebuild it.
         engine.clearPendingTransition()
       }
+      if (state.injektAutoQueue !== previous.injektAutoQueue) onKarouselChanged(state.injektAutoQueue)
     })
   },
 
@@ -253,6 +291,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
 
   async toggle() {
     get().init()
+    ranOut = false
     await engine.toggle()
   },
 
@@ -265,18 +304,15 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     else if (state.index + 1 < state.queue.length) nextIdx = state.index + 1
     else if (state.repeat === 'all') nextIdx = 0
 
-    if (nextIdx === null) {
-      if (settings().injektAutoQueue) {
-        const added = await extendQueue(state)
-        if (added) {
-          nextIdx = get().index + 1
-        }
-      }
+    if (nextIdx === null && state.repeat === 'off' && settings().injektAutoQueue) {
+      // Karousel: the queue ran out, so add music like it and play on.
+      if (await extendQueue()) nextIdx = get().index + 1 < get().queue.length ? get().index + 1 : null
     }
 
     if (nextIdx === null) {
       engine.pause()
       set({ playback: 'paused' })
+      ranOut = true
       return
     }
 
@@ -345,9 +381,36 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     engine.clearPendingTransition()
   },
 
+  cycleShuffle() {
+    const next: ShuffleMode = { off: 'shuffle', shuffle: 'karousel', karousel: 'off' }[
+      shuffleModeOf(get().shuffle, settings().injektAutoQueue)
+    ] as ShuffleMode
+    const toast = useToast.getState().show
+    if (next === 'shuffle') {
+      get().setShuffle(true)
+      toast('Shuffle on', 'info')
+    } else if (next === 'karousel') {
+      // A repeating queue never runs out, so Karousel would never get a turn.
+      if (get().repeat !== 'off') {
+        set({ repeat: 'off' })
+        engine.clearPendingTransition()
+      }
+      settings().set('injektAutoQueue', true)
+      toast('Karousel on: when the queue runs out, music like it keeps playing', 'info')
+    } else {
+      settings().set('injektAutoQueue', false)
+      get().setShuffle(false)
+      toast('Shuffle and Karousel off', 'info')
+    }
+    return next
+  },
+
   cycleRepeat() {
     const order: RepeatMode[] = ['off', 'all', 'one']
     const next = order[(order.indexOf(get().repeat) + 1) % order.length]
+    if (get().repeat === 'off' && settings().injektAutoQueue) {
+      useToast.getState().show('Repeat on: Karousel waits until repeat is off again', 'info')
+    }
     set({ repeat: next })
     engine.clearPendingTransition()
   },
@@ -369,7 +432,10 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       return
     }
     const queue = [...state.queue]
+    // What you add yourself goes ahead of what Karousel added to keep going.
+    const karouselFrom = queue.findIndex((song, i) => i > state.index && song.kultrKarousel)
     if (position === 'next') queue.splice(state.index + 1, 0, ...songs)
+    else if (karouselFrom >= 0) queue.splice(karouselFrom, 0, ...songs)
     else queue.push(...songs)
     set({ queue })
     engine.clearPendingTransition()
@@ -434,6 +500,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       const saved = JSON.parse(raw) as SavedSession
       if (!saved.queue?.length) return
       get().init()
+      restoring = true
       set({
         queue: saved.queue,
         index: Math.max(0, Math.min(saved.index, saved.queue.length - 1)),
@@ -447,6 +514,8 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       }
     } catch {
       /* corrupt session; ignore */
+    } finally {
+      restoring = false
     }
   },
 }))
@@ -521,6 +590,7 @@ async function submitScrobble(song: Song, seconds: number, completed: boolean): 
 function onTrackStarted(state: PlayerState): void {
   const song = state.current()
   if (!song) return
+  ranOut = false
   listenedSeconds = 0
   lastTickAt = 0
   lastMediaTime = null
@@ -544,18 +614,74 @@ function onTrackStarted(state: PlayerState): void {
   }
 }
 
-async function extendQueue(state: PlayerState): Promise<boolean> {
-  const seed = state.queue[state.index]
+let extending: { seed: string | undefined; done: Promise<boolean> } | null = null
+
+/**
+ * Karousel: add music like what has been playing to the end of the queue.
+ * One batch at a time: asking again for the same track waits for the batch
+ * on its way, and asking for another track (something new started playing)
+ * waits for it to settle, then starts that track's own.
+ */
+function extendQueue(): Promise<boolean> {
+  const seed = usePlayer.getState().current()?.id
+  if (extending && extending.seed === seed) return extending.done
+  const done: Promise<boolean> = (extending?.done ?? Promise.resolve(false))
+    .then(() => addKarouselSongs())
+    .finally(() => {
+      if (extending?.done === done) extending = null
+    })
+  extending = { seed, done }
+  return done
+}
+
+async function addKarouselSongs(): Promise<boolean> {
+  const { queue, index } = usePlayer.getState()
+  const seed = queue[index]
   if (!seed) return false
+  // The track playing and the ones before it, and a couple the user chose
+  // themselves, so the music stays close to where it started.
+  const before = queue.slice(Math.max(0, index - 4), index).reverse()
+  const chosen = shuffled(queue.filter((song, i) => !song.kultrKarousel && i !== index && !before.includes(song))).slice(0, 2)
+  let songs: Song[]
   try {
-    const exclude = new Set(state.queue.slice(-60).map((song) => song.id))
-    const additions = await buildAutoQueue(seed, { count: 10, exclude })
-    if (!additions.length) return false
-    usePlayer.setState({ queue: [...usePlayer.getState().queue, ...additions] })
-    return true
-  } catch {
+    songs = await karouselNext([seed, ...before, ...chosen], queue)
+  } catch (err) {
+    console.warn('[kultr] Karousel could not find anything to add', err)
     return false
   }
+  // Switched off meanwhile, or something else started playing.
+  const fresh = usePlayer.getState()
+  if (!songs.length || !settings().injektAutoQueue || fresh.current()?.id !== seed.id) return false
+  const added = songs.map((song) => ({ ...song, kultrKarousel: true }))
+  usePlayer.setState({
+    queue: [...fresh.queue, ...added],
+    unshuffled: fresh.unshuffled ? [...fresh.unshuffled, ...added] : null,
+  })
+  return true
+}
+
+/**
+ * Karousel was switched. Off: the songs it added that have not played yet
+ * leave the queue. On: if the queue has already run out, it plays on with
+ * music like it; otherwise the next plan tops the queue up.
+ */
+function onKarouselChanged(on: boolean): void {
+  const state = usePlayer.getState()
+  if (!on) {
+    const gone = new Set(state.queue.slice(state.index + 1).filter((song) => song.kultrKarousel))
+    if (!gone.size) return
+    // The unshuffled order may hold copies (a heart patches both), so by id there.
+    const goneIds = new Set([...gone].map((song) => song.id))
+    usePlayer.setState({
+      queue: state.queue.filter((song) => !gone.has(song)),
+      unshuffled: state.unshuffled?.filter((song) => !(song.kultrKarousel && goneIds.has(song.id))) ?? null,
+    })
+    engine.clearPendingTransition()
+    return
+  }
+  if (!state.current()) return
+  if (ranOut && state.playback !== 'playing') void state.next(false)
+  else if (!state.peekNext()) engine.clearPendingTransition()
 }
 
 let preparing = false
@@ -581,8 +707,7 @@ async function prepareNextTransition(): Promise<void> {
     let next = state.peekNext()
 
     if (!next && settings().injektAutoQueue) {
-      const added = await extendQueue(state)
-      if (added) next = usePlayer.getState().peekNext()
+      if (await extendQueue()) next = usePlayer.getState().peekNext()
     }
     if (!next) return
 

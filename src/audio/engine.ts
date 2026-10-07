@@ -74,6 +74,13 @@ interface Deck {
   base: number
   /** Fade level 0..1 (element mode keeps this in JS, Web Audio in the node). */
   fade: number
+  /**
+   * Counts the fades started on this deck. A fade's last step (pausing the
+   * outgoing track) only runs while it is still the latest: skip twice in
+   * quick succession and the deck the first skip was fading out is already
+   * playing the second skip's track, which that step would otherwise stop.
+   */
+  fades: number
   objectUrl: string | null
 }
 
@@ -183,6 +190,7 @@ export class AudioEngine {
       song: null,
       base: 1,
       fade: 0,
+      fades: 0,
       objectUrl: null,
     }
   }
@@ -409,6 +417,7 @@ export class AudioEngine {
     deck.base = this.baseGainFor(song)
     deck.el.src = url
     deck.el.playbackRate = 1
+    this.resetFilters(deck)
     deck.el.load()
     if (startAt > 0) {
       await new Promise<void>((resolve) => {
@@ -426,6 +435,16 @@ export class AudioEngine {
         /* seeking before metadata; ignore */
       }
     }
+  }
+
+  /** Bass and sweep back to neutral, whatever a mix left them at. */
+  private resetFilters(deck: Deck): void {
+    if (this.mode !== 'webaudio' || !deck.bass || !deck.sweep || !this.ctx) return
+    const now = this.ctx.currentTime
+    deck.bass.gain.cancelScheduledValues(now)
+    deck.bass.gain.setValueAtTime(0, now)
+    deck.sweep.frequency.cancelScheduledValues(now)
+    deck.sweep.frequency.setValueAtTime(20, now)
   }
 
   private setDeckLevel(deck: Deck, fade: number): void {
@@ -631,6 +650,8 @@ export class AudioEngine {
     rising: boolean,
     onDone?: () => void,
   ): void {
+    const fade = ++deck.fades
+    const done = onDone && (() => deck.fades === fade && onDone())
     if (this.mode === 'webaudio' && deck.gain && this.ctx) {
       const now = this.ctx.currentTime
       const param = deck.gain.gain
@@ -638,7 +659,7 @@ export class AudioEngine {
       param.setValueAtTime(deck.base * from, now)
       param.setValueCurveAtTime(buildCurve(curve, rising, deck.base * from, deck.base * to), now, duration)
       deck.fade = to
-      if (onDone) window.setTimeout(onDone, duration * 1000 + 60)
+      if (done) window.setTimeout(done, duration * 1000 + 60)
     } else {
       this.elementFades.push({
         deck,
@@ -648,7 +669,7 @@ export class AudioEngine {
         duration: duration * 1000,
         curve,
         rising,
-        onDone,
+        onDone: done,
       })
     }
   }
@@ -668,12 +689,7 @@ export class AudioEngine {
       this.releaseDeckUrl(from)
       from.song = null
       this.setDeckLevel(from, 0)
-      if (this.mode === 'webaudio' && from.bass && from.sweep && this.ctx) {
-        from.bass.gain.cancelScheduledValues(this.ctx.currentTime)
-        from.bass.gain.setValueAtTime(0, this.ctx.currentTime)
-        from.sweep.frequency.cancelScheduledValues(this.ctx.currentTime)
-        from.sweep.frequency.setValueAtTime(20, this.ctx.currentTime)
-      }
+      this.resetFilters(from)
       this.transitioning = false
       this.callbacks.onTransitionEnd()
     }

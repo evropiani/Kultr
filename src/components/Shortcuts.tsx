@@ -13,7 +13,7 @@ const SHORTCUTS: [string, string][] = [
   ['Shift + ← / →', 'Previous / next track'],
   ['↑ / ↓', 'Volume up / down'],
   ['M', 'Mute'],
-  ['S', 'Shuffle'],
+  ['S', 'Shuffle, Karousel, off'],
   ['R', 'Cycle repeat'],
   ['L', 'Favourite the current track'],
   ['Q', 'Toggle the queue'],
@@ -85,7 +85,7 @@ export function useKeyboardShortcuts(): void {
           break
         case 's':
         case 'S':
-          player.setShuffle(!player.shuffle)
+          player.cycleShuffle()
           break
         case 'r':
         case 'R':

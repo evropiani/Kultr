@@ -176,6 +176,11 @@
 .iconbtn[data-active='true'] {
   color: var(--accent);
 }
+/* Shuffle and repeat: on a tinted disc while they're on, so it reads at a glance. */
+.iconbtn--mode[data-active='true'],
+.iconbtn--mode[data-active='true']:hover {
+  background: var(--accent-soft);
+}
 .iconbtn[disabled] {
   opacity: 0.35;
   pointer-events: none;

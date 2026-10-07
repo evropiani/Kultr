@@ -5,9 +5,6 @@ import {
   Maximize2,
   Pause,
   Play,
-  Repeat,
-  Repeat1,
-  Shuffle,
   SkipBack,
   SkipForward,
   Sparkles,
@@ -26,6 +23,7 @@ import { Art } from './ui'
 import { Scrubber, overlapRegion } from './Scrubber'
 import { SleepTimerMenu } from './SleepTimer'
 import { CastButton } from './Cast'
+import { RepeatButton, ShuffleButton } from './ModeButtons'
 
 /** Read straight from the engine so the scrubber needs no React state. */
 const getEngineTime = () => engine.currentTime
@@ -113,14 +111,7 @@ export function PlayerBar() {
 
       <div className="player__center">
         <div className="player__buttons">
-          <button
-            className="iconbtn"
-            data-active={player.shuffle}
-            aria-label="Shuffle"
-            onClick={() => player.setShuffle(!player.shuffle)}
-          >
-            <Shuffle size={16} />
-          </button>
+          <ShuffleButton size={16} />
           <button className="iconbtn" aria-label="Previous track" onClick={() => void player.previous()}>
             <SkipBack size={18} fill="currentColor" />
           </button>
@@ -134,14 +125,7 @@ export function PlayerBar() {
           <button className="iconbtn" aria-label="Next track" onClick={() => void player.next(true)}>
             <SkipForward size={18} fill="currentColor" />
           </button>
-          <button
-            className="iconbtn"
-            data-active={player.repeat !== 'off'}
-            aria-label={`Repeat: ${player.repeat}`}
-            onClick={player.cycleRepeat}
-          >
-            {player.repeat === 'one' ? <Repeat1 size={16} /> : <Repeat size={16} />}
-          </button>
+          <RepeatButton size={16} />
         </div>
         <Scrubber
           getTime={getEngineTime}

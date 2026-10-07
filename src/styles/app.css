@@ -1367,6 +1367,37 @@
   height: 100%;
   object-fit: cover;
 }
+/* Heads what Karousel added in Up next. */
+.karousel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 10px 6px;
+}
+.karousel-head__disc {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.karousel-head__text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.karousel-head__text strong {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+.karousel-head__text span {
+  font-size: 12px;
+  color: var(--ink-3);
+}
 .queue__label {
   padding: 12px 10px 6px;
   font-size: 11px;

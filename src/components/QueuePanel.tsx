@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ListX, Sparkles, Trash2, X } from 'lucide-react'
+import { Fragment, useState } from 'react'
+import { ListX, Trash2, X } from 'lucide-react'
 import { artUrl } from '@/lib/artwork'
 import { formatTime } from '@/lib/format'
 import { usePlayer } from '@/store/player'
@@ -8,12 +8,13 @@ import { useUi } from '@/store/ui'
 import { useDismiss } from '@/lib/hooks'
 import { usePresence } from '@/lib/motion'
 import { Art } from './ui'
+import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
 
 export function QueuePanel() {
   const open = useUi((state) => state.queueOpen)
   const setQueue = useUi((state) => state.setQueue)
   const player = usePlayer()
-  const injektAutoQueue = useSettings((state) => state.injektAutoQueue)
+  const karousel = useSettings((state) => state.injektAutoQueue)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const ref = useDismiss<HTMLElement>(open, () => setQueue(false))
@@ -22,6 +23,10 @@ export function QueuePanel() {
   if (!present) return null
 
   const upcoming = player.queue.slice(player.index + 1)
+  // What Karousel added goes under its own heading.
+  const firstKarousel = upcoming.findIndex((song) => song.kultrKarousel)
+  // Waiting to top the queue up; a repeating queue never runs out, so not then.
+  const waiting = karousel && player.repeat === 'off' && firstKarousel < 0 && !player.current()?.kultrStreamUrl
 
   return (
     <aside className="queue glass glass-strong" ref={ref} aria-label="Play queue" data-leaving={leaving}>
@@ -49,47 +54,41 @@ export function QueuePanel() {
           </>
         ) : null}
 
-        <div className="queue__label">
-          Up next
-          {injektAutoQueue ? (
-            <span className="badge" data-tone="accent" style={{ marginLeft: 8, height: 18 }}>
-              <Sparkles size={10} />
-              auto-extends
-            </span>
-          ) : null}
-        </div>
+        <div className="queue__label">Up next</div>
 
-        {upcoming.length === 0 ? (
+        {upcoming.length === 0 && !waiting ? (
           <p className="row__hint" style={{ padding: '6px 10px' }}>
-            {injektAutoQueue
-              ? 'Nothing queued — InjeKt will pick tracks that mix well with this one when it ends.'
-              : 'Nothing queued. Turn on “Keep playing similar music” in Settings to have Kultr continue for you.'}
+            Nothing queued. Tap shuffle twice for Karousel, and music like this keeps playing when the
+            queue runs out.
           </p>
         ) : (
           upcoming.map((_, offset) => {
             const index = player.index + 1 + offset
             return (
-              <QueueItem
-                key={`${player.queue[index]?.id}-${index}`}
-                index={index}
-                draggable
-                dragging={dragIndex === index}
-                dropBefore={dropIndex === index}
-                onDragStart={() => setDragIndex(index)}
-                onDragOver={() => setDropIndex(index)}
-                onDrop={() => {
-                  if (dragIndex !== null) player.move(dragIndex, index)
-                  setDragIndex(null)
-                  setDropIndex(null)
-                }}
-                onDragEnd={() => {
-                  setDragIndex(null)
-                  setDropIndex(null)
-                }}
-              />
+              <Fragment key={`${player.queue[index]?.id}-${index}`}>
+                {offset === firstKarousel ? <KarouselHeading text={KAROUSEL_ADDED} /> : null}
+                <QueueItem
+                  index={index}
+                  draggable
+                  dragging={dragIndex === index}
+                  dropBefore={dropIndex === index}
+                  onDragStart={() => setDragIndex(index)}
+                  onDragOver={() => setDropIndex(index)}
+                  onDrop={() => {
+                    if (dragIndex !== null) player.move(dragIndex, index)
+                    setDragIndex(null)
+                    setDropIndex(null)
+                  }}
+                  onDragEnd={() => {
+                    setDragIndex(null)
+                    setDropIndex(null)
+                  }}
+                />
+              </Fragment>
             )
           })
         )}
+        {waiting ? <KarouselHeading text={KAROUSEL_WAITING} /> : null}
       </div>
     </aside>
   )

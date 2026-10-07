@@ -56,6 +56,11 @@ export interface Song {
    * Used for internet radio stations, which are not library tracks.
    */
   kultrStreamUrl?: string
+  /**
+   * Kultr-only, on queue entries: added by Karousel to keep the music going,
+   * not chosen by the user. Such songs leave the queue when Karousel goes off.
+   */
+  kultrKarousel?: boolean
 }
 
 export interface Album {

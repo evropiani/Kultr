@@ -7,6 +7,61 @@ only fixed.
 
 ---
 
+## 1.7.0 — 2026-10-07
+
+### 2026-10-07 08:45 — Karousel
+
+**Karousel** comes to Kultr on the web, as it did to Kultr for Android, from
+KultrDL. Tap the shuffle button once for shuffle, a second time for
+Karousel, a third to turn both off. With it on, when the queue gets to its
+last track, more music like what has been playing is added, and it keeps
+going for as long as you listen. It replaces "Keep playing similar music"
+(same setting, on by default as before; now **Settings → Playback →
+Karousel**).
+
+- Where the songs come from: your server's similar songs to the track
+  playing, the best-known songs of artists like the ones playing and of
+  those artists themselves (Navidrome with Last.fm), and the library's songs
+  by any of them; then the same genres, then what you play most and have
+  hearted. Offline, only downloaded songs are offered. With InjeKt on, the
+  similar songs that mix best out of the track playing come first.
+- No more than two songs by one artist in a batch, never the same artist
+  twice in a row, nothing already queued or played in the last three hours
+  (the same song on another album or remastered counts as the same).
+- Its songs show under a **Karousel** heading in Up next, in the queue panel
+  and the full player. They survive a reload, and leave the queue when
+  Karousel is turned off. Songs you add to the queue yourself go ahead of
+  them.
+- Turning it on after the queue has run out plays on. Turning it on switches
+  repeat off, and turning repeat on tells you Karousel waits for it.
+- Shuffle and repeat sit on a tinted disc while they're on, and the shuffle
+  button shows ∞ while Karousel is on. <kbd>S</kbd> steps through the three
+  states like the button.
+
+The old "keep playing" picked from the same artist, genre or library and
+sorted by how well tracks mix; Karousel goes wider (similar artists, your
+favourites), keeps any one artist from taking over, and leaves out what you
+heard in the last three hours. The two quick mixes on the home and artist
+pages are unchanged.
+
+Fixed along the way:
+
+- **Skipping twice in quick succession stopped the music.** With a fade on
+  skip, the first skip's fade-out finished after the second skip had already
+  put the new track on that deck, and paused it — the player still showed
+  it playing. 1.6.1 did it every time in testing; now a fade only finishes
+  if nothing newer has started on its deck. A skip in the middle of an
+  InjeKt mix also no longer leaves the bass swap or filter sweep on the deck
+  it reuses.
+- **Queue changes made while paused were not saved.** The queue was only
+  written while a track played, so adding, removing or reordering while
+  paused was lost on a reload.
+- Karousel's "never the same artist twice in a row" could still put two
+  together at the end of a batch; it now looks ahead. (Kultr for Android has
+  the same slip.)
+
+---
+
 ## 1.6.1 — 2026-10-04
 
 ### 2026-10-04 22:55 — A new app icon

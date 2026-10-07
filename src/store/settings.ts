@@ -106,6 +106,11 @@ export interface SettingsState {
   injektTempoBlend: number
   injektBars: number
   injektSkipIntro: boolean
+  /**
+   * Karousel: when the queue runs out, music like it keeps playing. Kept
+   * under the name of the setting it replaced ("Keep playing similar music"),
+   * which is also the name the other Kultr apps give it.
+   */
   injektAutoQueue: boolean
   injektAnalyseAhead: boolean
 
