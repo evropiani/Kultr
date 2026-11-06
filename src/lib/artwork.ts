@@ -102,6 +102,69 @@ function liftForUi([r, g, b]: [number, number, number]): [number, number, number
   ]
 }
 
+type Rgb = [number, number, number]
+
+/** Relative luminance (WCAG), 0 for black to 1 for white. */
+export function luminance([r, g, b]: Rgb): number {
+  const linear = (c: number) => {
+    const x = c / 255
+    return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b)
+}
+
+function toHsv([r, g, b]: Rgb): [number, number, number] {
+  const [x, y, z] = [r / 255, g / 255, b / 255]
+  const max = Math.max(x, y, z)
+  const d = max - Math.min(x, y, z)
+  let h = 0
+  if (d > 0) {
+    if (max === x) h = ((y - z) / d + 6) % 6
+    else if (max === y) h = (z - x) / d + 2
+    else h = (x - y) / d + 4
+  }
+  return [h / 6, max === 0 ? 0 : d / max, max]
+}
+
+function fromHsv(h: number, s: number, v: number): Rgb {
+  const i = Math.floor(h * 6) % 6
+  const f = h * 6 - Math.floor(h * 6)
+  const [p, q, t] = [v * (1 - s), v * (1 - f * s), v * (1 - (1 - f) * s)]
+  const [r, g, b] = [
+    [v, t, p],
+    [q, v, p],
+    [p, v, t],
+    [p, q, v],
+    [t, p, v],
+    [v, p, q],
+  ][i]
+  return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)]
+}
+
+/**
+ * The colour darkened until its luminance is at most 0.15, so it reads as
+ * text on cream (4.5:1). Hue stays, and pale colours gain a little saturation
+ * so they turn deeper rather than grey. Kultr for iOS does the same, so an
+ * accent looks alike on both.
+ */
+export function readableOnLight(rgb: Rgb): Rgb {
+  const target = 0.15
+  if (luminance(rgb) <= target) return rgb
+  const [h, s0, v0] = toHsv(rgb)
+  const s = s0 > 0.05 ? Math.min(1, Math.max(s0, 0.45) * 1.1) : s0
+  let color = rgb
+  for (let v = v0; v > 0.3; v -= 0.02) {
+    color = fromHsv(h, s, v)
+    if (luminance(color) <= target) break
+  }
+  return color
+}
+
+/** Whichever of white and warm ink reads better on the accent. */
+export function onAccent(rgb: Rgb): Rgb {
+  return luminance(rgb) > 0.2 ? [31, 26, 20] : [255, 255, 255]
+}
+
 export function hexToRgb(hex: string): [number, number, number] | null {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
   if (!match) return null

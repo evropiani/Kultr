@@ -329,7 +329,6 @@ export function GenrePage() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <span className="hero__kicker">Genre</span>
           <h1>{genre}</h1>
           <span className="page-head__sub">{formatCount(songs.length, 'track')}</span>
         </div>
@@ -347,7 +346,7 @@ export function GenrePage() {
             Shuffle
           </button>
           <button
-            className="pill pill-accent"
+            className="pill"
             disabled={!songs.length}
             onClick={() => void usePlayer.getState().playNow(songs, 0, genre)}
           >

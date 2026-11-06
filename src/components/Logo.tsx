@@ -4,9 +4,11 @@ import clsx from 'clsx'
  * The Kultr mark: the app icon itself.
  *
  * The same artwork as the favicon and the installed-app icons, so the app
- * looks like one thing wherever you meet it. Its dark tile reads on light and
- * dark alike, so there is nothing to swap when the theme changes, and nothing
- * to flash while a second image loads.
+ * looks like one thing wherever you meet it: the orange K on cream, as in
+ * Kultr for iOS. On the cream theme the tile melts into the page and the K
+ * stands alone; on charcoal it reads as a tile. Either way there is nothing
+ * to swap when the theme changes, and nothing to flash while a second image
+ * loads.
  */
 export function Logo({
   size = 34,

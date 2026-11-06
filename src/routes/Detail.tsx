@@ -64,7 +64,6 @@ export function AlbumPage() {
           <Art src={artUrl(album, 600)} alt={album.name} />
         </div>
         <div className="hero__body">
-          <span className="hero__kicker">Album</span>
           <h1 className="hero__title">{album.name}</h1>
           <div className="hero__meta">
             {album.artistId ? (
@@ -81,7 +80,7 @@ export function AlbumPage() {
           </div>
           <div className="hero__actions">
             <button
-              className="pill pill-accent pill-lg"
+              className="pill pill-lg"
               onClick={() => void usePlayer.getState().playNow(data.songs, 0, album.name)}
             >
               <Play size={15} fill="currentColor" />
@@ -231,14 +230,13 @@ export function ArtistPage() {
           <Art src={artUrl(artist, 600)} alt={artist.name} round />
         </div>
         <div className="hero__body">
-          <span className="hero__kicker">Artist</span>
           <h1 className="hero__title">{artist.name}</h1>
           <div className="hero__meta">
             <span>{formatCount(data.albums.length, 'album')}</span>
             <span className="sep">{formatCount(data.songs.length, 'track')}</span>
           </div>
           <div className="hero__actions">
-            <button className="pill pill-accent pill-lg" onClick={playAll}>
+            <button className="pill pill-lg" onClick={playAll}>
               <Play size={15} fill="currentColor" />
               Play
             </button>

@@ -22,6 +22,7 @@ import { SyncPage } from '@/routes/Sync'
 import { useAuth } from '@/store/auth'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
+import { useUi } from '@/store/ui'
 import { useSync } from '@/store/sync'
 import { useOffline } from '@/store/offline'
 import { useSelection } from '@/store/selection'
@@ -40,6 +41,7 @@ function useThemeEffects(): void {
     surfaceBorder,
     borderOpacity,
     surfaceOpacity,
+    backdropArtwork,
     customCss,
   } = useSettings()
 
@@ -53,6 +55,7 @@ function useThemeEffects(): void {
             : 'dark'
           : theme
       root.dataset.theme = resolved
+      useUi.getState().setResolvedTheme(resolved)
       // Night mode is a variant of dark, so it switches off with it — and
       // comes back with it when the system goes dark again.
       const night = nightMode && resolved === 'dark'
@@ -60,7 +63,7 @@ function useThemeEffects(): void {
       else delete root.dataset.night
       document
         .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', resolved === 'light' ? '#eceef4' : night ? '#000000' : '#0b0b0f')
+        ?.setAttribute('content', resolved === 'light' ? '#f6f0e5' : night ? '#000000' : '#1c1a17')
     }
     applyTheme()
 
@@ -78,16 +81,12 @@ function useThemeEffects(): void {
     root.dataset.motion = reduceMotion ? 'reduced' : 'full'
     root.dataset.corners = corners
     root.dataset.border = surfaceBorder
+    root.dataset.backdrop = backdropArtwork ? 'artwork' : 'plain'
     root.style.setProperty('--surface-scale', String(surfaceOpacity / 100))
-    // Written inline so it beats the per-theme value whatever the source
-    // order of the stylesheets turns out to be; removed again in neutral
-    // mode so each theme keeps its own hairline.
-    if (surfaceBorder === 'accent') {
-      root.style.setProperty('--edge-a', String(borderOpacity / 100))
-    } else {
-      root.style.removeProperty('--edge-a')
-    }
-  }, [glass, gridSize, compactRows, reduceMotion, corners, surfaceBorder, borderOpacity, surfaceOpacity])
+    // Each theme scales it (borders show more on charcoal than on cream), so
+    // one slider means the same in both, neutral or accent.
+    root.style.setProperty('--border-opacity', String(borderOpacity / 100))
+  }, [glass, gridSize, compactRows, reduceMotion, corners, surfaceBorder, borderOpacity, surfaceOpacity, backdropArtwork])
 
   // Whatever is in the box, last, so it can override anything above it. It is
   // injected as a stylesheet rather than interpolated anywhere, so the worst a

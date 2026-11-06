@@ -411,7 +411,7 @@ function TrackRow({
 
       <div className="trackrow__actions">
         <button
-          className="iconbtn"
+          className="iconbtn trackrow__more"
           aria-label={`More options for ${song.title}`}
           onClick={(event) => menu.open(event)}
         >

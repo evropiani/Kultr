@@ -143,12 +143,12 @@ export function NowPlaying() {
                 </>
               ) : null}
             </p>
-            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap', marginTop: 4 }}>
-              {song.year ? <span className="badge">{song.year}</span> : null}
-              {song.genre ? <span className="badge">{song.genre}</span> : null}
-              {song.suffix ? <span className="badge">{song.suffix.toUpperCase()}</span> : null}
-              {song.bitRate ? <span className="badge">{song.bitRate} kbps</span> : null}
-            </div>
+            {/* One quiet line rather than a row of pills, as in Kultr for iOS. */}
+            <p className="npv__facts">
+              {[song.year, song.genre, song.suffix?.toUpperCase(), song.bitRate ? `${song.bitRate} kbps` : null]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
           </div>
 
           <div className="npv__controls">

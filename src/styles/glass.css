@@ -1,80 +1,30 @@
 /* ==========================================================================
-   Glass surfaces
+   Surfaces
    --------------------------------------------------------------------------
-   A glass surface in Kultr is four things stacked:
-     1. a blurred, over-saturated sample of whatever is behind it,
-     2. a faint tint pulled from the current artwork,
-     3. a specular rim — bright at the top-left, dim at the bottom-right,
-     4. a soft drop shadow so it reads as a floating slab.
-   The ::before layer carries the highlight, ::after carries the refraction
-   gradient that makes the edges feel like they bend the light.
+   Cream is flat: a panel is one colour (paper on cream, a lifted charcoal in
+   dark), a hairline edge and a soft shadow. No accent wash, no specular rim.
+   What floats over the content (the player bar, menus, the queue) keeps a
+   blur, so music artwork scrolling under it still softens.
    ========================================================================== */
 
 .glass {
   position: relative;
-  background: linear-gradient(
-      145deg,
-      rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.1),
-      transparent 42%
-    ),
-    var(--glass-tint);
+  background: var(--glass-tint);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-edge);
   border-radius: var(--r-lg);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.18);
+  box-shadow: var(--glass-shadow);
   isolation: isolate;
 }
 
-:root[data-theme='light'] .glass {
-  box-shadow: var(--glass-shadow), inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 0 rgba(10, 10, 16, 0.05);
-}
-
-/* The travelling specular highlight along the top rim. */
-.glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    var(--glass-edge-bright) 0%,
-    transparent 28%,
-    transparent 70%,
-    rgba(255, 255, 255, 0.12) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 1;
-}
-
 .glass-strong {
-  background: linear-gradient(
-      150deg,
-      rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.16),
-      transparent 48%
-    ),
-    var(--glass-tint-strong);
+  background: var(--glass-tint-strong);
 }
 
-/* Night mode keeps surfaces flat black: no accent wash across the panels,
-   only the edge to show where one ends. */
+/* Night mode: black panels, told apart by their edges alone. */
 :root[data-night='true'] .glass {
-  background: var(--glass-tint);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-}
-:root[data-night='true'] .glass-strong {
-  background: var(--glass-tint-strong);
+  box-shadow: none;
 }
 
 /* Interactive glass: lifts and brightens on hover, presses in on click. */
@@ -94,7 +44,8 @@
   transform: translateY(0) scale(0.985);
 }
 
-/* Pill controls — the chrome of the app. */
+/* Pills, Apple Music's way: solid. The one action that leads is the accent
+   with a white (or ink) label; the rest are sand with an accent label. */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -102,13 +53,11 @@
   height: 34px;
   padding: 0 14px;
   border-radius: var(--r-pill);
-  background: var(--glass-tint);
-  border: 1px solid var(--glass-edge);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  color: var(--ink-2);
+  background: var(--sand);
+  border: 1px solid transparent;
+  color: var(--accent-on-sand);
   font-size: 13px;
-  font-weight: 560;
+  font-weight: 600;
   white-space: nowrap;
   transition:
     color var(--dur-fast) var(--ease-out),
@@ -117,30 +66,23 @@
     transform var(--dur-fast) var(--ease-spring);
 }
 .pill:hover {
-  color: var(--ink);
-  background: var(--glass-tint-strong);
+  background: var(--sand-hover);
 }
 .pill:active {
   transform: scale(0.96);
 }
-.pill[data-active='true'] {
-  color: var(--ink);
-  background: var(--accent-soft);
-  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.55);
+.pill[data-active='true'],
+.pill.pill-accent {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+.pill[data-active='true']:hover,
+.pill.pill-accent:hover {
+  background: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.88);
 }
 .pill[disabled] {
   opacity: 0.4;
   pointer-events: none;
-}
-.pill.pill-accent {
-  color: #fff;
-  background: linear-gradient(
-    135deg,
-    rgb(var(--accent-r) var(--accent-g) var(--accent-b)),
-    rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.72)
-  );
-  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.7);
-  box-shadow: 0 8px 26px -10px var(--accent-glow);
 }
 .pill.pill-lg {
   height: 42px;
@@ -168,7 +110,7 @@
 }
 .iconbtn:hover {
   color: var(--ink);
-  background: var(--glass-tint);
+  background: var(--sand);
 }
 .iconbtn:active {
   transform: scale(0.9);
@@ -194,15 +136,15 @@
   height: 42px;
   padding: 0 14px;
   border-radius: var(--r-md);
-  background: var(--glass-tint);
+  /* A faint fill of the ink: a little darker than paper, a little lighter
+     than charcoal, so a field reads as a well on any panel. */
+  background: rgb(var(--ink-rgb) / 0.05);
   border: 1px solid var(--glass-edge);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
   transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 .field:focus-within {
   border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.6);
-  background: var(--glass-tint-strong);
+  background: rgb(var(--ink-rgb) / 0.03);
 }
 .field input,
 .field select {
@@ -234,12 +176,7 @@
   transition: background-color var(--dur) var(--ease-out);
 }
 .switch[data-on='true'] {
-  background: linear-gradient(
-    135deg,
-    rgb(var(--accent-r) var(--accent-g) var(--accent-b)),
-    rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.8)
-  );
-  box-shadow: 0 6px 18px -8px var(--accent-glow);
+  background: var(--accent);
 }
 .switch::after {
   content: '';
@@ -250,7 +187,7 @@
   height: 22px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgb(31 26 20 / 0.3);
   transition: transform var(--dur) var(--ease-spring);
 }
 .switch[data-on='true']::after {
@@ -295,7 +232,7 @@
   margin-top: -5px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 4px rgb(31 26 20 / 0.35);
   transition: transform var(--dur-fast) var(--ease-spring);
 }
 .slider::-moz-range-thumb {
@@ -304,7 +241,7 @@
   border: 0;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 4px rgb(31 26 20 / 0.35);
 }
 .slider:active::-webkit-slider-thumb {
   transform: scale(1.25);

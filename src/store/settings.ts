@@ -157,20 +157,21 @@ export interface SettingsState {
 }
 
 export const DEFAULT_SETTINGS = {
-  theme: 'dark' as ThemeMode,
+  // Cream, as in Kultr for iOS: follows the device, one orange, flat colour.
+  theme: 'system' as ThemeMode,
   nightMode: false,
   glass: 'liquid' as GlassLevel,
-  accentMode: 'artwork' as const,
-  accent: '#7c8cff',
+  accentMode: 'fixed' as 'artwork' | 'fixed',
+  accent: '#ff7a3d',
   accentBlend: 0,
-  surfaceBorder: 'accent' as SurfaceBorder,
+  surfaceBorder: 'neutral' as SurfaceBorder,
   borderOpacity: 45,
   surfaceOpacity: 100,
   corners: 'soft' as CornerStyle,
   playhead: 'minimal' as PlayheadStyle,
   timeRemaining: false,
   reduceMotion: false,
-  backdropArtwork: true,
+  backdropArtwork: false,
   gridSize: 'medium' as GridSize,
   compactRows: false,
 
@@ -229,6 +230,35 @@ export const DEFAULT_SETTINGS = {
   hasSeenWelcome: false,
 }
 
+/** Brings settings saved by an older version up to date. */
+export function migrateSettings(persisted: unknown, version: number): SettingsState {
+  // v2 → v3 renamed every automix* key to injekt*. Without this, anyone
+  // who had already tuned the mixer would silently get the defaults back.
+  const old = { ...(persisted as Record<string, unknown>) }
+  for (const key of Object.keys(old)) {
+    if (key.startsWith('automix')) {
+      const renamed = 'injekt' + key.slice('automix'.length)
+      if (!(renamed in old)) old[renamed] = old[key]
+      delete old[key]
+    }
+    // v3 → v4 removed the visualizer. Drop anything that is no longer a
+    // setting rather than carrying dead keys forward forever.
+    if (!(key in DEFAULT_SETTINGS)) delete old[key]
+  }
+  // v4 → v5 is the Cream look, once: the old defaults (periwinkle
+  // taken from the artwork, the cover blurred behind every page,
+  // accent-tinted borders) become the new ones. A colour someone picked
+  // themselves is kept, and all of it can be switched back in
+  // Settings → Appearance. Kultr for iOS moved its installs the same way.
+  if (version < 5) {
+    if (typeof old.accent !== 'string' || old.accent.toLowerCase() === '#7c8cff') old.accent = DEFAULT_SETTINGS.accent
+    old.accentMode = DEFAULT_SETTINGS.accentMode
+    old.backdropArtwork = DEFAULT_SETTINGS.backdropArtwork
+    old.surfaceBorder = DEFAULT_SETTINGS.surfaceBorder
+  }
+  return { ...DEFAULT_SETTINGS, ...old } as SettingsState
+}
+
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
@@ -241,28 +271,13 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'kultr.settings',
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         const { set: _set, merge: _merge, applyEqPreset: _apply, reset: _reset, ...rest } = state
         return rest as SettingsState
       },
-      migrate: (persisted) => {
-        // v2 → v3 renamed every automix* key to injekt*. Without this, anyone
-        // who had already tuned the mixer would silently get the defaults back.
-        const old = { ...(persisted as Record<string, unknown>) }
-        for (const key of Object.keys(old)) {
-          if (key.startsWith('automix')) {
-            const renamed = 'injekt' + key.slice('automix'.length)
-            if (!(renamed in old)) old[renamed] = old[key]
-            delete old[key]
-          }
-          // v3 → v4 removed the visualizer. Drop anything that is no longer a
-          // setting rather than carrying dead keys forward forever.
-          if (!(key in DEFAULT_SETTINGS)) delete old[key]
-        }
-        return { ...DEFAULT_SETTINGS, ...old } as SettingsState
-      },
+      migrate: migrateSettings,
     },
   ),
 )

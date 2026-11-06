@@ -3,7 +3,7 @@ import {
   exportableSettings,
   readSettingsFile,
 } from '@/lib/settingsFile'
-import { DEFAULT_SETTINGS } from '../src/store/settings'
+import { DEFAULT_SETTINGS, migrateSettings } from '../src/store/settings'
 import type { SettingsState } from '../src/store/settings'
 
 let failures = 0
@@ -98,6 +98,19 @@ for (const [name, value] of [['null', null], ['a string', 'nope'], ['other json'
   try { readSettingsFile(value) } catch { threw = true }
   assert(`${name} throws`, threw)
 }
+
+console.log('\n== Older settings move to the Cream look once ==')
+const oldDefaults = { ...DEFAULT_SETTINGS, theme: 'dark', accent: '#7c8cff', accentMode: 'artwork', backdropArtwork: true, surfaceBorder: 'accent', crossfadeSeconds: 9 }
+const moved = migrateSettings(oldDefaults, 4)
+assert('the old periwinkle becomes orange', moved.accent === '#ff7a3d', `-> ${moved.accent}`)
+assert('a fixed accent, neutral borders, no cover behind pages', moved.accentMode === 'fixed' && moved.surfaceBorder === 'neutral' && moved.backdropArtwork === false)
+assert('the theme someone had stays', moved.theme === 'dark')
+assert('everything else is kept', moved.crossfadeSeconds === 9)
+const picked = migrateSettings({ ...oldDefaults, accent: '#45d67a' }, 4)
+assert('a colour someone picked is kept', picked.accent === '#45d67a', `-> ${picked.accent}`)
+const later = migrateSettings({ ...DEFAULT_SETTINGS, accentMode: 'artwork', backdropArtwork: true }, 5)
+assert('only once: choices made after the move stay', later.accentMode === 'artwork' && later.backdropArtwork === true)
+assert('new installs start on Cream', DEFAULT_SETTINGS.theme === 'system' && DEFAULT_SETTINGS.accent === '#ff7a3d' && DEFAULT_SETTINGS.accentMode === 'fixed')
 
 console.log(failures === 0 ? '\nALL SETTINGS-FILE CHECKS PASSED\n' : `\n${failures} SETTINGS-FILE CHECK(S) FAILED\n`)
 process.exit(failures === 0 ? 0 : 1)

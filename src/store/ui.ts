@@ -52,12 +52,15 @@ interface UiState {
   shortcutsOpen: boolean
   /** RGB triplet sampled from the current artwork, drives the glass tint. */
   accentRgb: [number, number, number] | null
+  /** The theme showing right now, with System resolved. */
+  resolvedTheme: 'light' | 'dark'
   setNowPlaying: (open: boolean) => void
   setQueue: (open: boolean) => void
   setSidebar: (open: boolean) => void
   setSearch: (open: boolean) => void
   setShortcuts: (open: boolean) => void
   setAccent: (rgb: [number, number, number] | null) => void
+  setResolvedTheme: (theme: 'light' | 'dark') => void
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -67,10 +70,12 @@ export const useUi = create<UiState>((set) => ({
   searchOpen: false,
   shortcutsOpen: false,
   accentRgb: null,
+  resolvedTheme: document.documentElement.dataset.theme === 'light' ? 'light' : 'dark',
   setNowPlaying: (nowPlayingOpen) => set({ nowPlayingOpen }),
   setQueue: (queueOpen) => set({ queueOpen }),
   setSidebar: (sidebarOpen) => set({ sidebarOpen }),
   setSearch: (searchOpen) => set({ searchOpen }),
   setShortcuts: (shortcutsOpen) => set({ shortcutsOpen }),
   setAccent: (accentRgb) => set({ accentRgb }),
+  setResolvedTheme: (resolvedTheme) => set({ resolvedTheme }),
 }))

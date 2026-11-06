@@ -7,6 +7,53 @@ only fixed.
 
 ---
 
+## 1.8.0 — 2026-11-06
+
+### 2026-11-06 09:17 — Cream, the look of Kultr for iOS
+
+Kultr on the web now looks like Kultr for iOS: cream pages with paper panels
+and warm black text, warm charcoal in the dark theme, and one orange for
+whatever you can tap. Colour is flat everywhere; the album cover is the only
+colourful thing on screen.
+
+- **Colours.** Cream `#F6F0E5` with paper `#FFFCF6` panels in light mode;
+  charcoal `#1C1A17` in dark; night mode stays pure black, now with warm
+  grey panels. The accent is orange `#FF7A3D`. On cream any accent is drawn
+  deeper until it reads as text there (the orange becomes `#B24C1D`), and
+  whatever sits on a solid accent is white or warm ink, whichever reads —
+  the same rules as the iOS app, so the two match colour for colour.
+- **No gradients.** The drifting glow behind the app, the accent wash and
+  the shine along every panel's edge, the gradient buttons, switches and
+  playhead, and the shaded placeholders are all gone. A placeholder is sand
+  with the initials or icon in the accent.
+- **Buttons.** Pills are solid, as in Apple Music: the one action that leads
+  is orange, the rest are sand with an orange label. Play and Shuffle on
+  album, artist, playlist and genre pages are both sand, as on iOS.
+  Segmented controls, the full player's tabs included, are a sand track with
+  the choice lifted out on paper. A song's ••• is orange.
+- **Headers.** Album, artist, playlist and genre pages lose the small
+  all-caps label over the title. A home shelf's title is a bold heading that
+  opens the full list, in place of an icon and a See all button.
+- **The full player** is the page colour, and the year, genre, format and
+  bitrate under the title are one quiet line instead of a row of pills.
+- **The icon** is the K in orange on cream, from the iOS app: favicon,
+  installed-app icons, Apple touch icon, the sidebar and the sign-in screen.
+  The installed app's splash screen is cream to match.
+- **Settings → Appearance** has the iOS app's nine accent swatches, plus any
+  colour you like. Border opacity now applies to neutral borders too.
+- **Defaults.** New visitors get the theme their device uses, a fixed orange
+  accent, neutral borders and no cover behind the pages. Existing installs
+  move to those once: the periwinkle that was the default becomes orange,
+  colour from artwork and the blurred cover behind pages switch off, and
+  borders go neutral. A colour you picked yourself, and your theme, are
+  kept, and all of it can be switched back in Settings → Appearance.
+
+Contrast was checked for every pair that carries text: the orange label on
+sand gets a touch of ink so it passes 4.5:1 for every swatch, and secondary
+text in the dark theme is a little brighter than on iOS for the same reason.
+
+---
+
 ## 1.7.0 — 2026-10-07
 
 ### 2026-10-07 08:45 — Karousel

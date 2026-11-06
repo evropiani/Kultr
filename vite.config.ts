@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      __KULTR_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.7.0'),
+      __KULTR_VERSION__: JSON.stringify(process.env.npm_package_version ?? '1.8.0'),
       __KULTR_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
     },
     server: {
@@ -61,8 +61,9 @@ export default defineConfig(({ mode }) => {
           name: 'Kultr',
           short_name: 'Kultr',
           description: 'A modern, minimalist client for your Navidrome server.',
-          theme_color: '#0b0b0f',
-          background_color: '#0b0b0f',
+          // Cream, the colour of the icon, so the splash and the icon are one.
+          theme_color: '#f6f0e5',
+          background_color: '#f6f0e5',
           display: 'standalone',
           orientation: 'any',
           start_url: base,

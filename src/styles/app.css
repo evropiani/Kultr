@@ -16,7 +16,9 @@
 
 /* ---------------------------------------------------------------- backdrop */
 
-/* Blurred artwork wash behind everything — the light source for the glass. */
+/* The page is one flat colour. With "Artwork behind pages" on, the cover
+   sits blurred behind everything, under a flat veil of the page colour so
+   text reads the same at the top and the bottom. */
 .backdrop {
   position: fixed;
   inset: -20%;
@@ -29,54 +31,24 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(110px) saturate(150%) brightness(0.38);
+  filter: blur(110px) saturate(130%);
   opacity: 0;
   transform: scale(1.25);
   transition: opacity 1.4s var(--ease-out);
   will-change: opacity;
 }
-:root[data-theme='light'] .backdrop__layer {
-  filter: blur(110px) saturate(120%) brightness(1.3);
-  opacity: 0;
-}
 .backdrop__layer[data-visible='true'] {
-  opacity: 0.4;
+  opacity: 1;
 }
-:root[data-theme='light'] .backdrop__layer[data-visible='true'] {
-  opacity: 0.32;
-}
-.backdrop__mesh {
+.backdrop__veil {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(60% 50% at 18% 12%, rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.18), transparent 70%),
-    radial-gradient(50% 45% at 84% 78%, rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.12), transparent 72%);
-  animation: drift 26s ease-in-out infinite alternate;
+  background: var(--bg);
+  opacity: 0.55;
 }
-@keyframes drift {
-  from {
-    transform: translate3d(-3%, -2%, 0) scale(1.05);
-  }
-  to {
-    transform: translate3d(4%, 3%, 0) scale(1.18);
-  }
-}
-.backdrop__vignette {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgb(8 8 12 / 0.45), rgb(8 8 12 / 0.55)),
-    radial-gradient(120% 90% at 50% 0%, transparent 30%, rgb(0 0 0 / 0.6) 100%);
-}
-/* Night mode: no glow behind the app at all — the background is black, and
-   the drifting gradient no longer has to be drawn. */
+/* Night mode: nothing behind the app at all — the background is black. */
 :root[data-night='true'] .backdrop {
   display: none;
-}
-:root[data-theme='light'] .backdrop__vignette {
-  background:
-    linear-gradient(rgb(236 238 244 / 0.42), rgb(236 238 244 / 0.5)),
-    radial-gradient(120% 90% at 50% 0%, transparent 35%, rgb(255 255 255 / 0.5) 100%);
 }
 
 /* ----------------------------------------------------------------- sidebar */
@@ -284,6 +256,26 @@
 
 /* ------------------------------------------------------------ page headers */
 
+/* A home shelf's title, which opens its full list. */
+.shelf__title {
+  margin-bottom: 12px;
+  font-size: 22px;
+  font-weight: 700;
+}
+.shelf__title a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.shelf__title svg {
+  color: var(--ink-3);
+  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.shelf__title a:hover svg {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
 .page-head {
   display: flex;
   align-items: flex-end;
@@ -321,8 +313,8 @@
   height: 212px;
   border-radius: var(--r-lg);
   overflow: hidden;
-  box-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.9);
-  background: var(--glass-tint);
+  box-shadow: var(--art-shadow-lg);
+  background: var(--sand);
 }
 .hero__art img {
   width: 100%;
@@ -337,13 +329,6 @@
   display: grid;
   gap: 10px;
   padding-bottom: 6px;
-}
-.hero__kicker {
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
 }
 .hero__title {
   font-size: clamp(26px, 4vw, 46px);
@@ -409,8 +394,8 @@
   aspect-ratio: 1;
   border-radius: var(--r-md);
   overflow: hidden;
-  background: linear-gradient(140deg, var(--glass-tint-strong), var(--glass-tint));
-  box-shadow: 0 14px 32px -18px rgba(0, 0, 0, 0.85);
+  background: var(--sand);
+  box-shadow: var(--art-shadow);
 }
 .card__art img {
   width: 100%;
@@ -433,11 +418,9 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: #fff;
-  background: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.9);
+  color: var(--on-accent);
+  background: var(--accent);
+  box-shadow: var(--art-shadow);
   opacity: 0;
   transform: translateY(8px) scale(0.85);
   transition:
@@ -478,8 +461,9 @@
   height: 100%;
   display: grid;
   place-items: center;
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
-  color: var(--ink-3);
+  /* No cover: sand, with the initials or the icon in the accent. */
+  background: var(--sand);
+  color: var(--accent);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -597,6 +581,10 @@
   width: 30px;
   height: 30px;
 }
+/* A song's ••• is the accent, as in Kultr for iOS. */
+.trackrow__more {
+  color: var(--accent);
+}
 .trackrow__actions .iconbtn[data-active='true'] {
   opacity: 1;
 }
@@ -708,9 +696,9 @@
   height: 54px;
   border-radius: var(--r-sm);
   overflow: hidden;
-  background: var(--glass-tint);
+  background: var(--sand);
   cursor: pointer;
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--art-shadow);
   transition: transform var(--dur) var(--ease-spring);
 }
 .player__art:hover {
@@ -811,7 +799,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.7));
+  background: var(--accent);
 }
 .scrub__overlap {
   position: absolute;
@@ -1007,13 +995,15 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   padding: calc(14px + var(--safe-top)) 18px calc(18px + var(--safe-bottom));
-  background: rgb(0 0 0 / 0.35);
-  backdrop-filter: blur(46px) saturate(180%);
-  -webkit-backdrop-filter: blur(46px) saturate(180%);
+  /* The page colour, as on iOS; see-through over the blurred cover only
+     when "Artwork behind pages" is on. */
+  background: var(--bg);
   animation: npv-in var(--dur-slow) var(--ease-spring);
 }
-:root[data-theme='light'] .npv {
-  background: rgb(255 255 255 / 0.4);
+:root[data-backdrop='artwork'] .npv {
+  background: rgb(var(--bg-rgb) / 0.55);
+  backdrop-filter: blur(46px) saturate(140%);
+  -webkit-backdrop-filter: blur(46px) saturate(140%);
 }
 :root[data-night='true'] .npv {
   background: #000;
@@ -1074,12 +1064,18 @@
   align-content: center;
   min-width: 0;
 }
+.npv__facts {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
 .npv__art {
   width: min(46vh, 100%);
   aspect-ratio: 1;
   border-radius: var(--r-xl);
   overflow: hidden;
-  box-shadow: 0 50px 110px -40px rgba(0, 0, 0, 0.95);
+  box-shadow: var(--art-shadow-lg);
   transition: transform var(--dur-slow) var(--ease-spring);
 }
 .npv__art[data-playing='false'] {
@@ -1151,26 +1147,39 @@
   min-height: 0;
   height: 100%;
 }
+/* The same sand track and paper choice as every segmented control. */
 .npv__tabs {
   position: relative;
   display: flex;
-  gap: 6px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--sand);
+  justify-self: start;
 }
 .npv__tabs .pill {
   position: relative;
   z-index: 1;
+  background: transparent;
+  color: var(--ink-2);
+  height: 30px;
+}
+.npv__tabs .pill:hover {
+  background: transparent;
+  color: var(--ink);
 }
 .npv__tabs .pill[data-active='true'] {
   background: transparent;
   border-color: transparent;
+  color: var(--ink);
 }
 .npv__tabmark {
   position: absolute;
   top: 0;
   left: 0;
   border-radius: var(--r-pill);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.55);
+  background: var(--seg-mark);
+  box-shadow: var(--seg-shadow);
   pointer-events: none;
   opacity: 0;
   transition:
@@ -1469,7 +1478,7 @@
 
 .skeleton {
   border-radius: var(--r-md);
-  background: linear-gradient(90deg, var(--glass-tint) 25%, var(--glass-tint-strong) 37%, var(--glass-tint) 63%);
+  background: linear-gradient(90deg, var(--sand) 25%, var(--sand-hover) 37%, var(--sand) 63%);
   background-size: 400% 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -1572,7 +1581,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgb(0 0 0 / 0.5);
+  background: var(--scrim);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: fade-in var(--dur) var(--ease-out);
@@ -1823,6 +1832,46 @@
   gap: 10px;
   align-items: stretch;
 }
+/* Accent swatches: a row of discs, the chosen one ringed. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgb(var(--ink-rgb) / 0.12);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-out);
+}
+.swatch:hover {
+  transform: scale(1.1);
+}
+.swatch[aria-checked='true'] {
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 0 4px var(--ink);
+}
+/* "Another colour": the browser's colour picker behind a rainbow disc. */
+.swatch--custom {
+  -webkit-appearance: none;
+  appearance: none;
+  background: conic-gradient(#ff7a3d, #ffd166, #45d67a, #4cc9f0, #7c8cff, #ff6b9a, #ff7a3d);
+  overflow: hidden;
+}
+.swatch--custom::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.swatch--custom::-webkit-color-swatch {
+  border: 0;
+  opacity: 0;
+}
+.swatch--custom::-moz-color-swatch {
+  border: 0;
+  opacity: 0;
+}
 .row__links {
   display: flex;
   flex-wrap: wrap;
@@ -1853,13 +1902,14 @@
   text-align: right;
 }
 
+/* Segmented controls: a sand track with the choice lifted out of it on
+   paper, like the switcher under Kultr for iOS's player. */
 .seg {
   position: relative;
   display: inline-flex;
   padding: 3px;
   border-radius: var(--r-pill);
-  background: var(--glass-tint);
-  border: 1px solid var(--glass-edge);
+  background: var(--sand);
   gap: 2px;
 }
 .seg button {
@@ -1868,7 +1918,7 @@
   border-radius: var(--r-pill);
   font-size: 12.5px;
   font-weight: 560;
-  color: var(--ink-3);
+  color: var(--ink-2);
   transition: all var(--dur-fast) var(--ease-out);
 }
 .seg button {
@@ -1884,8 +1934,8 @@
   top: 0;
   left: 0;
   border-radius: var(--r-pill);
-  background: var(--glass-tint-strong);
-  box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.6);
+  background: var(--seg-mark);
+  box-shadow: var(--seg-shadow);
   pointer-events: none;
   opacity: 0;
   transition:
@@ -2085,7 +2135,7 @@
     position: fixed;
     inset: 0;
     z-index: 44;
-    background: rgb(0 0 0 / 0.5);
+    background: var(--scrim);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     animation: fade-in var(--dur) var(--ease-out);
@@ -2250,7 +2300,7 @@
   place-items: center;
   border-radius: 6px;
   border: 1.5px solid var(--ink-4);
-  background: rgb(0 0 0 / 0.25);
+  background: rgb(var(--ink-rgb) / 0.05);
   color: transparent;
   transition:
     background-color var(--dur-fast) var(--ease-out),
@@ -2264,7 +2314,7 @@
 .checkbox[data-checked='true'] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .checkbox:active {
   transform: scale(0.88);
@@ -2317,16 +2367,14 @@
   gap: 10px;
   justify-items: center;
   padding: 18px 16px calc(18px + var(--safe-bottom));
-  background: linear-gradient(to top, rgb(0 0 0 / 0.7), transparent);
+  background: rgb(var(--bg-rgb) / 0.92);
+  border-top: 1px solid var(--line);
   opacity: 0;
   transform: translateY(16px);
   transition:
     opacity var(--dur) var(--ease-out),
     transform var(--dur) var(--ease-spring);
   pointer-events: none;
-}
-:root[data-theme='light'] .dropzone {
-  background: linear-gradient(to top, rgb(236 238 244 / 0.8), transparent);
 }
 .dropzone[data-open='true'] {
   opacity: 1;
@@ -2441,33 +2489,6 @@
 .playhead-option .scrub__track,
 .playhead-option .scrub__fill {
   display: block;
-}
-
-/* Colour picker that matches the rest of the chrome rather than the OS. */
-.swatch {
-  width: 52px;
-  height: 34px;
-  flex: none;
-  padding: 3px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--glass-edge);
-  background: var(--glass-tint);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out);
-}
-.swatch:hover {
-  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.6);
-}
-.swatch::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-.swatch::-webkit-color-swatch {
-  border: 0;
-  border-radius: calc(var(--r-sm) - 4px);
-}
-.swatch::-moz-color-swatch {
-  border: 0;
-  border-radius: calc(var(--r-sm) - 4px);
 }
 
 /* ------------------------------------------------- home-page shelf picker */

@@ -1,17 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  Clock,
-  Disc3,
-  Heart,
-  ListMusic,
-  Play,
-  Radio as RadioIcon,
-  RefreshCw,
-  Settings as SettingsIcon,
-  Shuffle,
-  Sparkles,
-} from 'lucide-react'
+import { ChevronRight, Disc3, RefreshCw, Settings as SettingsIcon, Shuffle, Sparkles } from 'lucide-react'
 import type { Album, Artist, Playlist, RadioStation, Song } from '@/api/types'
 import { maybeClient } from '@/api/subsonic'
 import { allAlbums, allArtists, allPlaylists, allSongs, recentHistory } from '@/db'
@@ -34,24 +23,6 @@ function greeting(): string {
   if (hour < 12) return 'Good morning'
   if (hour < 18) return 'Good afternoon'
   return 'Good evening'
-}
-
-const TILE_ICONS: Record<string, React.ReactNode> = {
-  recentlyPlayed: <Clock size={16} />,
-  mostPlayedSongs: <Play size={16} />,
-  mostPlayedAlbums: <Play size={16} />,
-  mostPlayedArtists: <Play size={16} />,
-  mostPlayedPlaylists: <Play size={16} />,
-  randomSongs: <Shuffle size={16} />,
-  randomAlbums: <Shuffle size={16} />,
-  randomArtists: <Shuffle size={16} />,
-  recentlyAdded: <Disc3 size={16} />,
-  favouriteSongs: <Heart size={16} />,
-  favouriteAlbums: <Heart size={16} />,
-  favouriteArtists: <Heart size={16} />,
-  favouritePlaylists: <ListMusic size={16} />,
-  favouriteRadios: <Heart size={16} />,
-  radios: <RadioIcon size={16} />,
 }
 
 const SONG_LIMIT = 10
@@ -180,18 +151,7 @@ export function Home() {
       ) : (
         <>
           {content.map(({ tile, body }) => (
-            <Shelf
-              key={tile.id}
-              title={tile.title}
-              icon={TILE_ICONS[tile.id]}
-              action={
-                tile.seeAll ? (
-                  <Link className="pill" to={tile.seeAll}>
-                    See all
-                  </Link>
-                ) : null
-              }
-            >
+            <Shelf key={tile.id} title={tile.title} to={tile.seeAll}>
               {body}
             </Shelf>
           ))}
@@ -423,26 +383,23 @@ function buildShelves(
   return out
 }
 
-function Shelf({
-  title,
-  icon,
-  action,
-  children,
-}: {
-  title: string
-  icon: React.ReactNode
-  action?: React.ReactNode
-  children: React.ReactNode
-}) {
+/**
+ * A home shelf: a bold title, which opens the full list where there is one,
+ * as Apple Music's (and Kultr for iOS's) do.
+ */
+function Shelf({ title, to, children }: { title: string; to?: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: 34 }}>
-      <div className="page-head" style={{ marginBottom: 12, alignItems: 'center' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {icon}
-          {title}
-        </h2>
-        {action}
-      </div>
+      <h2 className="shelf__title">
+        {to ? (
+          <Link to={to}>
+            {title}
+            <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
+          </Link>
+        ) : (
+          title
+        )}
+      </h2>
       {children}
     </section>
   )

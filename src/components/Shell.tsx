@@ -28,7 +28,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { artUrl, dominantColor, hexToRgb } from '@/lib/artwork'
+import { artUrl, dominantColor, hexToRgb, onAccent, readableOnLight } from '@/lib/artwork'
 import { usePlayer } from '@/store/player'
 import { useAuth } from '@/store/auth'
 import { useSettings } from '@/store/settings'
@@ -52,6 +52,7 @@ export function Backdrop() {
   const accent = useSettings((state) => state.accent)
   const accentBlend = useSettings((state) => state.accentBlend)
   const setAccent = useUi((state) => state.setAccent)
+  const resolvedTheme = useUi((state) => state.resolvedTheme)
   const [layers, setLayers] = useState<{ a: string; b: string; showA: boolean }>({
     a: '',
     b: '',
@@ -74,16 +75,20 @@ export function Backdrop() {
   // Drive the accent colour from the artwork, or from the fixed colour.
   useEffect(() => {
     let cancelled = false
-    const apply = (rgb: [number, number, number] | null) => {
-      if (cancelled || !rgb) return
+    const apply = (picked: [number, number, number] | null) => {
+      if (cancelled || !picked) return
+      // A pale colour washes out on cream, so there it is darkened until it
+      // reads as text, as Kultr for iOS does.
+      const rgb = resolvedTheme === 'light' ? readableOnLight(picked) : picked
       const root = document.documentElement
       root.style.setProperty('--accent-r', String(rgb[0]))
       root.style.setProperty('--accent-g', String(rgb[1]))
       root.style.setProperty('--accent-b', String(rgb[2]))
+      root.style.setProperty('--on-accent', `rgb(${onAccent(rgb).join(' ')})`)
       setAccent(rgb)
     }
 
-    const chosen = hexToRgb(accent) ?? [124, 140, 255]
+    const chosen = hexToRgb(accent) ?? [255, 122, 61]
     if (accentMode === 'fixed' || !url) {
       apply(chosen)
       return
@@ -100,7 +105,7 @@ export function Backdrop() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [songId, accentMode, accent, accentBlend, setAccent])
+  }, [songId, accentMode, accent, accentBlend, setAccent, resolvedTheme])
 
   return (
     <div className="backdrop" aria-hidden="true">
@@ -116,10 +121,9 @@ export function Backdrop() {
             data-visible={!layers.showA && Boolean(layers.b)}
             style={layers.b ? { backgroundImage: `url("${layers.b}")` } : undefined}
           />
+          <div className="backdrop__veil" />
         </>
       ) : null}
-      <div className="backdrop__mesh" />
-      <div className="backdrop__vignette" />
     </div>
   )
 }

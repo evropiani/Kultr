@@ -191,7 +191,6 @@ export function PlaylistPage() {
           <Art src={artUrl(data, 600)} alt={data.name} />
         </div>
         <div className="hero__body">
-          <span className="hero__kicker">Playlist</span>
           <h1 className="hero__title">{data.name}</h1>
           {data.comment ? <p style={{ color: 'var(--ink-2)' }}>{data.comment}</p> : null}
           <div className="hero__meta">
@@ -202,7 +201,7 @@ export function PlaylistPage() {
           </div>
           <div className="hero__actions">
             <button
-              className="pill pill-accent pill-lg"
+              className="pill pill-lg"
               disabled={!songs.length}
               onClick={() => void usePlayer.getState().playNow(songs, 0, data.name)}
             >

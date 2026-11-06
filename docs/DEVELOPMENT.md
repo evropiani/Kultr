@@ -145,15 +145,19 @@ Anything touching tempo, key or transition planning should come with one.
 
 Three files, no CSS framework, no CSS-in-JS.
 
-- `tokens.css` — variables and reset. `--accent-r/g/b` are rewritten at
-  runtime from the album art, which is how the whole interface retints.
-- `glass.css` — the surface recipe. A `.glass` element is a blurred backdrop,
-  an artwork tint, a specular rim (the `::before` gradient with a mask), and a
-  shadow. The class names describe the rendering technique, not the product.
+- `tokens.css` — variables and reset. The palette is Cream, the same as Kultr
+  for iOS: `--bg`, `--bg-elevated`, the `--ink` steps, `--sand` (the fill of a
+  tinted button) and `--line`, per theme. `--accent-r/g/b` and `--on-accent`
+  are written at runtime: the chosen colour, darkened on cream until it reads
+  as text there (`readableOnLight` in `lib/artwork.ts`), or the artwork's.
+- `glass.css` — surfaces and controls. A `.glass` element is a flat panel: one
+  colour, a hairline edge, a soft shadow, and a blur for what scrolls under
+  it. Pills are sand with an accent label; `pill-accent` (or `data-active`) is
+  solid accent. The class names describe the rendering, not the product.
 - `app.css` — layout and components.
 
-Use the tokens rather than literal colours, so themes and the artwork tint keep
-working. Respect `prefers-reduced-motion`, which the `--motion` attribute also
+Use the tokens rather than literal colours, so the themes and the accent keep
+working. No gradients for decoration: the album cover is the colourful thing. Respect `prefers-reduced-motion`, which the `--motion` attribute also
 drives from settings.
 
 ---

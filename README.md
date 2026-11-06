@@ -28,13 +28,13 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 |  |  |
 |---|---|
 | ![Your library, mirrored locally](docs/screenshots/albums.png) | ![An album, playing](docs/screenshots/album.png) |
-| **Your library, mirrored locally.** Browsing is instant because nothing is fetched to draw it. | **An album, playing.** The whole interface takes its colour from the artwork. |
+| **Your library, mirrored locally.** Browsing is instant because nothing is fetched to draw it. | **An album, playing.** Flat cream and one orange, so the cover is the colourful thing on screen. |
 | ![InjeKt explaining a transition](docs/screenshots/injekt.png) | ![Appearance settings](docs/screenshots/settings.png) |
-| **InjeKt, showing its working.** Tempo, key, energy and the exact plan for the hand-over. | **Make it yours.** Accent colour, borders, corner style, and six playhead designs that preview themselves. |
+| **InjeKt, showing its working.** Tempo, key, energy and the exact plan for the hand-over. | **Make it yours.** Nine accent swatches (or any colour), borders, corner style, and six playhead designs that preview themselves. |
 | ![Choosing the home page shelves](docs/screenshots/home-settings.png) | ![The home page](docs/screenshots/home.png) |
 | **Choose your home page.** Fifteen shelves, switched on and off and put in the order you want. | **And here it is.** Empty shelves are skipped, so it never looks half-finished. |
-| ![The light theme](docs/screenshots/albums-light.png) | ![Signing in](docs/screenshots/login.png) |
-| **Light theme.** The same app icon, in the corner, reads on either background. | **One screen to connect.** Name the server, or let it use its address. |
+| ![The dark theme](docs/screenshots/albums-dark.png) | ![Signing in](docs/screenshots/login.png) |
+| **Dark theme.** Warm charcoal rather than blue-black, with the same orange, a little brighter. | **One screen to connect.** Name the server, or let it use its address. |
 
 <div align="center">
 
@@ -63,7 +63,7 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Many servers** | Add as many Navidrome servers as you like, give each one a name, switch between them, and turn one off without deleting it. |
 | **A home page you choose** | Fifteen shelves — most played, random, favourite and recently added, across tracks, albums, artists, playlists and radio — switched on, off and reordered to taste. A shelf with nothing to show is skipped rather than left empty. |
 | **Cast** | Send playback to a Chromecast or an AirPlay device, where the browser supports it. |
-| **Make it yours** | Light and dark, plus **night mode**: the dark theme in pure black for OLED screens. Three corner styles, six playhead designs, borders that take the accent colour, opacity sliders for both, and an accent you can blend with the artwork's rather than choosing between the two. Click the time in the player to count down instead of up. |
+| **Make it yours** | **Cream**, the look of Kultr for iOS: cream pages and warm charcoal, following your device, plus **night mode** — the dark theme in pure black for OLED screens. Nine accent swatches or any colour (on cream it is drawn deeper so it still reads as text), or colour from the artwork, blended with yours if you like. The cover blurred behind every page, three corner styles, six playhead designs, borders in the accent colour, and opacity sliders. Click the time in the player to count down instead of up. |
 | **Custom CSS** | A box in Settings for your own stylesheet, applied last so it overrides everything. |
 | **Settings backup** | Export every preference to a small JSON file and import it on another machine. Passwords and usernames are never in it; the list of servers is left out too unless you explicitly ask for it. |
 | **Equaliser** | Ten bands, nine presets, pre-amp. |
@@ -71,8 +71,11 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |
 | **Everything else** | Queue with drag-to-reorder, favourites, ratings, playlists, sleep timer, internet radio, keyboard shortcuts, light and dark themes, and a PWA install on desktop, Android and iOS. |
 
-The interface takes its colour from whatever is playing — the surfaces, the
-highlights and the backdrop all retint from the album art. It moves, too, but
+It looks like Kultr for iOS: flat cream pages with paper panels and warm black
+text (warm charcoal in the dark theme), and one orange for whatever you can
+tap — sand buttons with an orange label, the leading one solid orange. There
+are no gradients; the album cover is the only colourful thing on screen. With
+**Colour from artwork** on, the accent follows what is playing instead. It moves, too, but
 quickly: the highlight in the sidebar and in every switcher slides to what you
 picked, settings sections grow open and shut, pages rise into place, and the
 full player, the queue, dialogs, menus and notices leave the way they came

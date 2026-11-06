@@ -205,7 +205,7 @@ export function Stats() {
                     height: `${Math.max(2, (day.seconds / peak) * 104)}px`,
                     borderRadius: 6,
                     background:
-                      'linear-gradient(180deg, var(--accent), rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.35))',
+                      'var(--accent)',
                   }}
                 />
                 <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>{day.day.slice(8)}</span>

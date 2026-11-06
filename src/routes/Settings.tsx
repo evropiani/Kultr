@@ -88,6 +88,9 @@ function Panel(props: Parameters<typeof Section>[0]) {
   )
 }
 
+/** The accent swatches, the same as Kultr for iOS offers. */
+const ACCENTS = ['#ff7a3d', '#ffa733', '#f2613f', '#ff6b9a', '#ffd166', '#45d67a', '#2ec4b6', '#4cc9f0', '#7c8cff']
+
 export function Settings() {
   const settings = useSettings()
   const auth = useAuth()
@@ -179,7 +182,7 @@ export function Settings() {
             ]}
           />
         </Row>
-        <Row label="Reduce motion" hint="Stops the drifting background and spring animations.">
+        <Row label="Reduce motion" hint="Stops the spring animations and the movement between pages.">
           <Switch
             checked={settings.reduceMotion}
             onChange={(value) => settings.set('reduceMotion', value)}
@@ -201,16 +204,33 @@ export function Settings() {
           hint={
             settings.accentMode === 'artwork'
               ? 'Used on its own when colour from artwork is off, and mixed into the artwork colour below when it is on.'
-              : 'Used everywhere: highlights, the playhead, switches and the glow behind glass.'
+              : 'Used everywhere: buttons, highlights, the playhead and switches. On cream it is drawn deeper, so it still reads as text there.'
           }
+          stack
         >
-          <input
-            type="color"
-            value={settings.accent}
-            aria-label="Accent colour"
-            style={{ width: 48, height: 32, border: 0, background: 'none' }}
-            onChange={(event) => settings.set('accent', event.target.value)}
-          />
+          <div className="swatches" role="radiogroup" aria-label="Accent colour">
+            {ACCENTS.map((colour) => (
+              <button
+                key={colour}
+                type="button"
+                className="swatch"
+                role="radio"
+                aria-checked={settings.accent.toLowerCase() === colour}
+                aria-label={colour}
+                title={colour}
+                style={{ background: colour }}
+                onClick={() => settings.set('accent', colour)}
+              />
+            ))}
+            <input
+              type="color"
+              className="swatch swatch--custom"
+              value={settings.accent}
+              aria-label="Another colour"
+              title="Another colour"
+              onChange={(event) => settings.set('accent', event.target.value)}
+            />
+          </div>
         </Row>
         {settings.accentMode === 'artwork' ? (
           <Row
@@ -229,7 +249,10 @@ export function Settings() {
             />
           </Row>
         ) : null}
-        <Row label="Blurred artwork background">
+        <Row
+          label="Blurred artwork background"
+          hint="The cover of what is playing, blurred behind every page and the full player. Off, every page is one flat colour."
+        >
           <Switch
             checked={settings.backdropArtwork}
             onChange={(value) => settings.set('backdropArtwork', value)}
@@ -238,7 +261,7 @@ export function Settings() {
         </Row>
         <Row
           label="Panel borders"
-          hint="Panels, cards and controls are outlined with a hairline. Accent colours that outline with whatever the accent currently is, so the edges of the interface move with the music too."
+          hint="Panels, cards and controls are outlined with a hairline. Accent colours it with the accent instead of the text colour."
         >
           <Segmented<SurfaceBorder>
             value={settings.surfaceBorder}
@@ -249,23 +272,21 @@ export function Settings() {
             ]}
           />
         </Row>
-        {settings.surfaceBorder === 'accent' ? (
-          <Row
+        <Row
+          label="Border opacity"
+          hint="How strongly those outlines are drawn. Low is a whisper on the edge of each panel; high is a definite frame."
+          stack
+        >
+          <SliderRow
             label="Border opacity"
-            hint="How strongly those outlines are drawn. Low is a whisper of colour on the edge of each panel; high is a definite frame."
-            stack
-          >
-            <SliderRow
-              label="Border opacity"
-              min={0}
-              max={100}
-              step={5}
-              value={settings.borderOpacity}
-              onChange={(value) => settings.set('borderOpacity', value)}
-              format={(value) => (value === 0 ? 'invisible' : `${value}%`)}
-            />
-          </Row>
-        ) : null}
+            min={0}
+            max={100}
+            step={5}
+            value={settings.borderOpacity}
+            onChange={(value) => settings.set('borderOpacity', value)}
+            format={(value) => (value === 0 ? 'invisible' : `${value}%`)}
+          />
+        </Row>
         <Row
           label="Panel opacity"
           hint="How much of the background shows through the glass. Below 100% the panels get more transparent, above it they get more solid. Has no effect with surface blur switched off, since those panels are opaque by design."
