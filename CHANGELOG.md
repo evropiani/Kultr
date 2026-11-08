@@ -7,6 +7,14 @@ only fixed.
 
 ---
 
+## 1.11.1 — 2026-11-08
+
+### 2026-11-08 17:25 — Up next opens again
+
+- Opening Up next in 1.11.0 stopped the app with an error (a station's
+  heading was read in the wrong order). It opens again, and the songs a
+  station lines up show under its name.
+
 ## 1.11.0 — 2026-11-08
 
 ### 2026-11-08 17:12 — Stations, the energy planner and the command bar

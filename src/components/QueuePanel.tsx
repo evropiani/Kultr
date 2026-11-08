@@ -23,7 +23,7 @@ export function QueuePanel() {
   if (!present) return null
 
   const upcoming = player.queue.slice(player.index + 1)
-  const station = usePlayer((state) => state.station)
+  const station = player.station
   // What Karousel added goes under its own heading.
   const firstKarousel = upcoming.findIndex((song) => song.kultrKarousel)
   // Waiting to top the queue up; a repeating queue never runs out, so not then.
