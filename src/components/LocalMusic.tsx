@@ -156,7 +156,8 @@ export function LocalMusicChooser({ onReady }: { onReady?: () => void }) {
   const [busy, setBusy] = useState(false)
   const imports = useImportInputs(onReady)
   const openable = canOpenFolders()
-  const importable = canImport()
+  // The desktop app reads folders on disk; copying music into it would only duplicate it.
+  const importable = canImport() && !desktop()
 
   const choose = async () => {
     setBusy(true)
@@ -269,6 +270,7 @@ export function MusicFoldersRows() {
                   : `Stop using ${folder.name}? The files stay where they are.`
               if (!window.confirm(message)) return
               await deleteFolder(folder.id)
+              if (folder.kind === 'desktop' && folder.path) await desktop()?.forgetFolder?.(folder.path)
               if (folder.kind === 'opfs') await clearImported()
               await reload()
               if (local) await useAndScan()
@@ -303,7 +305,7 @@ export function MusicFoldersRows() {
             Add a folder
           </button>
         ) : null}
-        {canImport() ? (
+        {canImport() && !desktop() ? (
           <>
             <button className="pill" disabled={Boolean(imports.progress)} onClick={imports.importFolder}>
               <Upload size={14} />

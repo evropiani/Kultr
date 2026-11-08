@@ -43,6 +43,7 @@ import { useOffline } from '@/store/offline'
 import { engine } from '@/audio/engine'
 import { isLocalProfile, useAuth } from '@/store/auth'
 import { MusicFoldersRows } from '@/components/LocalMusic'
+import { forgetLocalLibrary } from '@/local/db'
 import {
   DEFAULT_SETTINGS,
   EQ_BANDS,
@@ -1066,7 +1067,7 @@ export function Settings() {
         </Row>
         <Row
           label="Reset Kultr"
-          hint="Deletes the local library mirror, your settings, saved servers and offline files from this browser. Nothing on your server is touched. Export first if you want any of it back."
+          hint="Deletes the local library mirror, your settings, saved servers, music folders and offline files from this browser. Nothing on your server, and no file on your computer, is touched. Export first if you want any of it back."
         >
           <button className="pill" style={{ color: 'var(--danger)' }} onClick={() => setConfirmReset(true)}>
             <Trash2 size={14} />
@@ -1184,6 +1185,7 @@ export function Settings() {
               style={{ color: 'var(--danger)' }}
               onClick={async () => {
                 await destroyDatabase()
+                await forgetLocalLibrary()
                 localStorage.clear()
                 sessionStorage.clear()
                 useToast.getState().show('Everything cleared. Reloading…', 'info')
@@ -1197,7 +1199,9 @@ export function Settings() {
       >
         <p className="row__hint">
           This wipes the local library mirror, your settings, saved servers, offline downloads and
-          InjeKt analysis from this browser. Nothing on your Navidrome server is touched.
+          InjeKt analysis from this browser, and forgets your music folders with their favourites,
+          ratings, play counts and playlists (music imported into the browser is deleted; folders on
+          your computer are not touched). Nothing on your Navidrome server is touched.
         </p>
       </Modal>
     </div>

@@ -7,6 +7,33 @@ only fixed.
 
 ---
 
+## 1.10.0 — 2026-11-08
+
+### 2026-11-08 16:50 — Kultr for Windows and Linux
+
+Kultr is now an app for Windows and Linux too, on the
+[releases page](https://github.com/evropiani/Kultr/releases/latest).
+
+- **Downloads.** For Windows an installer (`Kultr-Setup-1.10.0.exe`: Start
+  menu and desktop shortcut, no administrator rights needed) and a portable
+  `.exe` that runs without installing; for Linux an `.AppImage` that runs on
+  any distribution and a `.deb` for Debian, Ubuntu and Mint.
+- **Works offline.** Everything is inside the download. Kultr opens with no
+  internet connection and plays the music on your computer without a server;
+  it connects to Navidrome when you sign in to one, plain `http://` servers on
+  your own network included.
+- **Music folders on disk.** *Choose a music folder* opens the system's folder
+  dialog; Kultr reads the folder in place and remembers it, with no
+  permission prompts and nothing copied. The page can read only the folders
+  you chose.
+- **Updates.** The app checks GitHub once a day and offers the new version
+  (or *Kultr → Check for updates…* now). Install it over the old one; your
+  library and settings stay.
+- **Built on every change.** A new workflow builds both from the same web app
+  and publishes them to the release for each version.
+- **Reset Kultr** now also forgets your music folders and what Kultr kept for
+  them, and deletes music imported into the browser.
+
 ## 1.9.0 — 2026-11-08
 
 ### 2026-11-08 16:40 — Music on this computer, without Navidrome

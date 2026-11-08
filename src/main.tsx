@@ -31,16 +31,21 @@ createRoot(container).render(
 // Remove the pre-bundle placeholder once React has painted.
 requestAnimationFrame(() => document.getElementById('kultr-boot')?.remove())
 
-// Offer an update rather than reloading under someone's feet mid-track.
-const updateSW = registerSW({
-  onNeedRefresh() {
-    useToast
-      .getState()
-      .show('A new version of Kultr is ready. Reload when you are between tracks.', 'info', 15000)
-    // Apply on the next full page load.
-    void updateSW(false)
-  },
-  onOfflineReady() {
-    useToast.getState().show('Kultr is ready to work offline.', 'success')
-  },
-})
+// Offer an update rather than reloading under someone's feet mid-track. The
+// desktop app has no service worker: the app is on disk already, and it
+// checks GitHub for new versions itself.
+const desktopApp = Boolean((window as unknown as { kultrDesktop?: unknown }).kultrDesktop)
+const updateSW = desktopApp
+  ? () => Promise.resolve()
+  : registerSW({
+      onNeedRefresh() {
+        useToast
+          .getState()
+          .show('A new version of Kultr is ready. Reload when you are between tracks.', 'info', 15000)
+        // Apply on the next full page load.
+        void updateSW(false)
+      },
+      onOfflineReady() {
+        useToast.getState().show('Kultr is ready to work offline.', 'success')
+      },
+    })

@@ -1,0 +1,113 @@
+name: Desktop
+
+# Builds Kultr for Windows (installer and portable) and Linux (AppImage and
+# .deb) from the same web app, and on main publishes them to the release for
+# the current version (v<version> from package.json), creating it if needed.
+
+on:
+  push:
+    branches: ['**']
+    tags-ignore: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            script: dist:linux
+            files: |
+              desktop/release/*.AppImage
+              desktop/release/*.deb
+          - name: Windows
+            os: windows-latest
+            script: dist:win
+            files: |
+              desktop/release/*.exe
+    env:
+      # Not signed: Windows SmartScreen asks once ("More info → Run anyway").
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            desktop/package-lock.json
+
+      - name: Build the web app
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build:only
+
+      - name: Build the desktop app
+        working-directory: desktop
+        run: |
+          npm ci --no-audit --no-fund
+          npm run ${{ matrix.script }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kultr-${{ matrix.name }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Publish to the release for this version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          ls -lh out
+          NOTES=$(mktemp)
+          {
+            echo "Kultr ${VERSION} — the web version is at https://web.kultr.cc/, and these are the desktop apps."
+            echo
+            echo "## Install"
+            echo
+            echo "- **Windows:** \`Kultr-Setup-${VERSION}.exe\` installs Kultr (Start menu and desktop shortcut). \`Kultr-${VERSION}-portable.exe\` runs without installing. Windows may warn that the app is unrecognised: choose **More info → Run anyway**."
+            echo "- **Linux:** \`Kultr-${VERSION}-x86_64.AppImage\` runs anywhere (\`chmod +x\` it first); \`kultr_${VERSION}_amd64.deb\` installs on Debian, Ubuntu and Mint (\`sudo apt install ./kultr_${VERSION}_amd64.deb\`)."
+            echo
+            echo "Everything is inside: Kultr opens and plays the music on your computer with no internet connection, and connects to Navidrome when you want it to. Full guide: https://github.com/${GITHUB_REPOSITORY}/blob/main/docs/INSTALL.md#desktop-app-windows-and-linux"
+            echo
+            echo "## What's new"
+            echo
+            # This version's part of the changelog, without its own heading.
+            awk -v v="## ${VERSION} " 'index($0, v) == 1 { on = 1; next } on && /^## [0-9]/ { exit } on' CHANGELOG.md
+            printf '\n_Build %s, commit %s._\n' "${{ github.run_number }}" "${GITHUB_SHA::7}"
+          } > "$NOTES"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" out/* --clobber
+            gh release edit "$TAG" --notes-file "$NOTES"
+          else
+            gh release create "$TAG" out/* --title "Kultr ${VERSION}" --notes-file "$NOTES" --target "$GITHUB_SHA"
+          fi

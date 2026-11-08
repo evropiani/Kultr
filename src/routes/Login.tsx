@@ -7,6 +7,7 @@ import { hostLabel } from '@/store/auth'
 import { Spinner, Switch } from '@/components/ui'
 import { LocalMusicChooser } from '@/components/LocalMusic'
 import { isLocalProfile } from '@/store/auth'
+import { desktop } from '@/local/folders'
 
 /**
  * Connection screen.
@@ -52,6 +53,8 @@ export function Login() {
   }
 
   const busy = auth.status === 'connecting'
+  // The desktop app is never on the same address as Navidrome.
+  const inDesktop = Boolean(desktop())
 
   return (
     <div className="login">
@@ -110,11 +113,14 @@ export function Login() {
                 placeholder="https://music.example.com"
                 autoComplete="url"
                 spellCheck={false}
+                required={inDesktop}
                 onChange={(event) => setServerUrl(event.target.value)}
               />
             </div>
             <span className="login__hint">
-              Leave this empty if Kultr is served from the same address as Navidrome.
+              {inDesktop
+                ? 'Your Navidrome’s address, e.g. http://192.168.1.10:4533 or https://music.example.com.'
+                : 'Leave this empty if Kultr is served from the same address as Navidrome.'}
             </span>
           </div>
         ) : null}

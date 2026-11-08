@@ -39,11 +39,15 @@ src/
     context.ts      Shared AudioContext, decoding
   components/   UI
   db/           IndexedDB schema and accessors
+  local/        Music on this computer: tag reader, album builder, folder
+                access, scanner, and a LocalClient that answers the
+                Subsonic calls from the files
   lib/          Helpers: md5, formatting, artwork, hooks, actions
   routes/       Pages
   store/        Zustand stores: auth, settings, player, sync, ui
   styles/       tokens.css, glass.css, app.css
 server/         Zero-dependency static server with Navidrome proxy
+desktop/        Electron app for Windows and Linux (its own package.json)
 tests/          Test suites and stubs
 deploy/         Caddy and nginx configs
 ```
@@ -138,6 +142,33 @@ assert('beat-matched', Math.abs(p.incomingRate - 124 / 126) < 1e-6)
 ```
 
 Anything touching tempo, key or transition planning should come with one.
+
+`tests/local.test.ts` builds audio files byte by byte (ID3v2.3 and 2.4, FLAC,
+MP4, WAV, AIFF, Ogg Vorbis and Opus) and checks what the tag reader gets from
+them, then checks the album rules — the same cases as Kultr for iOS's
+`LocalLibraryTests`, so the apps read a music folder alike.
+
+## The desktop app
+
+`desktop/` wraps the built web app in Electron. `main.cjs` serves `dist/`
+(copied to `desktop/app`) from `http://127.0.0.1:41814` — a real origin, so
+storage persists, and plain http, so a Navidrome on `http://` is not blocked
+— and reads music folders for the page through `preload.cjs`, which exposes
+`window.kultrDesktop` (pick a folder, list its files, a URL for a file).
+Files are served with byte ranges, only from folders picked in the dialog,
+and only with a token made at each launch.
+
+```bash
+npm run build:only          # the web app, into dist/
+cd desktop
+npm install
+npm start                   # copies dist/ in and opens the app
+npm run dist:linux          # AppImage and .deb into desktop/release/
+npm run dist:win            # installer and portable .exe (on Windows)
+```
+
+`.github/workflows/desktop.yml` builds both on every push and, on `main`,
+attaches them to the release for the version in `package.json`.
 
 ---
 

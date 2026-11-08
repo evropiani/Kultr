@@ -134,3 +134,24 @@ export async function getLocalMeta<T>(key: string, fallback: T): Promise<T> {
 export async function setLocalMeta(key: string, value: unknown): Promise<void> {
   await (await localDb()).put('meta', value, key)
 }
+
+/** Forget the music on this computer entirely, for "Reset Kultr". The files themselves are never touched. */
+export async function forgetLocalLibrary(): Promise<void> {
+  const folders = await allFolders().catch(() => [] as MusicFolder[])
+  const bridge = (window as unknown as { kultrDesktop?: { forgetFolder?: (root: string) => Promise<void> } }).kultrDesktop
+  for (const folder of folders) if (folder.kind === 'desktop' && folder.path) await bridge?.forgetFolder?.(folder.path)
+  if (dbPromise) {
+    ;(await dbPromise).close()
+    dbPromise = null
+  }
+  await new Promise<void>((resolve) => {
+    const request = indexedDB.deleteDatabase('kultr-local')
+    request.onsuccess = request.onerror = request.onblocked = () => resolve()
+  })
+  try {
+    const root = (await navigator.storage.getDirectory()) as unknown as { removeEntry(name: string, o?: { recursive?: boolean }): Promise<void> }
+    await root.removeEntry('music', { recursive: true })
+  } catch {
+    /* nothing was imported */
+  }
+}

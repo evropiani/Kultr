@@ -1,10 +1,20 @@
 # Installing Kultr
 
-Every path here ends with Kultr running at `http://localhost:4180`, talking to
-your Navidrome, with no cross-origin problems to solve.
+The quickest ways need no installing at all:
 
-Pick one:
+- **The web version** at **https://web.kultr.cc/** — open it, sign in to your
+  Navidrome, or choose a folder of music on your computer. In Chrome or Edge,
+  **Install** in the address bar puts it in the Start menu or app launcher
+  like any other app, and it keeps working offline.
+- **The desktop app** for Windows and Linux — [below](#desktop-app-windows-and-linux).
+  Everything is inside the download: it plays the music on your computer with
+  no internet connection and no server, and connects to Navidrome too.
 
+The rest of this guide is for running Kultr yourself, next to Navidrome. Every
+path there ends with Kultr running at `http://localhost:4180`, talking to your
+Navidrome, with no cross-origin problems to solve.
+
+- [Desktop app (Windows and Linux)](#desktop-app-windows-and-linux)
 - [Docker, alongside Navidrome you already run](#1-docker-alongside-an-existing-navidrome)
 - [Docker, Navidrome and Kultr together](#2-docker-navidrome--kultr-together)
 - [From source — Linux](#3-from-source-linux)
@@ -16,8 +26,75 @@ Pick one:
 - [Updating](#updating)
 - [Uninstalling](#uninstalling)
 
-Before you start, you need **Navidrome already working**. If you do not have
-it yet, use [option 2](#2-docker-navidrome--kultr-together), which installs both.
+For options 1–8 you need **Navidrome already working**. If you do not have it
+yet, use [option 2](#2-docker-navidrome--kultr-together), which installs both —
+or skip the server entirely: the web version and the desktop app play the
+music on your computer by themselves.
+
+---
+
+## Desktop app (Windows and Linux)
+
+Kultr as an app of its own, with everything it needs inside: it opens with no
+internet connection, reads your music folders straight from disk, and
+connects to Navidrome whenever you sign in to one. Download it from the
+[latest release](https://github.com/evropiani/Kultr/releases/latest).
+
+### Windows
+
+1. Download **`Kultr-Setup-<version>.exe`**.
+2. Run it. Windows may say it *protected your PC*, because the app is not
+   signed with a paid certificate: choose **More info → Run anyway**.
+3. Choose where to install (your user folder by default; no administrator
+   rights needed). Kultr appears in the Start menu and on the desktop.
+
+Rather not install anything? **`Kultr-<version>-portable.exe`** runs as it is
+— from a USB stick, too.
+
+### Linux
+
+**AppImage** (any distribution):
+
+```bash
+chmod +x Kultr-<version>-x86_64.AppImage
+./Kultr-<version>-x86_64.AppImage
+```
+
+If it complains about FUSE, install it (`sudo apt install libfuse2` on
+Ubuntu 22.04 and later), or run it with `--appimage-extract-and-run`.
+
+**.deb** (Debian, Ubuntu, Mint, Pop!_OS):
+
+```bash
+sudo apt install ./kultr_<version>_amd64.deb
+```
+
+Kultr is then in your app launcher, under Audio.
+
+### First start
+
+On the sign-in screen, either sign in to Navidrome as usual, or choose
+**Choose a music folder** under *No server? Play the music on this computer*.
+Kultr reads every folder inside it, the tags in each file and the pictures
+beside them, and remembers the folder: no permission prompts, and it is still
+there after a restart. Add more folders, rescan or remove them in **Settings →
+Music on this computer**.
+
+A Navidrome on your own network over plain `http://` works in the desktop app
+(a page on `https://` would block it).
+
+### Updates
+
+Kultr checks GitHub once a day and offers the new version when there is one
+(**Kultr → Check for updates…** in the menu checks now; press <kbd>Alt</kbd>
+if the menu is hidden). Install it over the old one; your library, folders and
+settings stay.
+
+### Where it keeps things
+
+Your settings, library and the list of music folders live in your user
+profile: `%APPDATA%\Kultr` on Windows, `~/.config/Kultr` on Linux. Your music
+is never changed or copied.
 
 ---
 
@@ -493,6 +570,10 @@ npm run build
 sudo systemctl restart kultr    # if you set up the service
 ```
 
+**Desktop app:** download the new version from the
+[latest release](https://github.com/evropiani/Kultr/releases/latest) and
+install it over the old one (Kultr offers this itself once a day).
+
 After updating, Kultr may offer to reload for a new version. Your library
 mirror, settings and offline tracks survive updates.
 
@@ -513,6 +594,11 @@ sudo systemctl disable --now kultr
 sudo rm /etc/systemd/system/kultr.service
 sudo rm -rf /opt/kultr
 ```
+
+**Desktop app:** on Windows, *Settings → Apps → Kultr → Uninstall* (the
+portable version is just the one file). On Linux, delete the AppImage, or
+`sudo apt remove kultr`. Your settings and library stay in `%APPDATA%\Kultr`
+or `~/.config/Kultr` until you delete that folder too.
 
 Kultr also stores data **in your browser**. To clear it, open Kultr and use
 **Settings → Reset Kultr**, which removes the library mirror, offline tracks,

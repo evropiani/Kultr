@@ -10,7 +10,7 @@ Mirrors your whole library locally, crossfades properly, and mixes tracks like a
 
 *Vibecoded with [Claude Code](https://claude.ai/code).*
 
-[Open the web version](https://web.kultr.cc/) · [Android app](https://github.com/evropiani/Kultr_Android) · [iOS app](https://github.com/evropiani/Kultr_iOS) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Open the web version](https://web.kultr.cc/) · [Windows & Linux app](https://github.com/evropiani/Kultr/releases/latest) · [Android app](https://github.com/evropiani/Kultr_Android) · [iOS app](https://github.com/evropiani/Kultr_iOS) · [Install](#install) · [InjeKt](#injekt) · [Changelog](CHANGELOG.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, or find me on Discord: [@evropiani](https://discord.com/users/319246364246540288)
 
@@ -91,7 +91,19 @@ Press <kbd>/</kbd> to jump to it.
 
 ## Install
 
-Three ways, fastest first. All of them end up at **http://localhost:4180**.
+**Nothing to install:** open **https://web.kultr.cc/**. In Chrome or Edge,
+**Install** in the address bar makes it an app of its own that works offline.
+
+**Windows and Linux app:** download it from the
+[latest release](https://github.com/evropiani/Kultr/releases/latest) —
+`Kultr-Setup-<version>.exe` (or the portable `.exe`) for Windows, the
+`.AppImage` or `.deb` for Linux. Everything is inside: it opens with no
+internet connection, plays the music on your computer without a server, and
+connects to Navidrome when you sign in. Step by step, including the Windows
+*Run anyway* prompt: [docs/INSTALL.md](docs/INSTALL.md#desktop-app-windows-and-linux).
+
+**Next to your Navidrome**, so Kultr and the server share one address — three
+ways, fastest first. All of them end up at **http://localhost:4180**.
 
 > **Which one should I pick?**
 > Already run Navidrome in Docker → [A](#a-docker-with-navidrome-you-already-run).
@@ -399,8 +411,9 @@ after its folder.
 - **Firefox and Safari** cannot keep a folder open, so **Import a folder**
   copies the music into Kultr's own storage in the browser instead. It stays
   there until you remove it.
-- **The desktop app** for Windows and Linux reads folders on disk directly,
-  with no prompts.
+- **The [desktop app](https://github.com/evropiani/Kultr/releases/latest)**
+  for Windows and Linux reads folders on disk directly, with no prompts, and
+  works with no internet connection at all.
 
 Press **Check for updates** (or **Rescan** in Settings) after adding music;
 only new and changed files are read, so it is quick after the first time.

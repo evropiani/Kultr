@@ -61,6 +61,8 @@ export interface DesktopBridge {
   listFiles(root: string, extensions: string[]): Promise<{ rel: string; size: number; modified: number }[]>
   /** A URL the page can play or fetch (with ranges) for a file in a folder. */
   fileUrl(root: string, rel: string): string
+  /** Stop letting the page read a folder (after it is removed from Kultr). */
+  forgetFolder?(root: string): Promise<void>
   openExternal?(url: string): void
 }
 
