@@ -10,6 +10,7 @@ import { useSync } from '@/store/sync'
 import { useToast } from '@/store/ui'
 import { Empty, Section } from '@/components/ui'
 import { TrackList } from '@/components/TrackList'
+import { t } from '@/i18n'
 
 /**
  * Listening stats.
@@ -76,17 +77,14 @@ export function Stats() {
     return (
       <Empty
         icon={<BarChart3 size={24} />}
-        title="Nothing played yet"
+        title={t("Nothing played yet")}
         action={
           <button className="pill" disabled={refreshing} onClick={() => void refresh()}>
             <RefreshCw size={14} className={refreshing ? 'spin' : undefined} />
-            Check the server
-          </button>
+            {t("Check the server")}</button>
         }
       >
-        Play something and it shows up here. Plays are counted on your Navidrome server, so what you
-        play on other devices counts too, and none of it is lost if this browser's data is cleared.
-      </Empty>
+        {t("Play something and it shows up here. Plays are counted on your Navidrome server, so what you play on other devices counts too, and none of it is lost if this browser's data is cleared.")}</Empty>
     )
   }
 
@@ -97,26 +95,23 @@ export function Stats() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Listening</h1>
+          <h1>{t("Listening")}</h1>
           <span className="page-head__sub">
-            {formatCount(summary.totalPlays, 'play')} counted on your server
-            {summary.pending ? ` · ${formatCount(summary.pending, 'play')} waiting to be sent` : ''}
+            {t("%@ counted on your server%@", formatCount(summary.totalPlays, 'play'), summary.pending ? t(" · %@ waiting to be sent", formatCount(summary.pending, 'play')) : '')}
           </span>
         </div>
         <div className="page-actions">
           <Link className="pill pill-accent" to="/recap">
             <CalendarDays size={14} />
-            Monthly recap
-          </Link>
+            {t("Monthly recap")}</Link>
           <button className="pill" disabled={refreshing} onClick={() => void refresh()}>
             <RefreshCw size={14} className={refreshing ? 'spin' : undefined} />
-            Refresh from server
-          </button>
+            {t("Refresh from server")}</button>
         </div>
       </div>
 
       {summary.recent.length ? (
-        <Section title="Recently played" icon={<Clock size={16} />}>
+        <Section title={t("Recently played")} icon={<Clock size={16} />}>
           <div style={{ display: 'grid', gap: 2 }}>
             {summary.recent.map(({ song, at }) => (
               <div
@@ -145,13 +140,13 @@ export function Stats() {
       ) : null}
 
       {summary.top.length ? (
-        <Section title="Played the most" icon={<BarChart3 size={16} />}>
-          <TrackList songs={summary.top} source="Your top tracks" numbering="index" sortable={false} />
+        <Section title={t("Played the most")} icon={<BarChart3 size={16} />}>
+          <TrackList songs={summary.top} source={t("Your top tracks")} numbering="index" sortable={false} />
         </Section>
       ) : null}
 
       {summary.artists.length ? (
-        <Section title="Top artists" icon={<Users size={16} />}>
+        <Section title={t("Top artists")} icon={<Users size={16} />}>
           <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
             {summary.artists.map((entry) => (
               <div key={entry.artistId ?? entry.artist} style={{ display: 'grid', gap: 4 }}>
@@ -174,21 +169,20 @@ export function Stats() {
 
       {data.history.length ? (
         <Section
-          title="In this browser, the last two weeks"
+          title={t("In this browser, the last two weeks")}
           icon={<BarChart3 size={16} />}
-          description={`${formatDuration(summary.localSeconds)} of music played here. Your server keeps a count and a last-played time for each track rather than a log of every play, so this chart only knows about this browser.`}
+          description={t("%@ of music played here. Your server keeps a count and a last-played time for each track rather than a log of every play, so this chart only knows about this browser.", formatDuration(summary.localSeconds))}
           actions={
             <button
               className="pill"
               onClick={async () => {
                 await clearHistory()
                 reload()
-                useToast.getState().show('This browser’s history was cleared. Play counts on your server are untouched.', 'info')
+                useToast.getState().show(t("This browser’s history was cleared. Play counts on your server are untouched."), 'info')
               }}
             >
               <Trash2 size={14} />
-              Clear
-            </button>
+              {t("Clear")}</button>
           }
         >
           <div

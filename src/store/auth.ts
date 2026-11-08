@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { SubsonicClient, describeError, setClient } from '@/api/subsonic'
 import type { Credentials, ServerInfo } from '@/api/types'
 import { LOCAL_LABEL, LOCAL_PROFILE_ID, LocalClient } from '@/local/client'
+import { t } from '@/i18n'
 
 export interface ServerProfile extends Credentials {
   id: string
@@ -24,6 +25,10 @@ export interface ServerProfile extends Credentials {
 /** Whether a profile is the music on this computer rather than a server. */
 export const isLocalProfile = (profile: Pick<ServerProfile, 'id' | 'kind'> | null | undefined): boolean =>
   profile?.kind === 'local' || profile?.id === LOCAL_PROFILE_ID
+
+/** A profile's name as shown: the music on this computer is named in the app's language unless renamed. */
+export const profileName = (profile: Pick<ServerProfile, 'id' | 'kind' | 'label'>): string =>
+  isLocalProfile(profile) && profile.label === LOCAL_LABEL ? t(LOCAL_LABEL) : profile.label
 
 const LOCAL_PROFILE: ServerProfile = {
   id: LOCAL_PROFILE_ID,
@@ -214,7 +219,7 @@ export const useAuth = create<AuthState>()(
         const profile = get().profiles.find((p) => p.id === id)
         if (!profile) return false
         if (profile.enabled === false) {
-          set({ error: `${profile.label} is switched off. Turn it on in Settings first.` })
+          set({ error: t('%@ is switched off. Turn it on in Settings first.', profileName(profile)) })
           return false
         }
         set({ activeId: id })
@@ -381,7 +386,7 @@ export const useAuth = create<AuthState>()(
 )
 
 export function hostLabel(url: string): string {
-  if (!url) return 'This device'
+  if (!url) return t('This device')
   try {
     return new URL(url).host
   } catch {

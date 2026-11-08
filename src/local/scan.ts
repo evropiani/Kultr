@@ -13,6 +13,7 @@ import {
 } from './db'
 import { AUDIO_TYPES, fileBlob, fileSource, folderAccess, isAudio, isImage, listFiles, type MusicFolder } from './folders'
 import { readTags } from './tags'
+import { t } from '@/i18n'
 
 export interface ScanProgress {
   message: string
@@ -56,7 +57,7 @@ export async function scanFolders(
       for (const track of await tracksIn(folder.id)) if (track.coverId) usedCovers.add(track.coverId)
       continue
     }
-    onProgress({ message: `Looking through ${folder.name}…`, current: 0, total: 0 })
+    onProgress({ message: t("Looking through %@…", folder.name), current: 0, total: 0 })
     let files
     try {
       files = await listFiles(folder)
@@ -125,7 +126,7 @@ export async function scanFolders(
         }
         done++
         if (done % 10 === 0 || done === audio.length) {
-          onProgress({ message: `Reading tags in ${folder.name}… ${done} of ${audio.length}`, current: done, total: audio.length })
+          onProgress({ message: t("Reading tags in %@… %@ of %@", folder.name, done, audio.length), current: done, total: audio.length })
         }
       }
     }

@@ -13,6 +13,7 @@ import {
   type StoredTrack,
 } from './db'
 import { scanFolders, type ScanProgress, type ScanResult } from './scan'
+import { t } from '@/i18n'
 
 /** The label a profile for music on this computer goes by. */
 export const LOCAL_PROFILE_ID = 'local'
@@ -370,9 +371,9 @@ export class LocalClient extends SubsonicClient {
       case 'getNowPlaying':
         return ok({ nowPlaying: { entry: [] } })
       case 'createShare':
-        throw new SubsonicApiError(0, 'Share links need a server; music on this computer cannot be shared by link.')
+        throw new SubsonicApiError(0, t('Share links need a server; music on this computer cannot be shared by link.'))
       default:
-        throw new SubsonicApiError(0, `Not available for music on this computer (${endpoint}).`)
+        throw new SubsonicApiError(0, t('Not available for music on this computer (%@).', endpoint))
     }
   }
 

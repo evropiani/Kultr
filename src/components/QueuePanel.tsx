@@ -11,6 +11,8 @@ import { useDismiss } from '@/lib/hooks'
 import { usePresence } from '@/lib/motion'
 import { Art, Menu, useMenu } from './ui'
 import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
+import { locale, t } from '@/i18n'
+import { stationName } from '@/audio/stations'
 
 export function QueuePanel() {
   const open = useUi((state) => state.queueOpen)
@@ -33,14 +35,14 @@ export function QueuePanel() {
   const waiting = karousel && player.repeat === 'off' && firstKarousel < 0 && !player.current()?.kultrStreamUrl
 
   return (
-    <aside className="queue glass glass-strong" ref={ref} aria-label="Play queue" data-leaving={leaving}>
+    <aside className="queue glass glass-strong" ref={ref} aria-label={t("Play queue")} data-leaving={leaving}>
       <header className="queue__head">
-        <h3>Queue</h3>
+        <h3>{t("Queue")}</h3>
         <span className="badge">{player.queue.length}</span>
         <button
           className="iconbtn"
-          aria-label="Save as a playlist"
-          title="Save the session as a playlist"
+          aria-label={t("Save as a playlist")}
+          title={t("Save the session as a playlist")}
           disabled={!player.queue.length}
           onClick={(event) => saveMenu.openFrom(event.currentTarget)}
         >
@@ -51,13 +53,13 @@ export function QueuePanel() {
           onClose={saveMenu.close}
           items={[
             {
-              label: `What you've played, ${formatCount(player.index + 1, 'track')}`,
+              label: t("What you've played, %@", formatCount(player.index + 1, 'track')),
               icon: <History size={15} />,
               disabled: player.index < 0,
               onSelect: () => void saveSession(player.queue.slice(0, player.index + 1)),
             },
             {
-              label: `The whole queue, ${formatCount(player.queue.length, 'track')}`,
+              label: t("The whole queue, %@", formatCount(player.queue.length, 'track')),
               icon: <ListMusic size={15} />,
               onSelect: () => void saveSession(player.queue),
             },
@@ -65,13 +67,13 @@ export function QueuePanel() {
         />
         <button
           className="iconbtn"
-          aria-label="Clear everything except the current track"
-          title="Clear the queue"
+          aria-label={t("Clear everything except the current track")}
+          title={t("Clear the queue")}
           onClick={player.clearQueue}
         >
           <ListX size={16} />
         </button>
-        <button className="iconbtn" aria-label="Close the queue" onClick={() => setQueue(false)}>
+        <button className="iconbtn" aria-label={t("Close the queue")} onClick={() => setQueue(false)}>
           <X size={16} />
         </button>
       </header>
@@ -79,18 +81,16 @@ export function QueuePanel() {
       <div className="queue__list">
         {player.index >= 0 && player.queue[player.index] ? (
           <>
-            <div className="queue__label">Now playing</div>
+            <div className="queue__label">{t("Now playing")}</div>
             <QueueItem index={player.index} current />
           </>
         ) : null}
 
-        <div className="queue__label">Up next</div>
+        <div className="queue__label">{t("Up next")}</div>
 
         {upcoming.length === 0 && !waiting ? (
           <p className="row__hint" style={{ padding: '6px 10px' }}>
-            Nothing queued. Tap shuffle twice for Karousel, and music like this keeps playing when the
-            queue runs out.
-          </p>
+            {t("Nothing queued. Tap shuffle twice for Karousel, and music like this keeps playing when the queue runs out.")}</p>
         ) : (
           upcoming.map((_, offset) => {
             const index = player.index + 1 + offset
@@ -98,7 +98,7 @@ export function QueuePanel() {
               <Fragment key={`${player.queue[index]?.id}-${index}`}>
                 {offset === firstKarousel ? (
                   station ? (
-                    <KarouselHeading title={station.name} text="The station: music that fits, mixed one into the next." />
+                    <KarouselHeading title={stationName(station)} text={t("The station: music that fits, mixed one into the next.")} />
                   ) : (
                     <KarouselHeading text={KAROUSEL_ADDED} />
                   )
@@ -188,7 +188,7 @@ function QueueItem({
         <button
           className="iconbtn"
           style={{ width: 28, height: 28 }}
-          aria-label={`Remove ${song.title} from the queue`}
+          aria-label={t("Remove %@ from the queue", song.title)}
           onClick={() => player.removeAt(index)}
         >
           <Trash2 size={14} />
@@ -202,6 +202,6 @@ function QueueItem({
 async function saveSession(songs: Song[]): Promise<void> {
   const music = songs.filter((song) => !song.kultrStreamUrl)
   if (!music.length) return
-  const when = new Date().toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-  await createPlaylistWith(`Session · ${when}`, music.map((song) => song.id))
+  const when = new Date().toLocaleString(locale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  await createPlaylistWith(t('Session · %@', when), music.map((song) => song.id))
 }

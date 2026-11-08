@@ -15,6 +15,7 @@ import {
   setSyncState,
   type SyncState,
 } from '@/db'
+import { t } from '@/i18n'
 
 export type SyncPhase =
   | 'idle'
@@ -156,35 +157,34 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
   }
 
   try {
-    emit('connecting', local ? 'Opening your music folders…' : 'Contacting your server…', 0, 1, 0)
+    emit('connecting', local ? t('Opening your music folders…') : t('Contacting your server…'), 0, 1, 0)
     const info = await client.ping()
 
     // ---------------------------------------------------------- scanning --
     if (local) {
-      emit('scanning', 'Looking for music…', 0, 1, weights.scan)
+      emit('scanning', t('Looking for music…'), 0, 1, weights.scan)
       const scan = await client.scan((progress) => {
         emit('scanning', progress.message, progress.current, progress.total || 1, weights.scan)
       }, signal)
       if (scan.unavailable.length) {
         errors.push(
-          `Could not read ${scan.unavailable.map((folder) => folder.name).join(', ')} this time; ` +
-            'its music stays in the library until it can be read again.',
+          t('Could not read %@ this time; its music stays in the library until it can be read again.', scan.unavailable.map((folder) => folder.name).join(', ')),
         )
       }
       base += weights.scan
     }
 
     // ---------------------------------------------------------- artists --
-    emit('artists', 'Reading artists…', 0, 1, weights.artists)
+    emit('artists', t('Reading artists…'), 0, 1, weights.artists)
     const artists = await client.getArtists()
     await putArtists(artists)
-    emit('artists', `${artists.length.toLocaleString()} artists`, 1, 1, weights.artists)
+    emit('artists', t('%@ artists', artists.length), 1, 1, weights.artists)
     base += weights.artists
 
     // ----------------------------------------------------------- albums --
-    emit('albums', 'Reading albums…', 0, 1, weights.albums)
+    emit('albums', t('Reading albums…'), 0, 1, weights.albums)
     const albums = await fetchAllAlbums((current) => {
-      emit('albums', `Reading albums… ${current.toLocaleString()}`, current, current + ALBUM_PAGE, weights.albums)
+      emit('albums', t('Reading albums… %@', current), current, current + ALBUM_PAGE, weights.albums)
     }, signal)
     const localAlbums = await allAlbums()
     const localById = new Map(localAlbums.map((album) => [album.id, album]))
@@ -221,7 +221,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
       await putSongs(batch)
     }
 
-    emit('songs', stale.length ? 'Reading tracks…' : 'Tracks already up to date', 0, stale.length || 1, weights.songs)
+    emit('songs', stale.length ? t('Reading tracks…') : t('Tracks already up to date'), 0, stale.length || 1, weights.songs)
 
     await pooled(
       stale,
@@ -243,7 +243,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
           if (processed % 5 === 0 || processed === stale.length) {
             emit(
               'songs',
-              `Reading tracks… ${songsSeen.toLocaleString()} from ${processed.toLocaleString()}/${stale.length.toLocaleString()} albums`,
+              t('Reading tracks… %@ from %@/%@ albums', songsSeen, processed, stale.length),
               processed,
               stale.length || 1,
               weights.songs,
@@ -257,7 +257,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
     base += weights.songs
 
     // -------------------------------------------------------- playlists --
-    emit('playlists', 'Reading playlists…', 0, 1, weights.playlists)
+    emit('playlists', t('Reading playlists…'), 0, 1, weights.playlists)
     let playlists = await client.getPlaylists()
     if (options.includePlaylistContents !== false && playlists.length) {
       const detailed = [...playlists]
@@ -273,7 +273,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
           }
           emit(
             'playlists',
-            `Reading playlists… ${index + 1}/${playlists.length}`,
+            t('Reading playlists… %@/%@', index + 1, playlists.length),
             index + 1,
             playlists.length,
             weights.playlists,
@@ -287,13 +287,13 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
     base += weights.playlists
 
     // ----------------------------------------------------------- genres --
-    emit('genres', 'Reading genres…', 0, 1, weights.genres)
+    emit('genres', t('Reading genres…'), 0, 1, weights.genres)
     const genres = await client.getGenres()
     await putGenres(genres)
     base += weights.genres
 
     // ---------------------------------------------------------- cleanup --
-    emit('cleanup', 'Tidying up…', 1, 1, 0)
+    emit('cleanup', t('Tidying up…'), 1, 1, 0)
     const albumIds = new Set(albums.map((album) => album.id))
     const artistIds = new Set(artists.map((artist) => artist.id))
     const albumsRemoved = await deleteMissing('albums', albumIds)
@@ -332,7 +332,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
     }
     await setSyncState(state)
 
-    onProgress({ phase: 'done', message: 'Library up to date', current: 1, total: 1, percent: 1 })
+    onProgress({ phase: 'done', message: t("Library up to date"), current: 1, total: 1, percent: 1 })
 
     return {
       mode,
@@ -352,7 +352,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
     }
   } catch (err) {
     if (err instanceof Cancelled || (err as Error)?.name === 'AbortError') {
-      onProgress({ phase: 'cancelled', message: 'Sync cancelled', current: 0, total: 1, percent: 0 })
+      onProgress({ phase: 'cancelled', message: t("Sync cancelled"), current: 0, total: 1, percent: 0 })
       throw err
     }
     const message = err instanceof Error ? err.message : String(err)
@@ -368,26 +368,26 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
 export async function quickCheck(): Promise<{ changed: boolean; reason: string }> {
   const client = getClient()
   // Files on this computer are only found by looking, which is what a sync does.
-  if (isLocalClient(client)) return { changed: false, reason: 'Music on this computer is read when you sync.' }
+  if (isLocalClient(client)) return { changed: false, reason: t('Music on this computer is read when you sync.') }
   const state = await getSyncState()
   const newest = await client.getAlbumList2({ type: 'newest', size: 1 })
   const newestCreated = newest[0]?.created
   if (newestCreated && state.newestAlbumCreated && newestCreated > state.newestAlbumCreated) {
-    return { changed: true, reason: 'New albums were added to your server.' }
+    return { changed: true, reason: t('New albums were added to your server.') }
   }
   if (newestCreated && !state.newestAlbumCreated) {
-    return { changed: true, reason: 'Local library has never been synced.' }
+    return { changed: true, reason: t('Local library has never been synced.') }
   }
   try {
     const scan = await client.getScanStatus()
     if (scan.count && state.counts.songs && scan.count !== state.counts.songs) {
       return {
         changed: true,
-        reason: `Server reports ${scan.count.toLocaleString()} tracks, you have ${state.counts.songs.toLocaleString()}.`,
+        reason: t('Server reports %@ tracks, you have %@.', scan.count, state.counts.songs),
       }
     }
   } catch {
     /* getScanStatus needs admin rights on some setups; ignore. */
   }
-  return { changed: false, reason: 'Everything matches.' }
+  return { changed: false, reason: t('Everything matches.') }
 }

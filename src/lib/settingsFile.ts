@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS, type SettingsState } from '@/store/settings'
 import { readAnnotations, readCrates, readStations } from './collection'
 import { readWidgets } from './widgets'
+import { t } from '@/i18n'
 
 /**
  * Settings backup — moving your setup to another browser or machine.
@@ -22,6 +23,8 @@ const DEVICE_LOCAL_KEYS = [
   'offlineDestinationChosen',
   'hasSeenWelcome',
   'muted',
+  // Each device speaks the language its owner chose there.
+  'language',
 ] as const
 
 /**
@@ -122,14 +125,14 @@ export function readSettingsFile(input: unknown): ImportResult {
 
   const root = input as Partial<SettingsFile> | null
   if (!root || typeof root !== 'object') {
-    throw new Error('That file is not a Kultr settings export.')
+    throw new Error(t('That file is not a Kultr settings export.'))
   }
   if (root.kind !== SETTINGS_FILE_KIND) {
-    throw new Error('That file is not a Kultr settings export.')
+    throw new Error(t('That file is not a Kultr settings export.'))
   }
   const incoming = root.settings
   if (!incoming || typeof incoming !== 'object') {
-    throw new Error('The file has no settings in it.')
+    throw new Error(t('The file has no settings in it.'))
   }
 
   const defaults = DEFAULT_SETTINGS as unknown as Record<string, unknown>
@@ -185,7 +188,7 @@ export function readSettingsFile(input: unknown): ImportResult {
 
   const servers = readServers(root.servers)
   if (!applied.length && !servers.length) {
-    throw new Error('Nothing in that file could be applied.')
+    throw new Error(t('Nothing in that file could be applied.'))
   }
   return { patch: patch as Partial<SettingsState>, applied, skipped, servers }
 }

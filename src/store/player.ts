@@ -7,10 +7,11 @@ import { engine, type EngineMode, type PlaybackState } from '@/audio/engine'
 import { analyseTrack, type TrackAnalysis } from '@/audio/analysis'
 import { planTransition, type TransitionPlan } from '@/audio/injekt'
 import { karouselNext } from '@/audio/karouselMusic'
-import { calmestFirst as orderCalmestFirst, needsAnalysis, stationPicks, type Station } from '@/audio/stations'
+import { calmestFirst as orderCalmestFirst, needsAnalysis, stationName, stationPicks, type Station } from '@/audio/stations'
 import { stationPool } from '@/lib/stationLibrary'
 import { settings, useSettings } from './settings'
 import { useToast } from './ui'
+import { t } from '@/i18n'
 
 export type RepeatMode = 'off' | 'all' | 'one'
 
@@ -334,7 +335,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     if (get().sleepTimerAfterTrack) {
       get().setSleepTimer(null)
       engine.pause()
-      useToast.getState().show('Sleep timer: stopped at the end of the track.', 'info')
+      useToast.getState().show(t("Sleep timer: stopped at the end of the track."), 'info')
       return
     }
 
@@ -403,7 +404,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     const toast = useToast.getState().show
     if (next === 'shuffle') {
       get().setShuffle(true)
-      toast('Shuffle on', 'info')
+      toast(t('Shuffle on'), 'info')
     } else if (next === 'karousel') {
       // A repeating queue never runs out, so Karousel would never get a turn.
       if (get().repeat !== 'off') {
@@ -411,11 +412,11 @@ export const usePlayer = create<PlayerState>((set, get) => ({
         engine.clearPendingTransition()
       }
       settings().set('injektAutoQueue', true)
-      toast('Karousel on: when the queue runs out, music like it keeps playing', 'info')
+      toast(t('Karousel on: when the queue runs out, music like it keeps playing'), 'info')
     } else {
       settings().set('injektAutoQueue', false)
       get().setShuffle(false)
-      toast('Shuffle and Karousel off', 'info')
+      toast(t('Shuffle and Karousel off'), 'info')
     }
     return next
   },
@@ -424,7 +425,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     const order: RepeatMode[] = ['off', 'all', 'one']
     const next = order[(order.indexOf(get().repeat) + 1) % order.length]
     if (get().repeat === 'off' && settings().injektAutoQueue) {
-      useToast.getState().show('Repeat on: Karousel waits until repeat is off again', 'info')
+      useToast.getState().show(t("Repeat on: Karousel waits until repeat is off again"), 'info')
     }
     set({ repeat: next })
     engine.clearPendingTransition()
@@ -443,7 +444,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     if (!songs.length) return
     const state = get()
     if (!state.queue.length) {
-      void get().playNow(songs, 0, 'Queue')
+      void get().playNow(songs, 0, t('Queue'))
       return
     }
     const queue = [...state.queue]
@@ -458,8 +459,8 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       .getState()
       .show(
         songs.length === 1
-          ? `Added “${songs[0].title}” to the queue`
-          : `Added ${songs.length} tracks to the queue`,
+          ? t("Added “%@” to the queue", songs[0].title)
+          : t("Added %@ tracks to the queue", songs.length),
         'success',
       )
   },
@@ -520,11 +521,11 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     startingStation = true
     try {
       set({ station })
-      await get().playNow(songs, 0, `Station: ${station.name}`)
+      await get().playNow(songs, 0, t("Station: %@", stationName(station)))
     } finally {
       startingStation = false
     }
-    useToast.getState().show(`Station: ${station.name}`, 'info')
+    useToast.getState().show(t("Station: %@", stationName(station)), 'info')
     return true
   },
 
@@ -541,7 +542,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       return
     }
     stationPoolCache = { id: station.id, pool }
-    set({ station, source: `Station: ${station.name}` })
+    set({ station, source: t("Station: %@", stationName(station)) })
     const picks = await stationNext(current, [current], 6)
     const fresh = get()
     if (!picks.length || fresh.station?.id !== station.id) return
@@ -551,7 +552,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     const mine = kept.slice(fresh.index + 1)
     set({ queue: [...kept.slice(0, fresh.index + 1), ...added.slice(0, 1), ...mine, ...added.slice(1)], unshuffled: null })
     engine.clearPendingTransition()
-    useToast.getState().show(`Station: ${station.name}`, 'info')
+    useToast.getState().show(t("Station: %@", stationName(station)), 'info')
     // Mix straight into the new station rather than waiting for the end of the track.
     window.setTimeout(() => void get().mixNow(), 1200)
   },
@@ -724,8 +725,8 @@ async function stationNext(seed: Song | null, queued: Song[], count: number): Pr
 
 function emptyStation(station: Station): string {
   return needsAnalysis(station)
-    ? `Nothing fits “${station.name}” yet. It needs InjeKt’s analysis: open Sync and press Analyse missing.`
-    : `Nothing in your library fits “${station.name}”.`
+    ? t('Nothing fits “%@” yet. It needs InjeKt’s analysis: open Sync and press Analyse missing.', stationName(station))
+    : t('Nothing in your library fits “%@”.', stationName(station))
 }
 
 /** In a timed sleep timer's last 15 minutes, Karousel's calmest picks go first. */
@@ -872,7 +873,7 @@ function checkSleepTimer(): void {
   if (Date.now() >= sleepTimerEndsAt) {
     usePlayer.setState({ sleepTimerEndsAt: null })
     engine.pause()
-    useToast.getState().show('Sleep timer finished. Good night.', 'info')
+    useToast.getState().show(t("Sleep timer finished. Good night."), 'info')
   }
 }
 
@@ -885,7 +886,7 @@ function setMediaSessionMetadata(song: Song): void {
   try {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.title,
-      artist: song.artist ?? 'Unknown artist',
+      artist: song.artist ?? t('Unknown artist'),
       album: song.album ?? '',
       artwork: art
         ? [

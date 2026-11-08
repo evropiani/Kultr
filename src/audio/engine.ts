@@ -6,6 +6,7 @@ import { getStoredFolder, readFromFolder } from '@/lib/filesystem'
 import { EQ_BANDS, settings, type CrossfadeCurve } from '@/store/settings'
 import { getAudioContext, isWebAudioSupported, unlockAudio } from './context'
 import type { TransitionPlan } from './injekt'
+import { t } from '@/i18n'
 
 /**
  * Two-deck audio engine.
@@ -300,10 +301,10 @@ export class AudioEngine {
       const code = deck.el.error?.code
       const message =
         code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
-          ? 'This file format is not supported by your browser. Try enabling transcoding in Navidrome.'
+          ? t('This file format is not supported by your browser. Try enabling transcoding in Navidrome.')
           : code === MediaError.MEDIA_ERR_NETWORK
-            ? 'The connection to your server dropped while streaming.'
-            : 'Playback failed.'
+            ? t('The connection to your server dropped while streaming.')
+            : t('Playback failed.')
       this.setState('error')
       this.callbacks.onError(message)
     })
@@ -498,10 +499,10 @@ export class AudioEngine {
     } catch (err) {
       if ((err as Error)?.name === 'NotAllowedError') {
         this.setState('paused')
-        this.callbacks.onError('Your browser blocked autoplay — press play to start.')
+        this.callbacks.onError(t('Your browser blocked autoplay — press play to start.'))
       } else {
         this.setState('error')
-        this.callbacks.onError('Could not start playback.')
+        this.callbacks.onError(t('Could not start playback.'))
       }
     }
   }
@@ -959,7 +960,7 @@ export class AudioEngine {
 
     this.callbacks.onModeChange(
       'element',
-      'Your server does not send CORS headers for audio, so Kultr switched to compatibility mode. Crossfade still works; the equaliser and InjeKt bass-swap do not. Putting Kultr and Navidrome behind one reverse proxy fixes this.',
+      t('Your server does not send CORS headers for audio, so Kultr switched to compatibility mode. Crossfade still works; the equaliser and InjeKt bass-swap do not. Putting Kultr and Navidrome behind one reverse proxy fixes this.'),
     )
 
     if (song) await this.play(song, { startAt: position, autoplay: wasPlaying })

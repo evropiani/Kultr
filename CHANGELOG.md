@@ -7,6 +7,27 @@ only fixed.
 
 ---
 
+## 1.14.0 — 2026-11-08
+
+### 2026-11-08 21:45 — Kultr in German
+
+- **Deutsch.** Every screen, notice, error and tooltip in Kultr now has
+  German, using the same words as Kultr for iOS and Android (Mediathek,
+  Warteliste, Kisten, Energieplaner, Stationen and the rest). It follows
+  your browser's language; **Settings → Appearance → Language** picks
+  English or Deutsch for this device, and switching takes effect at once.
+  Dates, durations and counts follow the language too. The release notes
+  stay in English, as in the other apps.
+- **Commands in German.** The command bar already understood German; what it
+  is about to do is now said in German as well ("Einstellungen öffnen").
+- The InjeKt explanation in the player and the transition panel says how
+  far each track was stretched as +2.1% / −1.3%, in either language.
+- For music on this computer, the ••• menu in German no longer offers
+  *Sync offline* and *Copy share link*, which it did because the check
+  compared English names.
+- A test checks that every line Kultr shows has German, with its
+  placeholders intact, the way the Android app's test does.
+
 ## 1.13.0 — 2026-11-08
 
 ### 2026-11-08 17:53 — Crates, notes and tags, Kultr Studio, widgets on Home

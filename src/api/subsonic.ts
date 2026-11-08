@@ -17,6 +17,7 @@ import type {
   StructuredLyrics,
   SubsonicUser,
 } from './types'
+import { t } from '@/i18n'
 
 /** Protocol version we speak. 1.16.1 is what Navidrome implements. */
 export const API_VERSION = '1.16.1'
@@ -43,25 +44,25 @@ export function describeError(err: unknown): string {
   if (err instanceof SubsonicApiError) {
     switch (err.code) {
       case 0:
-        return err.message || 'The server reported a generic error.'
+        return err.message || t('The server reported a generic error.')
       case 10:
-        return 'The server is missing a required parameter.'
+        return t('The server is missing a required parameter.')
       case 20:
-        return 'Your server is too old for this client.'
+        return t('Your server is too old for this client.')
       case 30:
-        return 'This client is too old for your server.'
+        return t('This client is too old for your server.')
       case 40:
-        return 'Wrong username or password.'
+        return t('Wrong username or password.')
       case 41:
-        return 'Token authentication is disabled on this server. Switch to "Plain password" in advanced settings (use HTTPS!).'
+        return t('Token authentication is disabled on this server. Switch to “Send the password in plain form” in the advanced options (use HTTPS!).')
       case 50:
-        return 'Your account is not allowed to do that.'
+        return t('Your account is not allowed to do that.')
       case 60:
-        return 'This feature needs a Subsonic Premium subscription (not applicable to Navidrome).'
+        return t('This feature needs a Subsonic Premium subscription (not applicable to Navidrome).')
       case 70:
-        return 'Not found.'
+        return t('Not found.')
       default:
-        return err.message || `Server error ${err.code}.`
+        return err.message || t('Server error %@.', err.code)
     }
   }
   if (err instanceof NetworkError) return err.message
@@ -187,10 +188,10 @@ export class SubsonicClient {
     } catch (err) {
       if (init.signal?.aborted) throw err
       if ((err as Error)?.name === 'TimeoutError' || controller.signal.reason instanceof DOMException) {
-        throw new NetworkError(`The server did not answer within ${Math.round(timeoutMs / 1000)}s.`, err)
+        throw new NetworkError(t('The server did not answer within %@ s.', Math.round(timeoutMs / 1000)), err)
       }
       throw new NetworkError(
-        'Could not reach the server. Check the address, that it is running, and that cross-origin requests are allowed (see the Kultr docs on reverse proxies).',
+        t('Could not reach the server. Check the address, that it is running, and that cross-origin requests are allowed (see the Kultr docs on reverse proxies).'),
         err,
       )
     } finally {
@@ -199,7 +200,7 @@ export class SubsonicClient {
     }
 
     if (!response.ok) {
-      throw new NetworkError(`Server responded with HTTP ${response.status} ${response.statusText}.`)
+      throw new NetworkError(t('Server responded with HTTP %@.', `${response.status} ${response.statusText}`.trim()))
     }
 
     let payload: { 'subsonic-response'?: Record<string, unknown> }
@@ -207,16 +208,16 @@ export class SubsonicClient {
       payload = await response.json()
     } catch (err) {
       throw new NetworkError(
-        'The server sent something that is not a Subsonic JSON response. Is the address pointing at Navidrome?',
+        t('The server sent something that is not a Subsonic JSON response. Is the address pointing at Navidrome?'),
         err,
       )
     }
 
     const body = payload['subsonic-response']
-    if (!body) throw new NetworkError('Malformed response: no "subsonic-response" envelope.')
+    if (!body) throw new NetworkError(t('The server’s answer had no Subsonic response in it.'))
     if (body.status === 'failed') {
       const error = body.error as { code?: number; message?: string } | undefined
-      throw new SubsonicApiError(error?.code ?? 0, error?.message ?? 'Unknown error')
+      throw new SubsonicApiError(error?.code ?? 0, error?.message ?? t('Unknown error'))
     }
     return body as T
   }
@@ -546,7 +547,7 @@ export function setClient(client: SubsonicClient | null): void {
 }
 
 export function getClient(): SubsonicClient {
-  if (!current) throw new Error('Not connected to a server yet.')
+  if (!current) throw new Error(t('Not connected to a server yet.'))
   return current
 }
 

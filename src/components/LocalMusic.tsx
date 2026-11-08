@@ -20,6 +20,7 @@ import { isLocalProfile, useAuth } from '@/store/auth'
 import { useSync } from '@/store/sync'
 import { useToast } from '@/store/ui'
 import { Row, Spinner } from './ui'
+import { t } from '@/i18n'
 
 /**
  * Music on this computer: choosing folders, importing files, and asking again
@@ -81,7 +82,7 @@ export async function addMusicFolder(): Promise<boolean> {
     if (same) break
   }
   if (same) {
-    useToast.getState().show(`${same.name} is already one of your music folders.`, 'info')
+    useToast.getState().show(t("%@ is already one of your music folders.", same.name), 'info')
     return false
   }
   await putFolder(folder)
@@ -112,10 +113,10 @@ function useImportInputs(onDone?: () => void) {
     setProgress({ done: 0, total: files.length })
     try {
       const count = await importMusic(files, (done, total) => setProgress({ done, total }))
-      toast.show(count ? `Imported ${count.toLocaleString()} file(s).` : 'None of those were music files Kultr can play.', count ? 'success' : 'warning')
+      toast.show(count ? t("Imported %@ file(s).", count.toLocaleString()) : t("None of those were music files Kultr can play."), count ? 'success' : 'warning')
       if (count) onDone?.()
     } catch (err) {
-      toast.show(`Could not import: ${err instanceof Error ? err.message : String(err)}`, 'error')
+      toast.show(t("Could not import: %@", err instanceof Error ? err.message : String(err)), 'error')
     } finally {
       setProgress(null)
     }
@@ -164,14 +165,14 @@ export function LocalMusicChooser({ onReady }: { onReady?: () => void }) {
     try {
       if (await addMusicFolder()) onReady?.()
     } catch (err) {
-      toast.show(`Could not open that folder: ${err instanceof Error ? err.message : String(err)}`, 'error')
+      toast.show(t("Could not open that folder: %@", err instanceof Error ? err.message : String(err)), 'error')
     } finally {
       setBusy(false)
     }
   }
 
   if (!openable && !importable) {
-    return <p className="login__hint">This browser cannot read music from your computer. Try Chrome, Edge or Firefox, or the desktop app.</p>
+    return <p className="login__hint">{t("This browser cannot read music from your computer. Try Chrome, Edge or Firefox, or the desktop app.")}</p>
   }
 
   return (
@@ -180,32 +181,29 @@ export function LocalMusicChooser({ onReady }: { onReady?: () => void }) {
       {openable ? (
         <button type="button" className="pill pill-lg local-chooser__main" disabled={busy || Boolean(imports.progress)} onClick={() => void choose()}>
           {busy ? <Spinner /> : <FolderOpen size={16} />}
-          Choose a music folder
-        </button>
+          {t("Choose a music folder")}</button>
       ) : null}
       {importable ? (
         <div className="local-chooser__more">
           <button type="button" className="pill" disabled={Boolean(imports.progress)} onClick={imports.importFolder}>
             <Upload size={14} />
-            {openable ? 'Import a folder instead' : 'Import a music folder'}
+            {openable ? t("Import a folder instead") : t("Import a music folder")}
           </button>
           <button type="button" className="pill" disabled={Boolean(imports.progress)} onClick={imports.importFiles}>
             <Upload size={14} />
-            Import files
-          </button>
+            {t("Import files")}</button>
         </div>
       ) : null}
       {imports.progress ? (
         <p className="login__hint" role="status">
-          Copying {imports.progress.done.toLocaleString()} of {imports.progress.total.toLocaleString()} into Kultr…
-        </p>
+          {t("Copying %@ of %@ into Kultr…", imports.progress.done.toLocaleString(), imports.progress.total.toLocaleString())}</p>
       ) : (
         <p className="login__hint">
           {openable
             ? desktop()
-              ? 'Kultr reads the folder where it is and finds new music whenever you sync.'
-              : 'Kultr reads the folder where it is; nothing is uploaded or copied. The browser may ask once per visit before it lets Kultr read it again.'
-            : 'This browser cannot keep a folder open, so the music is copied into Kultr’s own storage in the browser. Nothing leaves your computer.'}
+              ? t("Kultr reads the folder where it is and finds new music whenever you sync.")
+              : t("Kultr reads the folder where it is; nothing is uploaded or copied. The browser may ask once per visit before it lets Kultr read it again.")
+            : t("This browser cannot keep a folder open, so the music is copied into Kultr’s own storage in the browser. Nothing leaves your computer.")}
         </p>
       )}
     </div>
@@ -232,12 +230,12 @@ export function MusicFoldersRows() {
   return (
     <>
       {imports.inputs}
-      {rows.length === 0 ? <p className="row__hint">No music folders yet.</p> : null}
+      {rows.length === 0 ? <p className="row__hint">{t("No music folders yet.")}</p> : null}
       {rows.map(({ folder, access }) => (
         <Row
           key={folder.id}
           label={folder.name}
-          hint={`${folder.path ?? KIND_LABEL[folder.kind]}${access === 'granted' ? '' : ' · Kultr needs your permission to read it again'}`}
+          hint={`${folder.path ?? t(KIND_LABEL[folder.kind])}${access === 'granted' ? '' : t(' · Kultr needs your permission to read it again')}`}
         >
           {access !== 'granted' ? (
             <button
@@ -250,31 +248,29 @@ export function MusicFoldersRows() {
               }}
             >
               <KeyRound size={14} />
-              Allow
-            </button>
+              {t("Allow")}</button>
           ) : null}
           {folder.kind === 'opfs' ? (
-            <button className="pill" onClick={imports.importFolder} title="Copy another folder of music in">
+            <button className="pill" onClick={imports.importFolder} title={t("Copy another folder of music in")}>
               <Upload size={14} />
-              Import more
-            </button>
+              {t("Import more")}</button>
           ) : null}
           <button
             className="pill pill-icon"
-            aria-label={`Remove ${folder.name}`}
-            title={folder.kind === 'opfs' ? 'Remove, and delete the copies from this browser' : 'Remove from Kultr (the files stay where they are)'}
+            aria-label={t("Remove %@", folder.name)}
+            title={folder.kind === 'opfs' ? t("Remove, and delete the copies from this browser") : t("Remove from Kultr (the files stay where they are)")}
             onClick={async () => {
               const message =
                 folder.kind === 'opfs'
-                  ? `Remove the music imported into Kultr? The copies in this browser are deleted; the originals on your computer are not touched.`
-                  : `Stop using ${folder.name}? The files stay where they are.`
+                  ? t('Remove the music imported into Kultr? The copies in this browser are deleted; the originals on your computer are not touched.')
+                  : t('Stop using %@? The files stay where they are.', folder.name)
               if (!window.confirm(message)) return
               await deleteFolder(folder.id)
               if (folder.kind === 'desktop' && folder.path) await desktop()?.forgetFolder?.(folder.path)
               if (folder.kind === 'opfs') await clearImported()
               await reload()
               if (local) await useAndScan()
-              toast.show(`Removed ${folder.name}.`, 'info')
+              toast.show(t("Removed %@.", folder.name), 'info')
             }}
           >
             <Trash2 size={14} />
@@ -282,11 +278,11 @@ export function MusicFoldersRows() {
         </Row>
       ))}
       <Row
-        label="Add music"
+        label={t("Add music")}
         hint={
           canOpenFolders()
-            ? 'Add a folder; Kultr reads the folders inside it too. Albums come from the tags in the files, or from the folder names when there are none.'
-            : 'This browser cannot keep a folder open, so music is copied into Kultr’s storage in the browser.'
+            ? t("Add a folder; Kultr reads the folders inside it too. Albums come from the tags in the files, or from the folder names when there are none.")
+            : t("This browser cannot keep a folder open, so music is copied into Kultr’s storage in the browser.")
         }
         wrap
       >
@@ -297,36 +293,33 @@ export function MusicFoldersRows() {
               try {
                 if (await addMusicFolder()) await reload()
               } catch (err) {
-                toast.show(`Could not open that folder: ${err instanceof Error ? err.message : String(err)}`, 'error')
+                toast.show(t("Could not open that folder: %@", err instanceof Error ? err.message : String(err)), 'error')
               }
             }}
           >
             <FolderPlus size={14} />
-            Add a folder
-          </button>
+            {t("Add a folder")}</button>
         ) : null}
         {canImport() && !desktop() ? (
           <>
             <button className="pill" disabled={Boolean(imports.progress)} onClick={imports.importFolder}>
               <Upload size={14} />
-              Import a folder
-            </button>
+              {t("Import a folder")}</button>
             <button className="pill" disabled={Boolean(imports.progress)} onClick={imports.importFiles}>
               <Upload size={14} />
-              Import files
-            </button>
+              {t("Import files")}</button>
           </>
         ) : null}
       </Row>
       {rows.length ? (
         <Row
-          label={local ? 'Look for new music' : 'Use this music'}
+          label={local ? t("Look for new music") : t("Use this music")}
           hint={
             running && local
               ? progress.message
               : local
-                ? 'Reads the folders again. Only new and changed files are opened, so it is quick after the first time.'
-                : 'Switch from your server to the music on this computer.'
+                ? t("Reads the folders again. Only new and changed files are opened, so it is quick after the first time.")
+                : t("Switch from your server to the music on this computer.")
           }
         >
           <button
@@ -335,14 +328,13 @@ export function MusicFoldersRows() {
             onClick={() => void useAndScan()}
           >
             {local ? <RefreshCw size={14} className={running ? 'spin' : undefined} /> : <HardDrive size={14} />}
-            {local ? (running ? 'Reading…' : 'Rescan') : 'Use it'}
+            {local ? (running ? t("Reading…") : t("Rescan")) : t("Use it")}
           </button>
         </Row>
       ) : null}
       {imports.progress ? (
         <p className="row__hint" role="status">
-          Copying {imports.progress.done.toLocaleString()} of {imports.progress.total.toLocaleString()} into Kultr…
-        </p>
+          {t("Copying %@ of %@ into Kultr…", imports.progress.done.toLocaleString(), imports.progress.total.toLocaleString())}</p>
       ) : null}
     </>
   )
@@ -364,7 +356,7 @@ export function FolderAccessBanner() {
     <div className="folder-banner glass" role="status">
       <KeyRound size={16} />
       <span>
-        Your browser needs your permission again before Kultr can play from <strong>{names}</strong>.
+        {t("Your browser needs your permission again before Kultr can play from")}{' '}<strong>{names}</strong>.
       </span>
       <button
         className="pill pill-accent"
@@ -378,8 +370,7 @@ export function FolderAccessBanner() {
           }
         }}
       >
-        Allow
-      </button>
+        {t("Allow")}</button>
     </div>
   )
 }

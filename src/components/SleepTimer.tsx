@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Moon } from 'lucide-react'
 import { usePlayer } from '@/store/player'
 import { Menu, useMenu, type MenuItem } from './ui'
+import { t } from '@/i18n'
 
 const PRESETS = [15, 30, 45, 60, 90]
 
@@ -24,12 +25,12 @@ export function SleepTimerMenu({ children }: { children: ReactNode }) {
 
   const items: MenuItem[] = [
     ...PRESETS.map((minutes) => ({
-      label: `Stop in ${minutes} minutes`,
+      label: t("Stop in %@ minutes", minutes),
       icon: <Moon size={15} />,
       onSelect: () => setSleepTimer(minutes),
     })),
     {
-      label: 'Stop at the end of this track',
+      label: t("Stop at the end of this track"),
       icon: <Moon size={15} />,
       separatorBefore: true,
       onSelect: () => setSleepTimer(null, true),
@@ -38,7 +39,7 @@ export function SleepTimerMenu({ children }: { children: ReactNode }) {
 
   if (armed) {
     items.push({
-      label: 'Cancel sleep timer',
+      label: t("Cancel sleep timer"),
       danger: true,
       separatorBefore: true,
       onSelect: () => setSleepTimer(null, false),
@@ -51,13 +52,13 @@ export function SleepTimerMenu({ children }: { children: ReactNode }) {
         ref={buttonRef}
         className="iconbtn"
         data-active={armed}
-        aria-label="Sleep timer"
+        aria-label={t("Sleep timer")}
         title={
           sleepTimerEndsAt
-            ? `Sleep timer: ${minutesLeft} min left`
+            ? t("Sleep timer: %@ min left", minutesLeft)
             : sleepTimerAfterTrack
-              ? 'Sleep timer: stops after this track'
-              : 'Sleep timer'
+              ? t("Sleep timer: stops after this track")
+              : t("Sleep timer")
         }
         onClick={() => menu.openFrom(buttonRef.current)}
       >

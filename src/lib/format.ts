@@ -1,3 +1,5 @@
+import { locale, t } from '@/i18n'
+
 /** Formatting helpers shared across the UI. */
 
 export function formatTime(seconds: number | undefined | null): string {
@@ -18,9 +20,9 @@ export function formatDuration(seconds: number | undefined | null): string {
   const total = Math.round(seconds)
   const hours = Math.floor(total / 3600)
   const minutes = Math.round((total % 3600) / 60)
-  if (hours > 0) return `${hours} hr ${minutes} min`
-  if (minutes > 0) return `${minutes} min`
-  return `${total} sec`
+  if (hours > 0) return t('%@ hr %@ min', hours, minutes)
+  if (minutes > 0) return t('%@ min', minutes)
+  return t('%@ sec', total)
 }
 
 export function formatBytes(bytes: number | undefined | null): string {
@@ -33,20 +35,21 @@ export function formatBytes(bytes: number | undefined | null): string {
 
 export function formatCount(value: number | undefined | null, singular: string, plural?: string): string {
   const count = value ?? 0
-  return `${count.toLocaleString()} ${count === 1 ? singular : plural ?? `${singular}s`}`
+  // "%@ track", "%@ tracks": the German file has a line for each.
+  return t(`%@ ${count === 1 ? singular : plural ?? `${singular}s`}`, count)
 }
 
 export function formatRelative(timestamp: number | null | undefined): string {
-  if (!timestamp) return 'never'
+  if (!timestamp) return t('never')
   const delta = Date.now() - timestamp
   const minutes = Math.round(delta / 60_000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 1) return t('just now')
+  if (minutes < 60) return t('%@ min ago', minutes)
   const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours} hr ago`
+  if (hours < 24) return t('%@ hr ago', hours)
   const days = Math.round(hours / 24)
-  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`
-  return new Date(timestamp).toLocaleDateString()
+  if (days < 30) return t(days === 1 ? '%@ day ago' : '%@ days ago', days)
+  return new Date(timestamp).toLocaleDateString(locale())
 }
 
 /** "The Beatles" sorts under B, like every other music app. */

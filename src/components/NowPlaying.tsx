@@ -30,6 +30,7 @@ import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHea
 import { NextButton } from './NextButton'
 import { useTrackAnalysis } from '@/lib/beatGrid'
 import { renderTemplate } from '@/lib/studio'
+import { t } from '@/i18n'
 
 type Tab = 'queue' | 'lyrics' | 'injekt'
 
@@ -82,18 +83,18 @@ export function NowPlaying() {
   )
 
   const tabs: { id: Tab; label: string; hidden?: boolean }[] = [
-    { id: 'queue', label: 'Up next' },
-    { id: 'lyrics', label: 'Lyrics', hidden: !showLyrics },
-    { id: 'injekt', label: 'InjeKt' },
+    { id: 'queue', label: t("Up next") },
+    { id: 'lyrics', label: t("Lyrics"), hidden: !showLyrics },
+    { id: 'injekt', label: t("InjeKt") },
   ]
 
   return (
-    <div className="npv" role="dialog" aria-label="Now playing" data-leaving={leaving}>
+    <div className="npv" role="dialog" aria-label={t("Now playing")} data-leaving={leaving}>
       <div className="npv__bar">
-        <button className="iconbtn" aria-label="Close" onClick={() => setNowPlaying(false)}>
+        <button className="iconbtn" aria-label={t("Close")} onClick={() => setNowPlaying(false)}>
           <ChevronDown size={20} />
         </button>
-        <h3>{player.source || 'Now playing'}</h3>
+        <h3>{player.source || t("Now playing")}</h3>
         <div style={{ flex: 1 }} />
         {player.transition ? (
           <span className="badge" data-tone="accent">
@@ -107,19 +108,19 @@ export function NowPlaying() {
           aria-pressed={injektEnabled}
           title={
             injektEnabled
-              ? 'InjeKt is on — transitions are beat-matched and key-aware'
-              : 'InjeKt is off — plain crossfade between tracks'
+              ? t("InjeKt is on — transitions are beat-matched and key-aware")
+              : t("InjeKt is off — plain crossfade between tracks")
           }
           onClick={() => setSetting('injektEnabled', !injektEnabled)}
         >
           <Sparkles size={13} />
-          InjeKt {injektEnabled ? 'on' : 'off'}
+          {t("InjeKt %@", injektEnabled ? t("on") : t("off"))}
         </button>
         <button
           className="iconbtn"
-          aria-label={showPlayerPanel ? 'Hide the side panel' : 'Show the side panel'}
+          aria-label={showPlayerPanel ? t("Hide the side panel") : t("Show the side panel")}
           aria-pressed={showPlayerPanel}
-          title={showPlayerPanel ? 'Hide the side panel' : 'Show the side panel'}
+          title={showPlayerPanel ? t("Hide the side panel") : t("Show the side panel")}
           onClick={() => setSetting('showPlayerPanel', !showPlayerPanel)}
         >
           {showPlayerPanel ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
@@ -190,18 +191,18 @@ export function NowPlaying() {
                 <button
                   className="iconbtn"
                   data-active={starred}
-                  aria-label="Favourite"
+                  aria-label={t("Favourite")}
                   onClick={async () => setStarred(await toggleStarSong(song, starred))}
                 >
                   <Heart size={18} fill={starred ? 'currentColor' : 'none'} />
                 </button>
-                <button className="iconbtn" aria-label="Previous" onClick={() => void player.previous()}>
+                <button className="iconbtn" aria-label={t("Previous")} onClick={() => void player.previous()}>
                   <SkipBack size={24} fill="currentColor" />
                 </button>
               </div>
               <button
                 className="npv__play"
-                aria-label={playing ? 'Pause' : 'Play'}
+                aria-label={playing ? t("Pause") : t("Play")}
                 onClick={() => void player.toggle()}
               >
                 {playing ? (
@@ -211,7 +212,7 @@ export function NowPlaying() {
                 )}
               </button>
               <div className="npv__side">
-                <NextButton size={24} label="Next" />
+                <NextButton size={24} label={t("Next")} />
                 <RepeatButton size={18} />
                 <CastButton size={18} />
               </div>
@@ -235,7 +236,7 @@ export function NowPlaying() {
                     setTab(entry.id)
                   }}
                 >
-                  {entry.label}
+                  {t(entry.label)}
                 </button>
               ))}
           </div>
@@ -288,9 +289,7 @@ function UpNext() {
       <KarouselHeading text={KAROUSEL_WAITING} />
     ) : (
       <p className="row__hint">
-        Nothing queued after this one. Tap shuffle twice for Karousel, and music like this keeps
-        playing when the queue runs out.
-      </p>
+        {t("Nothing queued after this one. Tap shuffle twice for Karousel, and music like this keeps playing when the queue runs out.")}</p>
     )
   }
 
@@ -302,8 +301,7 @@ function UpNext() {
       {waiting ? <KarouselHeading text={KAROUSEL_WAITING} /> : null}
       <p className="row__hint" style={{ marginTop: 8 }}>
         <ListMusic size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
-        Drag to reorder in the queue panel.
-      </p>
+        {t("Drag to reorder in the queue panel.")}</p>
     </div>
   )
 }

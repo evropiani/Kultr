@@ -17,6 +17,7 @@ import { usePlaylistPicker } from '@/components/AddToPlaylist'
 import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
 import { NotesAndTags, useCratePicker } from '@/components/Crates'
 import { Package } from 'lucide-react'
+import { t } from '@/i18n'
 
 /* ------------------------------------------------------------------- album -- */
 
@@ -54,7 +55,7 @@ export function AlbumPage() {
   }, [data.songs])
 
   if (loading) return <Loading />
-  if (!data.album) return <Empty icon={<Play size={24} />} title="Album not found" />
+  if (!data.album) return <Empty icon={<Play size={24} />} title={t("Album not found")} />
 
   const album = data.album
   const totalDuration = data.songs.reduce((sum, song) => sum + (song.duration ?? 0), 0)
@@ -86,8 +87,7 @@ export function AlbumPage() {
               onClick={() => void usePlayer.getState().playNow(data.songs, 0, album.name)}
             >
               <Play size={15} fill="currentColor" />
-              Play
-            </button>
+              {t("Play")}</button>
             <button
               className="pill pill-lg"
               onClick={() =>
@@ -97,34 +97,30 @@ export function AlbumPage() {
               }
             >
               <Shuffle size={15} />
-              Shuffle
-            </button>
+              {t("Shuffle")}</button>
             <button
               className="pill pill-lg"
               data-active={starred}
               onClick={async () => setStarred(await toggleStarAlbum(album, starred))}
             >
               <Heart size={15} fill={starred ? 'currentColor' : 'none'} />
-              {starred ? 'Favourited' : 'Favourite'}
+              {starred ? t("Favourited") : t("Favourite")}
             </button>
             <button
               className="pill pill-lg"
               onClick={() => usePlayer.getState().enqueue(data.songs, 'end')}
             >
               <ListPlus size={15} />
-              Queue
-            </button>
+              {t("Queue")}</button>
             <button
               className="pill pill-lg"
               onClick={() => usePlaylistPicker.getState().show(data.songs.map((song) => song.id))}
             >
               <ListPlus size={15} />
-              Add to playlist
-            </button>
+              {t("Add to playlist")}</button>
             <button className="pill pill-lg" onClick={() => useCratePicker.getState().show({ kind: 'album', id: album.id, name: album.name })}>
               <Package size={15} />
-              Crate
-            </button>
+              {t("Crate")}</button>
             <OfflineButton songs={data.songs} label={album.name} className="pill pill-lg" />
             <RemoveOfflineButton songs={data.songs} />
           </div>
@@ -137,7 +133,7 @@ export function AlbumPage() {
           ? discs.map(([disc, songs]) => (
               <section key={disc} style={{ marginBottom: 26 }}>
                 <h3 style={{ margin: '0 0 8px 12px', color: 'var(--ink-3)' }}>
-                  {album.discTitles?.find((entry) => entry.disc === disc)?.title ?? `Disc ${disc}`}
+                  {album.discTitles?.find((entry) => entry.disc === disc)?.title ?? t("Disc %@", disc)}
                 </h3>
                 <TrackList
                   songs={songs}
@@ -209,7 +205,7 @@ export function ArtistPage() {
   )
 
   if (loading) return <Loading />
-  if (!data.artist) return <Empty icon={<Play size={24} />} title="Artist not found" />
+  if (!data.artist) return <Empty icon={<Play size={24} />} title={t("Artist not found")} />
 
   const artist = data.artist
   const bio = info?.biography?.replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1').replace(/<[^>]+>/g, '') ?? ''
@@ -245,8 +241,7 @@ export function ArtistPage() {
           <div className="hero__actions">
             <button className="pill pill-lg" onClick={playAll}>
               <Play size={15} fill="currentColor" />
-              Play
-            </button>
+              {t("Play")}</button>
             <button
               className="pill pill-lg"
               onClick={() =>
@@ -256,24 +251,21 @@ export function ArtistPage() {
               }
             >
               <Shuffle size={15} />
-              Shuffle
-            </button>
+              {t("Shuffle")}</button>
             <button className="pill pill-lg" onClick={() => void startMix()}>
               <Sparkles size={15} />
-              Artist mix
-            </button>
+              {t("Artist mix")}</button>
             <button
               className="pill pill-lg"
               data-active={starred}
               onClick={async () => setStarred(await toggleStarArtist(artist, starred))}
             >
               <Heart size={15} fill={starred ? 'currentColor' : 'none'} />
-              {starred ? 'Following' : 'Follow'}
+              {starred ? t("Following") : t("Follow")}
             </button>
             <button className="pill pill-lg" onClick={() => useCratePicker.getState().show({ kind: 'artist', id: artist.id, name: artist.name })}>
               <Package size={15} />
-              Crate
-            </button>
+              {t("Crate")}</button>
             <OfflineButton songs={data.songs} label={artist.name} className="pill pill-lg" />
             <RemoveOfflineButton songs={data.songs} />
           </div>
@@ -299,7 +291,7 @@ export function ArtistPage() {
             </p>
             {bio.length > 220 ? (
               <button className="pill" style={{ marginTop: 8 }} onClick={() => setExpanded((v) => !v)}>
-                {expanded ? 'Show less' : 'Read more'}
+                {expanded ? t("Show less") : t("Read more")}
               </button>
             ) : null}
           </section>
@@ -307,13 +299,13 @@ export function ArtistPage() {
 
         {topSongs.length ? (
           <section style={{ marginBottom: 32 }}>
-            <h2 style={{ marginBottom: 10 }}>Popular</h2>
+            <h2 style={{ marginBottom: 10 }}>{t("Popular")}</h2>
             <TrackList songs={topSongs} source={artist.name} numbering="index" sortable={false} />
           </section>
         ) : null}
 
         <section style={{ marginBottom: 32 }}>
-          <h2 style={{ marginBottom: 12 }}>Albums</h2>
+          <h2 style={{ marginBottom: 12 }}>{t("Albums")}</h2>
           <Grid>
             {data.albums.map((album) => (
               <AlbumCard key={album.id} album={album} />
@@ -323,7 +315,7 @@ export function ArtistPage() {
 
         {info?.similarArtist?.length ? (
           <section style={{ marginBottom: 32 }}>
-            <h2 style={{ marginBottom: 12 }}>Similar artists</h2>
+            <h2 style={{ marginBottom: 12 }}>{t("Similar artists")}</h2>
             <Grid>
               {info.similarArtist.slice(0, 12).map((similar) => (
                 <ArtistCard key={similar.id} artist={similar} />

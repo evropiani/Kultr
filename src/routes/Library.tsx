@@ -11,6 +11,7 @@ import { AlbumCard, ArtistCard, Grid } from '@/components/Cards'
 import { TrackList } from '@/components/TrackList'
 import { Empty, Segmented, SkeletonGrid } from '@/components/ui'
 import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
+import { t } from '@/i18n'
 
 /** Render a long list a chunk at a time, growing as the user scrolls. */
 function useIncremental<T>(items: T[], step = 120) {
@@ -109,25 +110,25 @@ export function Albums() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Albums</h1>
+          <h1>{t("Albums")}</h1>
           <span className="page-head__sub">{formatCount(filtered.length, 'album')}</span>
         </div>
         <div className="page-actions">
-          <OfflineButton songs={filteredSongs} label="These albums" />
+          <OfflineButton songs={filteredSongs} label={t("These albums")} />
           <RemoveOfflineButton songs={filteredSongs} />
         </div>
       </div>
 
-      <FilterBar value={query} onChange={setQuery} placeholder="Filter albums…">
+      <FilterBar value={query} onChange={setQuery} placeholder={t("Filter albums…")}>
         <Segmented
           value={sort}
           onChange={setSort}
           options={[
-            { value: 'name', label: 'Name' },
-            { value: 'artist', label: 'Artist' },
-            { value: 'year', label: 'Year' },
-            { value: 'added', label: 'Added' },
-            { value: 'plays', label: 'Plays' },
+            { value: 'name', label: t("Name") },
+            { value: 'artist', label: t("Artist") },
+            { value: 'year', label: t("Year") },
+            { value: 'added', label: t("Added") },
+            { value: 'plays', label: t("Plays") },
           ]}
         />
       </FilterBar>
@@ -135,9 +136,8 @@ export function Albums() {
       {loading ? (
         <SkeletonGrid />
       ) : filtered.length === 0 ? (
-        <Empty icon={<Disc3 size={24} />} title="No albums match">
-          Try a different filter, or sync the library from the Sync page.
-        </Empty>
+        <Empty icon={<Disc3 size={24} />} title={t("No albums match")}>
+          {t("Try a different filter, or sync the library from the Sync page.")}</Empty>
       ) : (
         <>
           <Grid>
@@ -181,20 +181,20 @@ export function Artists() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Artists</h1>
+          <h1>{t("Artists")}</h1>
           <span className="page-head__sub">{formatCount(filtered.length, 'artist')}</span>
         </div>
         <div className="page-actions">
-          <OfflineButton songs={filteredSongs} label="These artists" />
+          <OfflineButton songs={filteredSongs} label={t("These artists")} />
           <RemoveOfflineButton songs={filteredSongs} />
         </div>
       </div>
-      <FilterBar value={query} onChange={setQuery} placeholder="Filter artists…" />
+      <FilterBar value={query} onChange={setQuery} placeholder={t("Filter artists…")} />
 
       {loading ? (
         <SkeletonGrid />
       ) : filtered.length === 0 ? (
-        <Empty icon={<Users size={24} />} title="No artists match" />
+        <Empty icon={<Users size={24} />} title={t("No artists match")} />
       ) : (
         <>
           <Grid>
@@ -232,7 +232,7 @@ export function Songs() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Songs</h1>
+          <h1>{t("Songs")}</h1>
           <span className="page-head__sub">{formatCount(filtered.length, 'track')}</span>
         </div>
         <div className="page-actions">
@@ -241,32 +241,30 @@ export function Songs() {
             disabled={!filtered.length}
             onClick={() => {
               const picks = [...filtered].sort(() => Math.random() - 0.5)
-              void usePlayer.getState().playNow(picks, 0, 'All songs')
+              void usePlayer.getState().playNow(picks, 0, t('All songs'))
             }}
           >
             <Shuffle size={14} />
-            Shuffle
-          </button>
+            {t("Shuffle")}</button>
           <button
             className="pill pill-accent"
             disabled={!filtered.length}
-            onClick={() => void usePlayer.getState().playNow(filtered, 0, 'All songs')}
+            onClick={() => void usePlayer.getState().playNow(filtered, 0, t('All songs'))}
           >
             <Play size={14} fill="currentColor" />
-            Play all
-          </button>
-          <OfflineButton songs={filtered} label="Your songs" />
+            {t("Play all")}</button>
+          <OfflineButton songs={filtered} label={t("Your songs")} />
         </div>
       </div>
 
-      <FilterBar value={query} onChange={setQuery} placeholder="Filter songs…" />
+      <FilterBar value={query} onChange={setQuery} placeholder={t("Filter songs…")} />
 
       {loading ? (
         <div className="skeleton" style={{ height: 320 }} />
       ) : filtered.length === 0 ? (
-        <Empty icon={<Music2 size={24} />} title="No songs match" />
+        <Empty icon={<Music2 size={24} />} title={t("No songs match")} />
       ) : (
-        <TrackList songs={filtered} source="All songs" />
+        <TrackList songs={filtered} source={t("All songs")} />
       )}
     </>
   )
@@ -287,7 +285,7 @@ export function Genres() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Genres</h1>
+          <h1>{t("Genres")}</h1>
           <span className="page-head__sub">{formatCount(sorted.length, 'genre')}</span>
         </div>
       </div>
@@ -295,9 +293,8 @@ export function Genres() {
       {loading ? (
         <SkeletonGrid count={8} />
       ) : sorted.length === 0 ? (
-        <Empty icon={<Tags size={24} />} title="No genres yet">
-          Navidrome builds genres from your file tags. Sync the library once they are in place.
-        </Empty>
+        <Empty icon={<Tags size={24} />} title={t("No genres yet")}>
+          {t("Navidrome builds genres from your file tags. Sync the library once they are in place.")}</Empty>
       ) : (
         <div className="stats" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
           {sorted.map((genre) => (
@@ -343,16 +340,14 @@ export function GenrePage() {
             }
           >
             <Shuffle size={14} />
-            Shuffle
-          </button>
+            {t("Shuffle")}</button>
           <button
             className="pill"
             disabled={!songs.length}
             onClick={() => void usePlayer.getState().playNow(songs, 0, genre)}
           >
             <Play size={14} fill="currentColor" />
-            Play
-          </button>
+            {t("Play")}</button>
           <OfflineButton songs={songs} label={genre} />
           <RemoveOfflineButton songs={songs} />
         </div>

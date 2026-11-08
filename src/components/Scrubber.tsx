@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { formatTime } from '@/lib/format'
 import { useSettings } from '@/store/settings'
 import type { TransitionPlan } from '@/audio/injekt'
+import { t } from '@/i18n'
 
 /**
  * Where the next track will start bleeding in, as a region of *this* track.
@@ -193,7 +194,7 @@ export function Scrubber({
           type="button"
           ref={elapsedRef}
           className="player__time"
-          title={timeRemaining ? 'Showing time remaining — click for elapsed' : 'Showing elapsed time — click for remaining'}
+          title={timeRemaining ? t("Showing time remaining — click for elapsed") : t("Showing elapsed time — click for remaining")}
           onClick={() => setSetting('timeRemaining', !timeRemaining)}
         >
           0:00
@@ -206,11 +207,11 @@ export function Scrubber({
         data-style={playhead}
         role="slider"
         tabIndex={0}
-        aria-label="Seek"
+        aria-label={t("Seek")}
         aria-valuemin={0}
         aria-valuemax={Math.round(duration)}
         aria-valuenow={Math.round(getTime())}
-        aria-valuetext={`${formatTime(getTime())} of ${formatTime(duration)}`}
+        aria-valuetext={t("%@ of %@", formatTime(getTime()), formatTime(duration))}
         onPointerDown={(event) => {
           if (duration <= 0) return
           const rect = trackRef.current?.getBoundingClientRect()
@@ -231,7 +232,7 @@ export function Scrubber({
             <div
               className="scrub__overlap"
               style={{ left: `${overlapLeft}%`, width: `${overlapWidth}%` }}
-              title="Crossfade region"
+              title={t("Crossfade region")}
             />
           ) : null}
           <div ref={fillRef} className="scrub__fill" style={{ width: '0%' }} />

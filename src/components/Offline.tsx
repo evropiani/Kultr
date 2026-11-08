@@ -6,6 +6,7 @@ import { supportsFolderDownloads } from '@/lib/filesystem'
 import { countPending, useOffline } from '@/store/offline'
 import { Modal } from './ui'
 import { isLocalId } from '@/local/files'
+import { t } from '@/i18n'
 
 /**
  * "Sync offline" button.
@@ -48,10 +49,12 @@ export function OfflineButton({
   // Music on this computer needs no downloading.
   if (songs.length && songs.every((song) => isLocalId(song.id))) return null
   const title = complete
-    ? 'Every track here is already downloaded'
+    ? t('Every track here is already downloaded')
     : pending === null
-      ? 'Download these tracks for offline playback'
-      : `Download ${pending} track${pending === 1 ? '' : 's'} that are not stored yet`
+      ? t('Download these tracks for offline playback')
+      : pending === 1
+        ? t('Download 1 track that is not stored yet')
+        : t('Download %@ tracks that are not stored yet', pending)
 
   return (
     <button
@@ -68,7 +71,7 @@ export function OfflineButton({
       ) : (
         <FolderDown size={14} />
       )}
-      {compact ? null : complete ? 'Offline' : 'Sync offline'}
+      {compact ? null : complete ? t("Offline") : t("Sync offline")}
       {!compact && pending ? <span className="badge" style={{ height: 18 }}>{pending}</span> : null}
     </button>
   )
@@ -84,8 +87,8 @@ export function OfflineProgressBar() {
     <div className="sidebar__server" style={{ display: 'grid', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <FolderDown size={13} />
-        <strong style={{ flex: 1 }}>Downloading…</strong>
-        <button className="iconbtn" style={{ width: 22, height: 22 }} aria-label="Stop" onClick={cancel}>
+        <strong style={{ flex: 1 }}>{t("Downloading…")}</strong>
+        <button className="iconbtn" style={{ width: 22, height: 22 }} aria-label={t("Stop")} onClick={cancel}>
           <X size={13} />
         </button>
       </div>
@@ -109,41 +112,31 @@ export function OfflineDestinationPrompt() {
   const dismissPrompt = useOffline((state) => state.dismissPrompt)
 
   return (
-    <Modal open={Boolean(pending)} onClose={dismissPrompt} title="Where should downloads go?">
+    <Modal open={Boolean(pending)} onClose={dismissPrompt} title={t("Where should downloads go?")}>
       <p className="row__hint" style={{ marginBottom: 16 }}>
-        {pending?.length ?? 0} track(s) are about to be downloaded. You can change this later in
-        Settings → Offline.
-      </p>
+        {t("%@ track(s) are about to be downloaded. You can change this later in Settings → Offline.", pending?.length ?? 0)}</p>
 
       <div style={{ display: 'grid', gap: 8 }}>
         <button className="login__profile" onClick={() => void chooseDestination('folder')}>
           <FolderDown size={17} />
           <span style={{ flex: 1, minWidth: 0 }}>
-            A folder on this device
-            <small>
-              You pick the folder once. Files land there with readable names, so other apps can play
-              them too.
-            </small>
+            {t("A folder on this device")}<small>
+              {t("You pick the folder once. Files land there with readable names, so other apps can play them too.")}</small>
           </span>
         </button>
 
         <button className="login__profile" onClick={() => void chooseDestination('browser')}>
           <HardDrive size={17} />
           <span style={{ flex: 1, minWidth: 0 }}>
-            Inside this browser
-            <small>
-              Nothing to choose, works everywhere — but the files are only reachable from Kultr, and
-              the browser may evict them if storage runs low.
-            </small>
+            {t("Inside this browser")}<small>
+              {t("Nothing to choose, works everywhere — but the files are only reachable from Kultr, and the browser may evict them if storage runs low.")}</small>
           </span>
         </button>
       </div>
 
       {!supportsFolderDownloads() ? (
         <p className="row__hint" style={{ marginTop: 14 }}>
-          This browser cannot write to a folder, so only browser storage is available. Chrome, Edge
-          and other Chromium browsers can.
-        </p>
+          {t("This browser cannot write to a folder, so only browser storage is available. Chrome, Edge and other Chromium browsers can.")}</p>
       ) : null}
     </Modal>
   )
@@ -159,11 +152,10 @@ export function RemoveOfflineButton({ songs }: { songs: Song[] }) {
   return (
     <button
       className="pill"
-      title={`Delete ${stored.length} downloaded track(s)`}
+      title={t("Delete %@ downloaded track(s)", stored.length)}
       onClick={() => void remove(stored.map((song) => song.id))}
     >
       <Trash2 size={14} />
-      Remove downloads
-    </button>
+      {t("Remove downloads")}</button>
   )
 }

@@ -6,6 +6,7 @@ import { allPlaylists } from '@/db'
 import { addToPlaylist, createPlaylistWith } from '@/lib/actions'
 import { formatCount } from '@/lib/format'
 import { Modal } from './ui'
+import { t } from '@/i18n'
 
 interface PickerState {
   songIds: string[]
@@ -50,16 +51,16 @@ export function AddToPlaylistModal() {
   }
 
   return (
-    <Modal open={open} onClose={close} title={`Add ${formatCount(songIds.length, 'track')} to…`}>
+    <Modal open={open} onClose={close} title={t("Add %@ to…", formatCount(songIds.length, 'track'))}>
       <div className="login__field" style={{ marginBottom: 16 }}>
-        <label htmlFor="new-playlist">New playlist</label>
+        <label htmlFor="new-playlist">{t("New playlist")}</label>
         <div style={{ display: 'flex', gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
             <Plus size={16} />
             <input
               id="new-playlist"
               value={name}
-              placeholder="Name your playlist"
+              placeholder={t("Name your playlist")}
               onChange={(event) => setName(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') void handleCreate()
@@ -67,8 +68,7 @@ export function AddToPlaylistModal() {
             />
           </div>
           <button className="pill pill-accent pill-lg" disabled={!name.trim() || busy} onClick={handleCreate}>
-            Create
-          </button>
+            {t("Create")}</button>
         </div>
       </div>
 
@@ -76,9 +76,7 @@ export function AddToPlaylistModal() {
 
       {playlists.length === 0 ? (
         <p className="row__hint">
-          You have no playlists yet. Create one above — it is saved on your Navidrome server, so every
-          client sees it.
-        </p>
+          {t("You have no playlists yet. Create one above — it is saved on your Navidrome server, so every client sees it.")}</p>
       ) : (
         <div style={{ display: 'grid', gap: 4 }}>
           {playlists.map((playlist) => (

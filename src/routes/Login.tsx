@@ -6,8 +6,9 @@ import { useAuth } from '@/store/auth'
 import { hostLabel } from '@/store/auth'
 import { Spinner, Switch } from '@/components/ui'
 import { LocalMusicChooser } from '@/components/LocalMusic'
-import { isLocalProfile } from '@/store/auth'
+import { isLocalProfile, profileName } from '@/store/auth'
 import { desktop } from '@/local/folders'
+import { t } from '@/i18n'
 
 /**
  * Connection screen.
@@ -62,20 +63,19 @@ export function Login() {
         <div className="login__brand">
           <Logo size={78} />
           <div>
-            <h1 style={{ textAlign: 'center', fontSize: 26 }}>Kultr</h1>
+            <h1 style={{ textAlign: 'center', fontSize: 26 }}>{t("Kultr")}</h1>
             <p className="login__tagline">
               {adding
-                ? 'Add another Navidrome server, or the music on this computer.'
-                : 'A modern, minimalist player for your Navidrome server, or for the music on this computer.'}
+                ? t("Add another Navidrome server, or the music on this computer.")
+                : t("A modern, minimalist player for your Navidrome server, or for the music on this computer.")}
               <br />
-              Crossfade, InjeKt, Karousel, and your whole library at hand.
-            </p>
+              {t("Crossfade, InjeKt, Karousel, and your whole library at hand.")}</p>
           </div>
         </div>
 
         {auth.profiles.length > 0 ? (
           <div className="login__profiles">
-            <span className="login__hint">Saved libraries</span>
+            <span className="login__hint">{t("Saved libraries")}</span>
             {auth.profiles.map((profile) => (
               <button
                 key={profile.id}
@@ -92,8 +92,8 @@ export function Login() {
               >
                 {isLocalProfile(profile) ? <HardDrive size={16} /> : <Server size={16} />}
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  {profile.label}
-                  <small>{isLocalProfile(profile) ? 'Music on this computer' : profile.username}</small>
+                  {profileName(profile)}
+                  <small>{isLocalProfile(profile) ? t("Music on this computer") : profile.username}</small>
                 </span>
               </button>
             ))}
@@ -103,14 +103,14 @@ export function Login() {
 
         {!lockedServer ? (
           <div className="login__field">
-            <label htmlFor="server">Server address</label>
+            <label htmlFor="server">{t("Server address")}</label>
             <div className="field">
               <Server size={16} opacity={0.6} />
               <input
                 id="server"
                 name="url"
                 value={serverUrl}
-                placeholder="https://music.example.com"
+                placeholder={t("https://music.example.com")}
                 autoComplete="url"
                 spellCheck={false}
                 required={inDesktop}
@@ -119,32 +119,31 @@ export function Login() {
             </div>
             <span className="login__hint">
               {inDesktop
-                ? 'Your Navidrome’s address, e.g. http://192.168.1.10:4533 or https://music.example.com.'
-                : 'Leave this empty if Kultr is served from the same address as Navidrome.'}
+                ? t("Your Navidrome’s address, e.g. http://192.168.1.10:4533 or https://music.example.com.")
+                : t("Leave this empty if Kultr is served from the same address as Navidrome.")}
             </span>
           </div>
         ) : null}
 
         <div className="login__field">
-          <label htmlFor="label">Name <span className="login__optional">optional</span></label>
+          <label htmlFor="label">{t("Name")}{' '}<span className="login__optional">{t("optional")}</span></label>
           <div className="field">
             <Tag size={16} opacity={0.6} />
             <input
               id="label"
               name="label"
               value={label}
-              placeholder={serverUrl ? hostLabel(serverUrl) : 'Living room, Home NAS, …'}
+              placeholder={serverUrl ? hostLabel(serverUrl) : t("Living room, Home NAS, …")}
               spellCheck={false}
               onChange={(event) => setLabel(event.target.value)}
             />
           </div>
           <span className="login__hint">
-            What to call this server in Kultr. Leave it empty to use its address.
-          </span>
+            {t("What to call this server in Kultr. Leave it empty to use its address.")}</span>
         </div>
 
         <div className="login__field">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">{t("Username")}</label>
           <div className="field">
             <User size={16} opacity={0.6} />
             <input
@@ -160,7 +159,7 @@ export function Login() {
         </div>
 
         <div className="login__field">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t("Password")}</label>
           <div className="field">
             <ShieldCheck size={16} opacity={0.6} />
             <input
@@ -176,7 +175,7 @@ export function Login() {
               type="button"
               className="iconbtn"
               style={{ width: 28, height: 28 }}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showPassword ? t("Hide password") : t("Show password")}
               onClick={() => setShowPassword((value) => !value)}
             >
               {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -186,20 +185,18 @@ export function Login() {
 
         <div className="row" style={{ borderTop: 0, padding: 0 }}>
           <div className="row__text">
-            <span className="row__label">Stay signed in</span>
+            <span className="row__label">{t("Stay signed in")}</span>
             <span className="row__hint">
-              Subsonic authentication needs your password on every request, so it is stored in this
-              browser. Turn this off to keep it only until you close the tab.
-            </span>
+              {t("Subsonic authentication needs your password on every request, so it is stored in this browser. Turn this off to keep it only until you close the tab.")}</span>
           </div>
-          <Switch checked={remember} onChange={setRemember} label="Stay signed in" />
+          <Switch checked={remember} onChange={setRemember} label={t("Stay signed in")} />
         </div>
 
         {auth.error ? <div className="login__error">{auth.error}</div> : null}
 
         <button className="pill pill-accent pill-lg" type="submit" disabled={busy} style={{ justifyContent: 'center' }}>
           {busy ? <Spinner /> : null}
-          {busy ? 'Connecting…' : 'Connect'}
+          {busy ? t("Connecting…") : t("Connect")}
         </button>
 
         <button
@@ -208,32 +205,27 @@ export function Login() {
           style={{ textAlign: 'left', textDecoration: 'underline' }}
           onClick={() => setAdvanced((value) => !value)}
         >
-          {advanced ? 'Hide advanced options' : 'Advanced options'}
+          {advanced ? t("Hide advanced options") : t("Advanced options")}
         </button>
 
         {advanced ? (
           <div className="row" style={{ borderTop: 0, paddingTop: 0 }}>
             <div className="row__text">
-              <span className="row__label">Send the password in plain form</span>
+              <span className="row__label">{t("Send the password in plain form")}</span>
               <span className="row__hint">
-                Only needed if your server has token authentication disabled. Use HTTPS if you turn
-                this on.
-              </span>
+                {t("Only needed if your server has token authentication disabled. Use HTTPS if you turn this on.")}</span>
             </div>
-            <Switch checked={plainAuth} onChange={setPlainAuth} label="Plain password" />
+            <Switch checked={plainAuth} onChange={setPlainAuth} label={t("Plain password")} />
           </div>
         ) : null}
 
         <p className="login__hint" style={{ display: 'flex', gap: 8 }}>
           <Info size={14} style={{ flex: 'none', marginTop: 2 }} />
           <span>
-            Getting a connection error? Your browser blocks cross-origin requests unless Navidrome
-            allows them. The install guide shows a one-file reverse proxy that puts Kultr and
-            Navidrome on the same address and removes the problem entirely.
-            {serverUrl ? (
+            {t("Getting a connection error? Your browser blocks cross-origin requests unless Navidrome allows them. The install guide shows a one-file reverse proxy that puts Kultr and Navidrome on the same address and removes the problem entirely.")}{serverUrl ? (
               <>
                 {' '}
-                Connecting to <strong>{hostLabel(serverUrl)}</strong>.
+                {t("Connecting to")}{' '}<strong>{hostLabel(serverUrl)}</strong>.
               </>
             ) : null}
           </span>
@@ -244,13 +236,10 @@ export function Login() {
         <section className="login__card login__local glass glass-strong" aria-labelledby="local-heading">
           <div className="login__local-head">
             <HardDrive size={18} />
-            <h2 id="local-heading">No server? Play the music on this computer</h2>
+            <h2 id="local-heading">{t("No server? Play the music on this computer")}</h2>
           </div>
           <p className="login__hint">
-            Kultr works without Navidrome too. Point it at the folder your music is in and it builds the
-            library from the files: albums, artists, covers, lyrics, favourites, playlists and play counts,
-            all kept on this computer.
-          </p>
+            {t("Kultr works without Navidrome too. Point it at the folder your music is in and it builds the library from the files: albums, artists, covers, lyrics, favourites, playlists and play counts, all kept on this computer.")}</p>
           <LocalMusicChooser onReady={() => navigate('/', { replace: true })} />
         </section>
       )}

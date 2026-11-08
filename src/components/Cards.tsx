@@ -10,6 +10,7 @@ import { useSelection } from '@/store/selection'
 import { getClient } from '@/api/subsonic'
 import { Art } from './ui'
 import { draggableProps } from './DropZone'
+import { t } from '@/i18n'
 
 /** Tracks of an album, from the local mirror or the server if not synced. */
 async function albumSongs(albumId: string): Promise<Song[]> {
@@ -42,7 +43,7 @@ function CardCheck({ resolve, label }: { resolve: () => Promise<Song[]>; label: 
       className="checkbox card__check"
       role="checkbox"
       aria-checked={checked}
-      aria-label={`Select ${label}`}
+      aria-label={t("Select %@", label)}
       data-checked={checked}
       onClick={async (event) => {
         event.stopPropagation()
@@ -90,7 +91,7 @@ export function AlbumCard({ album }: { album: Album }) {
       <div className="card__art">
         <CardCheck resolve={resolve} label={album.name} />
         <Art src={artUrl(album, 400)} alt={album.name} />
-        <button className="card__play" onClick={play} aria-label={`Play ${album.name}`}>
+        <button className="card__play" onClick={play} aria-label={t("Play %@", album.name)}>
           <Play size={18} fill="currentColor" />
         </button>
       </div>
@@ -156,7 +157,7 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
       <div className="card__art">
         <CardCheck resolve={resolve} label={playlist.name} />
         <Art src={artUrl(playlist, 400)} alt={playlist.name} />
-        <button className="card__play" onClick={play} aria-label={`Play ${playlist.name}`}>
+        <button className="card__play" onClick={play} aria-label={t("Play %@", playlist.name)}>
           <Play size={18} fill="currentColor" />
         </button>
       </div>

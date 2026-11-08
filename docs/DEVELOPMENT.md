@@ -39,6 +39,8 @@ src/
     context.ts      Shared AudioContext, decoding
   components/   UI
   db/           IndexedDB schema and accessors
+  i18n/         t() and the German lines: de-shared.json (from Kultr for
+                Android) and de-web.json (lines only the web app has)
   local/        Music on this computer: tag reader, album builder, folder
                 access, scanner, and a LocalClient that answers the
                 Subsonic calls from the files
@@ -147,6 +149,27 @@ Anything touching tempo, key or transition planning should come with one.
 MP4, WAV, AIFF, Ogg Vorbis and Opus) and checks what the tag reader gets from
 them, then checks the album rules — the same cases as Kultr for iOS's
 `LocalLibraryTests`, so the apps read a music folder alike.
+
+## Translations
+
+Every line Kultr shows goes through `t()` from `src/i18n`, written in English:
+
+```ts
+t('Sleep timer: %@ min', minutes)
+```
+
+`t()` looks the English up in the German lines and fills each `%@` in order;
+with no German line, or with English chosen, it returns the English. The
+German comes from two files: `de-shared.json` is Kultr for Android's
+`assets/l10n/de.json` as it is (its `%d` and `%lld` read as `%@`), so the
+apps use the same words, and `de-web.json` holds the lines only the web app
+has. A list of labels kept at module level (home shelves, station presets…)
+stays English and is passed through `t()` where it is shown.
+
+`tests/i18n-check.mjs`, run by `npm test`, reads the source with the
+TypeScript parser and fails if a `t('…')` line, or a label in one of those
+lists, has no German, or if a German line has a different number of `%@`.
+Add the German to `de-web.json` when you add a line.
 
 ## The desktop app
 

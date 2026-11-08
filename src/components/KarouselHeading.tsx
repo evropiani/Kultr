@@ -1,4 +1,5 @@
 import { Infinity as InfinityIcon } from 'lucide-react'
+import { t } from '@/i18n'
 
 /** Text for the heading, for the queue as it stands. */
 export const KAROUSEL_ADDED = "Music like what's playing, so it never stops."
@@ -12,8 +13,8 @@ export function KarouselHeading({ text, title = 'Karousel' }: { text: string; ti
         <InfinityIcon size={16} />
       </span>
       <div className="karousel-head__text">
-        <strong>{title}</strong>
-        <span>{text}</span>
+        <strong>{t(title)}</strong>
+        <span>{t(text)}</span>
       </div>
     </div>
   )

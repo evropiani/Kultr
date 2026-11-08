@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * A single shared AudioContext for the whole app.
  *
@@ -76,7 +78,7 @@ export async function decodeToMono(
 
   if (!buffer) {
     const context = getAudioContext()
-    if (!context) throw new Error('This browser cannot decode audio for analysis.')
+    if (!context) throw new Error(t('This browser cannot decode audio for analysis.'))
     buffer = await context.decodeAudioData(data.slice(0))
   }
 

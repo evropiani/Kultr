@@ -35,6 +35,7 @@ import { TrackList } from '@/components/TrackList'
 import { Art, Empty, Modal, SkeletonGrid, Spinner } from '@/components/ui'
 import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
 import { RadioGrid, radioSongs } from '@/components/Radio'
+import { t } from '@/i18n'
 
 /* --------------------------------------------------------------- playlists -- */
 
@@ -73,28 +74,24 @@ export function Playlists() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Playlists</h1>
+          <h1>{t("Playlists")}</h1>
           <span className="page-head__sub">{formatCount(playlists.length, 'playlist')}</span>
         </div>
         <div className="page-actions">
           <button className="pill" onClick={() => void refreshFromServer()}>
             <RefreshCw size={14} />
-            Refresh
-          </button>
+            {t("Refresh")}</button>
           <button className="pill pill-accent" onClick={() => setCreating(true)}>
             <Plus size={14} />
-            New playlist
-          </button>
+            {t("New playlist")}</button>
         </div>
       </div>
 
       {loading ? (
         <SkeletonGrid count={8} />
       ) : playlists.length === 0 ? (
-        <Empty icon={<ListMusic size={24} />} title="No playlists yet">
-          Playlists live on your Navidrome server, so anything you create here shows up in every other
-          client too.
-        </Empty>
+        <Empty icon={<ListMusic size={24} />} title={t("No playlists yet")}>
+          {t("Playlists live on your Navidrome server, so anything you create here shows up in every other client too.")}</Empty>
       ) : (
         <Grid>
           {playlists.map((playlist) => (
@@ -106,23 +103,21 @@ export function Playlists() {
       <Modal
         open={creating}
         onClose={() => setCreating(false)}
-        title="New playlist"
+        title={t("New playlist")}
         footer={
           <>
             <button className="pill" onClick={() => setCreating(false)}>
-              Cancel
-            </button>
+              {t("Cancel")}</button>
             <button className="pill pill-accent" disabled={!name.trim() || busy} onClick={create}>
               {busy ? <Spinner /> : null}
-              Create
-            </button>
+              {t("Create")}</button>
           </>
         }
       >
         <div className="field">
           <input
             value={name}
-            placeholder="Playlist name"
+            placeholder={t("Playlist name")}
             autoFocus
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => {
@@ -158,7 +153,7 @@ export function PlaylistPage() {
       const fresh = await getClient().getPlaylists()
       await putPlaylists(fresh)
       reload()
-      useToast.getState().show('Removed from the playlist.', 'success')
+      useToast.getState().show(t("Removed from the playlist."), 'success')
     } catch (err) {
       useToast.getState().show(describeError(err), 'error')
     }
@@ -182,7 +177,7 @@ export function PlaylistPage() {
       </div>
     )
   }
-  if (!data) return <Empty icon={<ListMusic size={24} />} title="Playlist not found" />
+  if (!data) return <Empty icon={<ListMusic size={24} />} title={t("Playlist not found")} />
 
   return (
     <>
@@ -196,8 +191,8 @@ export function PlaylistPage() {
           <div className="hero__meta">
             <span>{formatCount(songs.length, 'track')}</span>
             <span className="sep">{formatDuration(data.duration)}</span>
-            {data.owner ? <span className="sep">by {data.owner}</span> : null}
-            {data.public ? <span className="badge">Public</span> : null}
+            {data.owner ? <span className="sep">{t("by %@", data.owner)}</span> : null}
+            {data.public ? <span className="badge">{t("Public")}</span> : null}
           </div>
           <div className="hero__actions">
             <button
@@ -206,8 +201,7 @@ export function PlaylistPage() {
               onClick={() => void usePlayer.getState().playNow(songs, 0, data.name)}
             >
               <Play size={15} fill="currentColor" />
-              Play
-            </button>
+              {t("Play")}</button>
             <button
               className="pill pill-lg"
               disabled={!songs.length}
@@ -216,14 +210,12 @@ export function PlaylistPage() {
               }
             >
               <Shuffle size={15} />
-              Shuffle
-            </button>
+              {t("Shuffle")}</button>
             <OfflineButton songs={songs} label={data.name} className="pill pill-lg" />
             <RemoveOfflineButton songs={songs} />
             <button className="pill pill-lg" onClick={() => setConfirmDelete(true)}>
               <Trash2 size={15} />
-              Delete
-            </button>
+              {t("Delete")}</button>
           </div>
         </div>
       </header>
@@ -234,29 +226,25 @@ export function PlaylistPage() {
           source={data.name}
           numbering="index"
           onRemove={(song, index) => void remove(song, index)}
-          emptyMessage="This playlist is empty. Add tracks from any track menu."
+          emptyMessage={t("This playlist is empty. Add tracks from any track menu.")}
         />
       </div>
 
       <Modal
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        title={`Delete “${data.name}”?`}
+        title={t("Delete “%@”?", data.name)}
         footer={
           <>
             <button className="pill" onClick={() => setConfirmDelete(false)}>
-              Cancel
-            </button>
+              {t("Cancel")}</button>
             <button className="pill" style={{ color: 'var(--danger)' }} onClick={() => void destroy()}>
-              Delete playlist
-            </button>
+              {t("Delete playlist")}</button>
           </>
         }
       >
         <p className="row__hint">
-          This removes the playlist from your Navidrome server for every client. The tracks
-          themselves are not touched.
-        </p>
+          {t("This removes the playlist from your Navidrome server for every client. The tracks themselves are not touched.")}</p>
       </Modal>
     </>
   )
@@ -282,7 +270,7 @@ export function Favourites() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Favourites</h1>
+          <h1>{t("Favourites")}</h1>
           <span className="page-head__sub">
             {formatCount(data.songs.length, 'track')} · {formatCount(data.albums.length, 'album')}
           </span>
@@ -291,12 +279,11 @@ export function Favourites() {
           <button
             className="pill pill-accent"
             disabled={!data.songs.length}
-            onClick={() => void usePlayer.getState().playNow(data.songs, 0, 'Favourites')}
+            onClick={() => void usePlayer.getState().playNow(data.songs, 0, t('Favourites'))}
           >
             <Play size={14} fill="currentColor" />
-            Play favourites
-          </button>
-          <OfflineButton songs={data.songs} label="Favourites" />
+            {t("Play favourites")}</button>
+          <OfflineButton songs={data.songs} label={t("Favourites")} />
           <RemoveOfflineButton songs={data.songs} />
         </div>
       </div>
@@ -304,15 +291,13 @@ export function Favourites() {
       {loading ? (
         <SkeletonGrid count={6} />
       ) : data.songs.length === 0 && data.albums.length === 0 ? (
-        <Empty icon={<Heart size={24} />} title="Nothing favourited yet">
-          Tap the heart on any track, album or artist. Favourites are stored on your server, so they
-          follow you to every client.
-        </Empty>
+        <Empty icon={<Heart size={24} />} title={t("Nothing favourited yet")}>
+          {t("Tap the heart on any track, album or artist. Favourites are stored on your server, so they follow you to every client.")}</Empty>
       ) : (
         <>
           {data.albums.length ? (
             <section style={{ marginBottom: 32 }}>
-              <h2 style={{ marginBottom: 12 }}>Albums</h2>
+              <h2 style={{ marginBottom: 12 }}>{t("Albums")}</h2>
               <Grid>
                 {data.albums.map((album) => (
                   <AlbumCard key={album.id} album={album} />
@@ -322,8 +307,8 @@ export function Favourites() {
           ) : null}
           {data.songs.length ? (
             <section>
-              <h2 style={{ marginBottom: 12 }}>Tracks</h2>
-              <TrackList songs={data.songs} source="Favourites" />
+              <h2 style={{ marginBottom: 12 }}>{t("Tracks")}</h2>
+              <TrackList songs={data.songs} source={t("Favourites")} />
             </section>
           ) : null}
         </>
@@ -370,50 +355,42 @@ export function Downloads() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Offline</h1>
+          <h1>{t("Offline")}</h1>
           <span className="page-head__sub">
-            {formatCount(usage.count, 'track')} · {formatBytes(usage.bytes)} stored in this browser
-          </span>
+            {t("%@ · %@ stored in this browser", formatCount(usage.count, 'track'), formatBytes(usage.bytes))}</span>
         </div>
         <div className="page-actions">
           <button
             className="pill"
             disabled={!songs.length}
-            onClick={() => void usePlayer.getState().playNow(songs, 0, 'Offline')}
+            onClick={() => void usePlayer.getState().playNow(songs, 0, t('Offline'))}
           >
             <Play size={14} fill="currentColor" />
-            Play offline tracks
-          </button>
-          <OfflineButton songs={library} label="Your whole library" className="pill pill-accent" />
+            {t("Play offline tracks")}</button>
+          <OfflineButton songs={library} label={t("Your whole library")} className="pill pill-accent" />
         </div>
       </div>
 
       <p className="row__hint" style={{ marginBottom: 16 }}>
         {destination === 'folder'
-          ? `Downloads go to the folder “${folderName || 'not chosen yet'}”. Change it in Settings → Offline.`
-          : 'Downloads are stored inside this browser. Settings → Offline can point them at a real folder instead.'}
-        {' '}Syncing again only fetches tracks you do not already have.
-      </p>
+          ? t("Downloads go to the folder “%@”. Change it in Settings → Offline.", folderName || 'not chosen yet')
+          : t("Downloads are stored inside this browser. Settings → Offline can point them at a real folder instead.")}
+        {' '}{t("Syncing again only fetches tracks you do not already have.")}</p>
 
       {quota.data?.quota ? (
         <p className="row__hint" style={{ marginBottom: 16 }}>
-          This browser has offered roughly {formatBytes(quota.data.quota)} of storage, of which about{' '}
-          {formatBytes(quota.data.usage ?? 0)} is in use (Kultr's library mirror included).
-        </p>
+          {t("This browser has offered roughly %@ of storage, of which about %@ is in use (Kultr's library mirror included).", formatBytes(quota.data.quota), formatBytes(quota.data.usage ?? 0))}</p>
       ) : null}
 
       {loading ? (
         <div className="skeleton" style={{ height: 240 }} />
       ) : songs.length === 0 ? (
-        <Empty icon={<HardDrive size={24} />} title="Nothing saved offline">
-          Use “Save for offline” from any track menu. Files are stored inside this browser, so they
-          play with no server connection at all — useful on a laptop, on a plane, or when your NAS is
-          asleep.
-        </Empty>
+        <Empty icon={<HardDrive size={24} />} title={t("Nothing saved offline")}>
+          {t("Use “Save for offline” from any track menu. Files are stored inside this browser, so they play with no server connection at all — useful on a laptop, on a plane, or when your NAS is asleep.")}</Empty>
       ) : (
         <TrackList
           songs={songs}
-          source="Offline"
+          source={t("Offline")}
           onRemove={async (song) => {
             // Goes through the offline store so the file on disk is deleted
             // too, not just the bookkeeping row.
@@ -440,19 +417,17 @@ export function Radio() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Radio</h1>
+          <h1>{t("Radio")}</h1>
           <span className="page-head__sub">
-            Internet radio stations configured on your Navidrome server
-          </span>
+            {t("Internet radio stations configured on your Navidrome server")}</span>
         </div>
       </div>
 
       {loading ? (
         <div className="skeleton" style={{ height: 200 }} />
       ) : stations.length === 0 ? (
-        <Empty icon={<ListMusic size={24} />} title="No stations configured">
-          Add internet radio stations in Navidrome's web interface and they will appear here.
-        </Empty>
+        <Empty icon={<ListMusic size={24} />} title={t("No stations configured")}>
+          {t("Add internet radio stations in Navidrome's web interface and they will appear here.")}</Empty>
       ) : (
         <RadioGrid stations={stations} songs={songs} />
       )}

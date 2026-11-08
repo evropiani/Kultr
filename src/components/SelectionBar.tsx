@@ -9,6 +9,7 @@ import { usePlaylistPicker } from './AddToPlaylist'
 import { isLocalId } from '@/local/files'
 import { useCratePicker } from './Crates'
 import { Package } from 'lucide-react'
+import { t } from '@/i18n'
 
 /**
  * Floating bar that appears whenever anything is ticked. Everything it offers
@@ -35,36 +36,33 @@ export function SelectionBar() {
     <div
       className="selbar glass glass-strong"
       role="toolbar"
-      aria-label="Selection actions"
+      aria-label={t("Selection actions")}
       data-leaving={leaving}
     >
-      <button className="iconbtn" aria-label="Clear selection" onClick={clear}>
+      <button className="iconbtn" aria-label={t("Clear selection")} onClick={clear}>
         <X size={16} />
       </button>
-      <strong style={{ fontSize: 13 }}>{formatCount(shownCount, 'track')} selected</strong>
+      <strong style={{ fontSize: 13 }}>{t("%@ selected", formatCount(shownCount, 'track'))}</strong>
 
       <div className="selbar__actions">
         <button
           className="pill"
           onClick={() => {
-            void usePlayer.getState().playNow(songs, 0, 'Selection')
+            void usePlayer.getState().playNow(songs, 0, t('Selection'))
             clear()
           }}
         >
           <Play size={14} fill="currentColor" />
-          Play
-        </button>
+          {t("Play")}</button>
         <button className="pill" onClick={() => usePlayer.getState().enqueue(songs, 'next')}>
           <ListPlus size={14} />
-          Play next
-        </button>
+          {t("Play next")}</button>
         <button
           className="pill"
           onClick={() => usePlaylistPicker.getState().show(songs.map((song) => song.id))}
         >
           <ListPlus size={14} />
-          Playlist
-        </button>
+          {t("Playlist")}</button>
         <button
           className="pill"
           onClick={async () => {
@@ -72,27 +70,23 @@ export function SelectionBar() {
           }}
         >
           <Heart size={14} />
-          Favourite
-        </button>
+          {t("Favourite")}</button>
         <button className="pill" onClick={() => useCratePicker.getState().show({ kind: 'songs', songs })}>
           <Package size={14} />
-          Crate
-        </button>
+          {t("Crate")}</button>
         {songs.every((song) => isLocalId(song.id)) ? null : (
           <button className="pill pill-accent" onClick={() => void download(songs, 'Selection')}>
             <FolderDown size={14} />
-            Sync offline
-          </button>
+            {t("Sync offline")}</button>
         )}
         {storedCount > 0 ? (
           <button
             className="pill"
-            title={`Delete ${storedCount} downloaded track(s)`}
+            title={t("Delete %@ downloaded track(s)", storedCount)}
             onClick={() => void removeOffline(songs.map((song) => song.id))}
           >
             <Trash2 size={14} />
-            Delete downloads
-          </button>
+            {t("Delete downloads")}</button>
         ) : null}
       </div>
     </div>

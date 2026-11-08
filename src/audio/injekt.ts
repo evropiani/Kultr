@@ -5,6 +5,7 @@ import { settings, type CrossfadeCurve } from '@/store/settings'
 import { analyseTrack, type TrackAnalysis } from './analysis'
 import { camelotDistance } from './dsp'
 import { affinity } from './affinity'
+import { t } from '@/i18n'
 
 /**
  * InjeKt — Kultr's DJ-style transition engine.
@@ -152,8 +153,8 @@ function gaplessPlan(durationA: number): TransitionPlan {
     bassSwap: false,
     sweep: false,
     curve: 'linear',
-    label: 'Gapless',
-    reason: 'Tracks run straight into each other with no silence between them.',
+    label: t("Gapless"),
+    reason: t('Tracks run straight into each other with no silence between them.'),
   }
 }
 
@@ -171,8 +172,8 @@ function hardCutPlan(durationA: number): TransitionPlan {
     bassSwap: false,
     sweep: false,
     curve: 'linear',
-    label: 'No crossfade',
-    reason: 'Crossfade and gapless are both off, so tracks simply follow one another.',
+    label: t("No crossfade"),
+    reason: t('Crossfade and gapless are both off, so tracks simply follow one another.'),
   }
 }
 
@@ -190,8 +191,8 @@ function crossfadePlan(durationA: number, seconds: number, curve: CrossfadeCurve
     bassSwap: false,
     sweep: false,
     curve,
-    label: `Crossfade · ${duration.toFixed(1)}s`,
-    reason: `The outgoing track fades out over ${duration.toFixed(1)} seconds while the next one fades in.`,
+    label: t("Crossfade · %@s", duration.toFixed(1)),
+    reason: t('The outgoing track fades out over %@ seconds while the next one fades in.', duration.toFixed(1)),
   }
 }
 
@@ -324,22 +325,21 @@ export async function planTransition(
 
   const details: string[] = []
   if (beatMatch) {
-    details.push(
-      `Beat-matched at ${meetBpm.toFixed(0)} BPM — this track ${outgoingRate >= 1 ? 'up' : 'down'} ${(Math.abs(outgoingRate - 1) * 100).toFixed(1)}%, the next ${incomingRate >= 1 ? 'up' : 'down'} ${(Math.abs(incomingRate - 1) * 100).toFixed(1)}%`,
-    )
+    const change = (rate: number) => `${rate >= 1 ? '+' : '−'}${(Math.abs(rate - 1) * 100).toFixed(1)}`
+    details.push(t('Beat-matched at %@ BPM — this track %@%, the next %@%', meetBpm.toFixed(0), change(outgoingRate), change(incomingRate)))
     if (outgoingRamp > 0) {
-      details.push(`current track eased into tempo over ${outgoingRamp.toFixed(0)}s`)
+      details.push(t('current track eased into tempo over %@s', outgoingRamp.toFixed(0)))
     }
   } else {
-    details.push(`${bpmA.toFixed(0)} BPM into ${bpmB.toFixed(0)} BPM, tempos too far apart to match`)
+    details.push(t('%@ BPM into %@ BPM, tempos too far apart to match', bpmA.toFixed(0), bpmB.toFixed(0)))
   }
-  details.push(`keys ${analysisA.camelot} → ${analysisB.camelot}`)
-  if (harmonicClash) details.push('keys clash, so the outgoing track is filtered out instead of blended')
-  if (inStartOffset > 1) details.push(`intro skipped to ${inStartOffset.toFixed(1)}s`)
+  details.push(t('keys %@ → %@', analysisA.camelot, analysisB.camelot))
+  if (harmonicClash) details.push(t('keys clash, so the outgoing track is filtered out instead of blended'))
+  if (inStartOffset > 1) details.push(t('intro skipped to %@s', inStartOffset.toFixed(1)))
 
   const label = beatMatch
-    ? `InjeKt · ${bpmA.toFixed(0)}⇄${bpmB.toFixed(0)} @ ${meetBpm.toFixed(0)} BPM · ${bars} bars`
-    : `InjeKt · ${duration.toFixed(1)}s ${harmonicClash ? 'sweep' : 'blend'}`
+    ? t('InjeKt · %@⇄%@ @ %@ BPM · %@ bars', bpmA.toFixed(0), bpmB.toFixed(0), meetBpm.toFixed(0), bars)
+    : t(harmonicClash ? 'InjeKt · %@s sweep' : 'InjeKt · %@s blend', duration.toFixed(1))
 
   return {
     type,

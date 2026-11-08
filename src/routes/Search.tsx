@@ -11,6 +11,7 @@ import { TrackList } from '@/components/TrackList'
 import { Empty, Spinner } from '@/components/ui'
 import { commandFor, describeCommand, refreshCommandNames, runCommand } from '@/lib/commandRunner'
 import { CornerDownLeft, Wand2 } from 'lucide-react'
+import { t } from '@/i18n'
 
 /** Rank a match: exact beats prefix beats "contains". */
 function score(haystack: string | undefined, needle: string): number {
@@ -38,15 +39,14 @@ export function Search() {
     <button
       className="command-row glass"
       onClick={() => void runCommand(command, (to) => navigate(to))}
-      title="Press Enter in the search field to do this"
+      title={t("Press Enter in the search field to do this")}
     >
       <span className="command-row__icon">
         <Wand2 size={16} />
       </span>
       <span className="command-row__text">{describeCommand(command)}</span>
       <span className="command-row__key">
-        <CornerDownLeft size={13} /> Enter
-      </span>
+        <CornerDownLeft size={13} /> {' '}{t("Enter")}</span>
     </button>
   ) : null
   const [serverResults, setServerResults] = useState<{
@@ -128,10 +128,9 @@ export function Search() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>{query.trim() ? `Results for “${query.trim()}”` : 'Search'}</h1>
+          <h1>{query.trim() ? t("Results for “%@”", query.trim()) : t("Search")}</h1>
           <span className="page-head__sub">
-            Searches your local mirror instantly. Ask the server if something is missing.
-          </span>
+            {t("Searches your local mirror instantly. Ask the server if something is missing.")}</span>
         </div>
       </div>
 
@@ -140,17 +139,13 @@ export function Search() {
       {loading ? (
         <Spinner />
       ) : !search ? (
-        <Empty icon={<SearchIcon size={24} />} title="Type in the search bar above">
-          Results appear here as you type. Everything comes from the copy of your library stored in
-          this browser, so it is instant even over a slow connection. Press <strong>/</strong> from
-          anywhere to jump to it. It takes commands too: “play Night Drive”, “shuffle” and an artist,
-          “sleep in 30 minutes”, “next”, “mix now”, “plan an hour”, “open settings”.
-        </Empty>
+        <Empty icon={<SearchIcon size={24} />} title={t("Type in the search bar above")}>
+          {t("Results appear here as you type. Everything comes from the copy of your library stored in this browser, so it is instant even over a slow connection. Press")}{' '}<strong>/</strong> {' '}{t("from anywhere to jump to it. It takes commands too: “play Night Drive”, “shuffle” and an artist, “sleep in 30 minutes”, “next”, “mix now”, “plan an hour”, “open settings”.")}</Empty>
       ) : (
         <>
           {results.artists.length ? (
             <section style={{ marginBottom: 30 }}>
-              <h2 style={{ marginBottom: 12 }}>Artists</h2>
+              <h2 style={{ marginBottom: 12 }}>{t("Artists")}</h2>
               <Grid>
                 {results.artists.map((artist) => (
                   <ArtistCard key={artist.id} artist={artist} />
@@ -161,7 +156,7 @@ export function Search() {
 
           {results.albums.length ? (
             <section style={{ marginBottom: 30 }}>
-              <h2 style={{ marginBottom: 12 }}>Albums</h2>
+              <h2 style={{ marginBottom: 12 }}>{t("Albums")}</h2>
               <Grid>
                 {results.albums.map((album) => (
                   <AlbumCard key={album.id} album={album} />
@@ -173,28 +168,26 @@ export function Search() {
           {results.songs.length ? (
             <section style={{ marginBottom: 30 }}>
               <h2 style={{ marginBottom: 12 }}>
-                Tracks <span className="page-head__sub">{formatCount(results.songs.length, 'result')}</span>
+                {t("Tracks")}{' '}<span className="page-head__sub">{formatCount(results.songs.length, 'result')}</span>
               </h2>
-              <TrackList songs={results.songs} source={`Search: ${search}`} sortable={false} />
+              <TrackList songs={results.songs} source={t("Search: %@", search)} sortable={false} />
             </section>
           ) : null}
 
           {nothingLocal ? (
-            <Empty icon={<SearchIcon size={24} />} title={`Nothing local for “${query}”`}>
-              Your mirror may be out of date. Ask the server directly, or run a sync.
-            </Empty>
+            <Empty icon={<SearchIcon size={24} />} title={t("Nothing local for “%@”", query)}>
+              {t("Your mirror may be out of date. Ask the server directly, or run a sync.")}</Empty>
           ) : null}
 
           <div style={{ marginTop: 10 }}>
             <button className="pill" onClick={() => void askServer()} disabled={serverBusy}>
               {serverBusy ? <Spinner /> : <Server size={14} />}
-              Search the server directly
-            </button>
+              {t("Search the server directly")}</button>
           </div>
 
           {serverResults ? (
             <section style={{ marginTop: 26 }}>
-              <h2 style={{ marginBottom: 12 }}>From the server</h2>
+              <h2 style={{ marginBottom: 12 }}>{t("From the server")}</h2>
               {serverResults.album.length ? (
                 <Grid>
                   {serverResults.album.map((album) => (
@@ -206,13 +199,13 @@ export function Search() {
                 <div style={{ marginTop: 16 }}>
                   <TrackList
                     songs={serverResults.song}
-                    source={`Server search: ${search}`}
+                    source={t("Server search: %@", search)}
                     sortable={false}
                   />
                 </div>
               ) : null}
               {!serverResults.album.length && !serverResults.song.length ? (
-                <p className="row__hint">The server found nothing either.</p>
+                <p className="row__hint">{t("The server found nothing either.")}</p>
               ) : null}
             </section>
           ) : null}

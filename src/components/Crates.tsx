@@ -6,6 +6,7 @@ import { annotationFor, crateContains, itemTitle, saveCrate, setAnnotation, togg
 import { useSettings } from '@/store/settings'
 import { StationIcon } from './StationIcon'
 import { Modal } from './ui'
+import { t } from '@/i18n'
 
 /* ------------------------------------------------------------ crate picker */
 
@@ -38,9 +39,9 @@ export function CratePickerModal() {
   }
 
   return (
-    <Modal open={Boolean(item)} onClose={close} title={item ? `Crates for “${itemTitle(item)}”` : 'Crates'}>
+    <Modal open={Boolean(item)} onClose={close} title={item ? t("Crates for “%@”", itemTitle(item)) : t("Crates")}>
       <div className="crate-picker">
-        {byHand.length === 0 ? <p className="row__hint">No crates yet. Name one below to make it and put this in.</p> : null}
+        {byHand.length === 0 ? <p className="row__hint">{t("No crates yet. Name one below to make it and put this in.")}</p> : null}
         {byHand.map((crate) => {
           const inIt = item ? crateContains(crate, item) : false
           return (
@@ -63,11 +64,10 @@ export function CratePickerModal() {
             make()
           }}
         >
-          <input className="field-input" placeholder="New crate…" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />
+          <input className="field-input" placeholder={t("New crate…")} value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />
           <button className="pill pill-accent" type="submit" disabled={!name.trim()}>
             <Package size={14} />
-            Make
-          </button>
+            {t("Make")}</button>
         </form>
       </div>
     </Modal>
@@ -92,7 +92,7 @@ export function NotesAndTags({ kind, id }: { kind: 'album' | 'artist'; id: strin
     () =>
       tagCounts(all)
         .map((entry) => entry.tag)
-        .filter((t) => !annotation.tags.some((mine) => mine.toLowerCase() === t.toLowerCase()))
+        .filter((name) => !annotation.tags.some((mine) => mine.toLowerCase() === name.toLowerCase()))
         .slice(0, 8),
     [all, annotation.tags],
   )
@@ -104,8 +104,7 @@ export function NotesAndTags({ kind, id }: { kind: 'album' | 'artist'; id: strin
     return (
       <button className="pill notes__open" onClick={() => setShown(true)}>
         <StickyNote size={14} />
-        Add a note or tags
-      </button>
+        {t("Add a note or tags")}</button>
     )
   }
 
@@ -113,10 +112,9 @@ export function NotesAndTags({ kind, id }: { kind: 'album' | 'artist'; id: strin
     <section className="notes glass">
       <div className="notes__head">
         <StickyNote size={15} />
-        <h3>Your notes</h3>
+        <h3>{t("Your notes")}</h3>
         <span className="row__hint" style={{ marginLeft: 'auto' }}>
-          Only you see these; they stay in this browser and in a settings backup.
-        </span>
+          {t("Only you see these; they stay in this browser and in a settings backup.")}</span>
       </div>
       {editing ? (
         <textarea
@@ -124,7 +122,7 @@ export function NotesAndTags({ kind, id }: { kind: 'album' | 'artist'; id: strin
           rows={3}
           autoFocus
           value={note}
-          placeholder={kind === 'album' ? 'What you think of it, where it came from, which edition…' : 'Anything you want to remember…'}
+          placeholder={kind === 'album' ? t("What you think of it, where it came from, which edition…") : t("Anything you want to remember…")}
           onChange={(event) => setNote(event.target.value)}
           onBlur={() => {
             save({ ...annotationFor(key), note })
@@ -133,15 +131,15 @@ export function NotesAndTags({ kind, id }: { kind: 'album' | 'artist'; id: strin
         />
       ) : (
         <button className="notes__note" onClick={() => setEditing(true)}>
-          {annotation.note ? annotation.note : <span className="row__hint">Add a note…</span>}
+          {annotation.note ? annotation.note : <span className="row__hint">{t("Add a note…")}</span>}
         </button>
       )}
       <div className="chip-row notes__tags">
         <Tag size={14} style={{ color: 'var(--ink-3)', alignSelf: 'center' }} />
-        {annotation.tags.map((t) => (
-          <span key={t} className="chip" data-on>
-            {t}
-            <button aria-label={`Remove the tag ${t}`} onClick={() => save(removeTag(annotationFor(key), t))}>
+        {annotation.tags.map((name) => (
+          <span key={name} className="chip" data-on>
+            {name}
+            <button aria-label={t("Remove the tag %@", name)} onClick={() => save(removeTag(annotationFor(key), name))}>
               <X size={11} />
             </button>
           </span>
@@ -154,10 +152,10 @@ export function NotesAndTags({ kind, id }: { kind: 'album' | 'artist'; id: strin
             setTag('')
           }}
         >
-          <input className="notes__tag-input" placeholder="Add a tag" value={tag} maxLength={40} onChange={(event) => setTag(event.target.value)} list={`tags-${key}`} />
+          <input className="notes__tag-input" placeholder={t("Add a tag")} value={tag} maxLength={40} onChange={(event) => setTag(event.target.value)} list={`tags-${key}`} />
           <datalist id={`tags-${key}`}>
-            {suggestions.map((t) => (
-              <option key={t} value={t} />
+            {suggestions.map((name) => (
+              <option key={name} value={name} />
             ))}
           </datalist>
         </form>

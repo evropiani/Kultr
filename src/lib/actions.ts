@@ -4,6 +4,7 @@ import { patchAlbum, patchArtist, patchSong, putPlaylist } from '@/db'
 import { usePlayer } from '@/store/player'
 import { useToast } from '@/store/ui'
 import { isLocalId, localBlob } from '@/local/files'
+import { t } from '@/i18n'
 
 /**
  * Keep the in-memory queue in step with a write.
@@ -109,7 +110,7 @@ export async function addToPlaylist(playlistId: string, songIds: string[]): Prom
     useToast
       .getState()
       .show(
-        songIds.length === 1 ? 'Added to playlist.' : `Added ${songIds.length} tracks to playlist.`,
+        songIds.length === 1 ? t("Added to playlist.") : t("Added %@ tracks to playlist.", songIds.length),
         'success',
       )
     return true
@@ -128,7 +129,7 @@ export async function createPlaylistWith(name: string, songIds: string[]): Promi
       const full = await client.getPlaylist(playlist.id).catch(() => null)
       if (full) await putPlaylist(full)
     }
-    useToast.getState().show(`Created “${name}”.`, 'success')
+    useToast.getState().show(t("Created “%@”.", name), 'success')
     return playlist?.id ?? null
   } catch (err) {
     useToast.getState().show(describeError(err), 'error')
@@ -142,13 +143,13 @@ export async function shareSong(song: Song): Promise<void> {
     const share = await getClient().createShare([song.id], song.title)
     if (share?.url) {
       await navigator.clipboard.writeText(share.url)
-      useToast.getState().show('Share link copied to the clipboard.', 'success')
+      useToast.getState().show(t("Share link copied to the clipboard."), 'success')
       return
     }
     throw new Error('no share url')
   } catch {
     useToast
       .getState()
-      .show('Sharing is not enabled on this server. Ask your admin to turn it on in Navidrome.', 'warning')
+      .show(t("Sharing is not enabled on this server. Ask your admin to turn it on in Navidrome."), 'warning')
   }
 }

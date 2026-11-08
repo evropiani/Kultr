@@ -76,6 +76,7 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Make it yours** | **Cream**, the look of Kultr for iOS: cream pages and warm charcoal, following your device, plus **night mode** — the dark theme in pure black for OLED screens. Nine accent swatches or any colour (on cream it is drawn deeper so it still reads as text), or colour from the artwork, blended with yours if you like. The cover blurred behind every page, three corner styles, six playhead designs, borders in the accent colour, and opacity sliders. Click the time in the player to count down instead of up; drag the playhead and a lens magnifies the time and the beats. |
 | **Custom CSS** | A box in Settings for your own stylesheet, applied last so it overrides everything. |
 | **Settings backup** | Export every preference to a small JSON file and import it on another machine. Passwords and usernames are never in it; the list of servers is left out too unless you explicitly ask for it. |
+| **English and Deutsch** | The whole app in German too, with the same words as Kultr for iOS and Android. It follows your browser's language; Settings → Appearance → Language picks one. Commands work in both: “spiele Nachtfahrt”, “schlaf in 30 Minuten”, “öffne Einstellungen”. |
 | **Equaliser** | Ten bands, nine presets, pre-amp. |
 | **Volume levelling** | ReplayGain, per track or per album, with clipping protection. |
 | **Lyrics** | Synced line-by-line when your files have them, plain text otherwise. |

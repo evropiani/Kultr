@@ -6,6 +6,7 @@ import { useOffline } from '@/store/offline'
 import { usePlayer } from '@/store/player'
 import { useSelection } from '@/store/selection'
 import { useToast } from '@/store/ui'
+import { t } from '@/i18n'
 
 /**
  * Drop targets for dragging tracks, albums and artists.
@@ -50,7 +51,7 @@ const TARGETS: Target[] = [
       for (const song of songs) {
         if (!song.starred) await toggleStarSong(song)
       }
-      useToast.getState().show(`Favourited ${songs.length} track(s).`, 'success')
+      useToast.getState().show(t("Favourited %@ track(s).", songs.length), 'success')
     },
   },
   {
@@ -103,8 +104,7 @@ export function DropZone() {
   return (
     <div className="dropzone" data-open={Boolean(dragging)} aria-hidden={!dragging}>
       <div className="dropzone__label">
-        Drop “{dragging?.label ?? ''}” on…
-      </div>
+        {t("Drop “%@” on…", dragging?.label ?? '')}</div>
       <div className="dropzone__targets">
         {TARGETS.map((target) => (
           <div
@@ -126,8 +126,8 @@ export function DropZone() {
             }}
           >
             {target.icon}
-            <strong>{target.label}</strong>
-            <small>{target.hint}</small>
+            <strong>{t(target.label)}</strong>
+            <small>{t(target.hint)}</small>
           </div>
         ))}
       </div>

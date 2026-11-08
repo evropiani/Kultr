@@ -12,6 +12,7 @@ import { artUrl } from '@/lib/artwork'
 import { usePlayer } from '@/store/player'
 import { useToast } from '@/store/ui'
 import { Art, Segmented } from '@/components/ui'
+import { locale, t } from '@/i18n'
 
 const POINTS = 12
 
@@ -58,7 +59,7 @@ export function Planner() {
   const build = () => {
     const set = planSet(points, Number(minutes), data.candidates)
     setPlan(set)
-    if (!set.length) toast.show('Nothing to plan with yet: Kultr needs analysed tracks.', 'warning')
+    if (!set.length) toast.show(t("Nothing to plan with yet: Kultr needs analysed tracks."), 'warning')
   }
 
   const total = plan?.length ? plan[plan.length - 1].startsAt + (plan[plan.length - 1].song.duration ?? 0) : 0
@@ -69,16 +70,14 @@ export function Planner() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Energy planner</h1>
+          <h1>{t("Energy planner")}</h1>
           <span className="page-head__sub">
-            Draw how the set should feel, calm at the bottom and peak at the top. Kultr picks tracks whose energy follows
-            the line, with tempos and keys that mix.
-          </span>
+            {t("Draw how the set should feel, calm at the bottom and peak at the top. Kultr picks tracks whose energy follows the line, with tempos and keys that mix.")}</span>
         </div>
         <div className="page-actions">
           <Segmented
             value={minutes}
-            options={MINUTES.map((value) => ({ value, label: value === '60' ? '1 hour' : value === '120' ? '2 hours' : `${value} min` }))}
+            options={MINUTES.map((value) => ({ value, label: value === '60' ? t("1 hour") : value === '120' ? t("2 hours") : t("%@ min", value) }))}
             onChange={(value) => setMinutes(value)}
           />
         </div>
@@ -89,21 +88,18 @@ export function Planner() {
         <div className="planner__presets">
           {CURVES.map((curve) => (
             <button key={curve.id} className="pill" onClick={() => setPoints(resampled(curve.points, POINTS))}>
-              {curve.name}
+              {t(curve.name)}
             </button>
           ))}
           <span style={{ flex: 1 }} />
           <button className="pill pill-accent" disabled={loading || !data.candidates.length} onClick={build}>
             <Wand2 size={14} />
-            {plan ? 'Plan again' : 'Plan the set'}
+            {plan ? t("Plan again") : t("Plan the set")}
           </button>
         </div>
         {tooFew ? (
           <p className="row__hint">
-            The planner works from InjeKt’s analysis, and {data.candidates.length.toLocaleString()} of{' '}
-            {data.songs.toLocaleString()} tracks are analysed. <Link to="/sync">Analyse the rest on the Sync page</Link> for a
-            set that fits the line better.
-          </p>
+            {t("The planner works from InjeKt’s analysis, and %@ of %@ tracks are analysed.", data.candidates.length.toLocaleString(), data.songs.toLocaleString())}{' '}<Link to="/sync">{t("Analyse the rest on the Sync page")}</Link> {' '}{t("for a set that fits the line better.")}</p>
         ) : null}
       </section>
 
@@ -111,23 +107,21 @@ export function Planner() {
         <section className="section glass" style={{ marginTop: 16 }}>
           <div className="section__head">
             <h3>
-              {plan.length} tracks · {formatDuration(total)}
+              {t("%@ tracks · %@", plan.length, formatDuration(total))}
             </h3>
             <span className="section__actions" style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-              <button className="pill pill-accent" onClick={() => void usePlayer.getState().playNow(plan.map((t) => t.song), 0, 'Energy planner')}>
+              <button className="pill pill-accent" onClick={() => void usePlayer.getState().playNow(plan.map((entry) => entry.song), 0, t('Energy planner'))}>
                 <Play size={14} />
-                Play the set
-              </button>
+                {t("Play the set")}</button>
               <button
                 className="pill"
                 onClick={async () => {
-                  const name = `Set · ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
-                  await createPlaylistWith(name, plan.map((t) => t.song.id))
+                  const name = `Set · ${new Date().toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}`
+                  await createPlaylistWith(name, plan.map((entry) => entry.song.id))
                 }}
               >
                 <ListPlus size={14} />
-                Save as playlist
-              </button>
+                {t("Save as playlist")}</button>
             </span>
           </div>
           <ol className="planned">
@@ -139,7 +133,7 @@ export function Planner() {
                   <strong>{track.song.title}</strong>
                   <span>{track.song.artist}</span>
                 </span>
-                <span className="planned__energy" title={`Energy ${Math.round(track.energy * 10)} (the line asked for ${Math.round(track.target * 10)})`}>
+                <span className="planned__energy" title={t("Energy %@ (the line asked for %@)", Math.round(track.energy * 10), Math.round(track.target * 10))}>
                   <span className="planned__bar">
                     <span style={{ width: `${track.energy * 100}%` }} />
                     <i style={{ left: `${track.target * 100}%` }} />
@@ -148,9 +142,9 @@ export function Planner() {
                 </span>
                 <button
                   className="pill pill-icon"
-                  aria-label={`Play from ${track.song.title}`}
-                  title="Play from here"
-                  onClick={() => void usePlayer.getState().playNow(plan.map((t) => t.song), index, 'Energy planner')}
+                  aria-label={t("Play from %@", track.song.title)}
+                  title={t("Play from here")}
+                  onClick={() => void usePlayer.getState().playNow(plan.map((entry) => entry.song), index, t('Energy planner'))}
                 >
                   <Play size={13} />
                 </button>
@@ -205,7 +199,7 @@ function CurveEditor({
       className="curve"
       viewBox={`0 0 ${W} ${H}`}
       role="img"
-      aria-label="The energy line: drag to draw it"
+      aria-label={t("The energy line: drag to draw it")}
       onPointerDown={(event) => {
         ;(event.target as Element).setPointerCapture?.(event.pointerId)
         drawing.current = true
@@ -220,11 +214,9 @@ function CurveEditor({
         <line key={line} x1={pad} x2={W - pad} y1={y(line)} y2={y(line)} className="curve__grid" />
       ))}
       <text x={pad + 4} y={pad + 12} className="curve__label">
-        Peak
-      </text>
+        {t("Peak")}</text>
       <text x={pad + 4} y={H - pad - 6} className="curve__label">
-        Calm
-      </text>
+        {t("Calm")}</text>
       <path d={`${path} L${x(1)},${y(0)} L${x(0)},${y(0)} Z`} className="curve__fill" />
       <path d={path} className="curve__line" />
       {points.map((value, i) => (

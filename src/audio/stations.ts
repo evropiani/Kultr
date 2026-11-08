@@ -1,6 +1,7 @@
 import type { Song } from '@/api/types'
 import type { TrackAnalysis } from './analysis'
 import { affinity } from './affinity'
+import { t } from '@/i18n'
 
 /**
  * Stations: rules over the library, played as an endless mix. Kultr picks
@@ -103,25 +104,35 @@ function range(bounds: Bounds, text: (value: number) => string, unit = ''): stri
   const low = bounds.min ?? null
   const high = bounds.max ?? null
   if (low !== null && high !== null) return `${text(low)}–${text(high)}${unit}`
-  if (low !== null) return `${text(low)}${unit} and up`
-  if (high !== null) return `up to ${text(high)}${unit}`
-  return 'any'
+  if (low !== null) return t('%@ and up', `${text(low)}${unit}`)
+  if (high !== null) return t('up to %@', `${text(high)}${unit}`)
+  return t('any')
 }
 
 /** One line saying what the rules are, like "96–110 BPM · energy 4–6 · 6A, 7A". */
 export function summary(station: Station): string {
   const parts: string[] = []
   if (!isOpen(station.bpm)) parts.push(range(station.bpm!, (v) => String(Math.round(v)), ' BPM'))
-  if (!isOpen(station.energy)) parts.push('energy ' + range(station.energy!, (v) => String(Math.round(v * 10))))
-  if (station.keys?.length) parts.push(station.keys.length <= 3 ? station.keys.join(', ') : `${station.keys.length} keys`)
-  if (station.genres?.length) parts.push(station.genres.length <= 2 ? station.genres.join(', ') : `${station.genres.length} genres`)
+  if (!isOpen(station.energy)) parts.push(t('energy %@', range(station.energy!, (v) => String(Math.round(v * 10)))))
+  if (station.keys?.length) parts.push(station.keys.length <= 3 ? station.keys.join(', ') : t('%@ keys', station.keys.length))
+  if (station.genres?.length) parts.push(station.genres.length <= 2 ? station.genres.join(', ') : t('%@ genres', station.genres.length))
   if (!isOpen(station.years)) parts.push(range(station.years!, (v) => String(Math.trunc(v))))
-  if (station.unplayed) parts.push('never played')
-  if (station.favourites) parts.push('favourites')
-  if (station.minRating && station.minRating > 0) parts.push(`${station.minRating}★ and up`)
-  if (station.tags?.length) parts.push('tagged ' + station.tags.join(', '))
-  if (station.addedDays) parts.push(station.addedDays === 365 ? 'added this year' : `added in the last ${station.addedDays} days`)
-  return parts.length ? parts.join(' · ') : 'Your whole library'
+  if (station.unplayed) parts.push(t('never played'))
+  if (station.favourites) parts.push(t('favourites'))
+  if (station.minRating && station.minRating > 0) parts.push(t('%@★ and up', station.minRating))
+  if (station.tags?.length) parts.push(t('tagged %@', station.tags.join(', ')))
+  if (station.addedDays) parts.push(station.addedDays === 365 ? t('added this year') : t('added in the last %@ days', station.addedDays))
+  return parts.length ? parts.join(' · ') : t('Your whole library')
+}
+
+/**
+ * A station's name as shown: the starting stations in the language in use
+ * (Night Drive is Nachtfahrt in German), stations you made or renamed as you
+ * named them.
+ */
+export function stationName(station: Station): string {
+  const preset = STATION_PRESETS.find((entry) => entry.id === station.id)
+  return preset && preset.name === station.name ? t(station.name) : station.name
 }
 
 /** A station per decade, made from the years in the library. */

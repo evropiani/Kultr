@@ -14,6 +14,7 @@ import { AlbumCard, ArtistCard, Grid } from '@/components/Cards'
 import { STATION_ICONS, StationIcon } from '@/components/StationIcon'
 import { TrackList } from '@/components/TrackList'
 import { Empty, Modal, Switch } from '@/components/ui'
+import { t } from '@/i18n'
 
 /**
  * Crates: folders of albums, artists and tracks, filled by hand, or by rules
@@ -28,28 +29,23 @@ export function Crates() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Crates</h1>
+          <h1>{t("Crates")}</h1>
           <span className="page-head__sub">
-            Folders of albums, artists and tracks, filled by hand or by rules. Put something in one from its ••• menu or its page.
-          </span>
+            {t("Folders of albums, artists and tracks, filled by hand or by rules. Put something in one from its ••• menu or its page.")}</span>
         </div>
         <div className="page-actions">
           <button className="pill" onClick={() => setEditing({ id: newId('c'), name: 'New crate', icon: 'shippingbox.fill', albums: [], artists: [], songs: [], rules: { id: 'rules', name: 'rules', icon: '', minRating: 4 } })}>
             <Plus size={14} />
-            Crate by rules
-          </button>
+            {t("Crate by rules")}</button>
           <button className="pill pill-accent" onClick={() => setEditing({ id: newId('c'), name: 'New crate', icon: 'shippingbox.fill', albums: [], artists: [], songs: [] })}>
             <Plus size={14} />
-            New crate
-          </button>
+            {t("New crate")}</button>
         </div>
       </div>
 
       {crates.length === 0 ? (
-        <Empty icon={<Package size={24} />} title="No crates yet">
-          Make one, then put albums, artists and tracks in it from their ••• menus and pages — or let rules fill it, like
-          “4 stars and up, added this year”.
-        </Empty>
+        <Empty icon={<Package size={24} />} title={t("No crates yet")}>
+          {t("Make one, then put albums, artists and tracks in it from their ••• menus and pages — or let rules fill it, like “4 stars and up, added this year”.")}</Empty>
       ) : (
         <div className="station-grid">
           {crates.map((crate) => (
@@ -61,13 +57,13 @@ export function Crates() {
                 <span className="station-card__text">
                   <strong>{crate.name}</strong>
                   <span>{crate.rules ? summary(crate.rules) : crateContents(crate)}</span>
-                  {crate.syncPlaylist ? <small>Kept as a playlist</small> : null}
+                  {crate.syncPlaylist ? <small>{t("Kept as a playlist")}</small> : null}
                 </span>
               </Link>
               <div className="station-card__actions">
                 <button
                   className="pill pill-icon"
-                  aria-label={`Play ${crate.name}`}
+                  aria-label={t("Play %@", crate.name)}
                   onClick={async () => {
                     const songs = await crateSongs(crate)
                     if (songs.length) void usePlayer.getState().playNow(songs, 0, crate.name)
@@ -75,7 +71,7 @@ export function Crates() {
                 >
                   <Play size={14} />
                 </button>
-                <button className="pill pill-icon" aria-label={`Edit ${crate.name}`} onClick={() => setEditing(crate)}>
+                <button className="pill pill-icon" aria-label={t("Edit %@", crate.name)} onClick={() => setEditing(crate)}>
                   <Pencil size={14} />
                 </button>
               </div>
@@ -115,7 +111,7 @@ export function CratePage() {
     [crate],
     { songs: [] as Song[], albums: [] as Album[], artists: [] as Artist[] },
   )
-  if (!crate) return <Empty icon={<Package size={24} />} title="That crate is gone" />
+  if (!crate) return <Empty icon={<Package size={24} />} title={t("That crate is gone")} />
   const own = crate.rules ? data.songs : data.songs.filter((song) => crate.songs.includes(song.id))
   return (
     <>
@@ -128,29 +124,25 @@ export function CratePage() {
             {crate.name}
           </h1>
           <span className="page-head__sub">
-            {crate.rules ? `By rules: ${summary(crate.rules)}` : crateContents(crate)} · {data.songs.length.toLocaleString()} tracks
-            {crate.syncPlaylist ? ' · kept as a playlist on your server' : ''}
+            {t("%@ · %@ tracks%@", crate.rules ? t("By rules: %@", summary(crate.rules)) : crateContents(crate), data.songs.length.toLocaleString(), crate.syncPlaylist ? t(" · kept as a playlist on your server") : '')}
           </span>
         </div>
         <div className="page-actions">
           <button className="pill pill-accent" disabled={!data.songs.length} onClick={() => void usePlayer.getState().playNow(data.songs, 0, crate.name)}>
             <Play size={14} />
-            Play
-          </button>
+            {t("Play")}</button>
           <button className="pill" disabled={!data.songs.length} onClick={() => void usePlayer.getState().playNow([...data.songs].sort(() => Math.random() - 0.5), 0, crate.name)}>
             <Shuffle size={14} />
-            Shuffle
-          </button>
+            {t("Shuffle")}</button>
           <button className="pill" onClick={() => setEditing(true)}>
             <Pencil size={14} />
-            Edit
-          </button>
+            {t("Edit")}</button>
           <button
             className="pill pill-icon"
-            aria-label="Delete this crate"
-            title="Delete this crate (the music stays)"
+            aria-label={t("Delete this crate")}
+            title={t("Delete this crate (the music stays)")}
             onClick={() => {
-              if (!window.confirm(`Delete the crate “${crate.name}”? The music in it stays where it is.`)) return
+              if (!window.confirm(t("Delete the crate “%@”? The music in it stays where it is.", crate.name))) return
               deleteCrate(crate.id)
               navigate('/crates')
             }}
@@ -162,7 +154,7 @@ export function CratePage() {
 
       {data.albums.length ? (
         <section style={{ marginBottom: 26 }}>
-          <h2 style={{ marginBottom: 12 }}>Albums</h2>
+          <h2 style={{ marginBottom: 12 }}>{t("Albums")}</h2>
           <Grid>
             {data.albums.map((album) => (
               <AlbumCard key={album.id} album={album} />
@@ -172,7 +164,7 @@ export function CratePage() {
       ) : null}
       {data.artists.length ? (
         <section style={{ marginBottom: 26 }}>
-          <h2 style={{ marginBottom: 12 }}>Artists</h2>
+          <h2 style={{ marginBottom: 12 }}>{t("Artists")}</h2>
           <Grid>
             {data.artists.map((artist) => (
               <ArtistCard key={artist.id} artist={artist} />
@@ -182,15 +174,15 @@ export function CratePage() {
       ) : null}
       {own.length ? (
         <section>
-          <h2 style={{ marginBottom: 12 }}>{crate.rules ? 'Tracks that fit' : 'Tracks'}</h2>
+          <h2 style={{ marginBottom: 12 }}>{crate.rules ? t("Tracks that fit") : t("Tracks")}</h2>
           <TrackList songs={own} source={crate.name} numbering="index" />
         </section>
       ) : null}
       {!data.songs.length ? (
-        <Empty icon={<Package size={24} />} title={crate.rules ? 'Nothing fits yet' : 'Nothing in it yet'}>
+        <Empty icon={<Package size={24} />} title={crate.rules ? t("Nothing fits yet") : t("Nothing in it yet")}>
           {crate.rules
-            ? 'Change the rules, or analyse more of your library on the Sync page if they use energy or key.'
-            : 'Open an album or artist and press Crate, or use a track’s ••• menu.'}
+            ? t("Change the rules, or analyse more of your library on the Sync page if they use energy or key.")
+            : t("Open an album or artist and press Crate, or use a track’s ••• menu.")}
         </Empty>
       ) : null}
 
@@ -205,7 +197,7 @@ function CrateEditor({ crate, onClose, onSaved }: { crate: Crate | null; onClose
   const crates = useSettings((state) => state.crates)
   const local = useAuth((state) => isLocalProfile(state.activeProfile()))
   useEffect(() => setDraft(crate), [crate])
-  if (!draft) return <Modal open={false} onClose={onClose} title="Crate">{null}</Modal>
+  if (!draft) return <Modal open={false} onClose={onClose} title={t("Crate")}>{null}</Modal>
   const isNew = !crates.some((entry) => entry.id === draft.id)
   const rules = draft.rules ?? null
   const patchRules = (change: Partial<Station>) => setDraft({ ...draft, rules: { ...(rules ?? { id: 'rules', name: 'rules', icon: '' }), ...change } })
@@ -215,12 +207,11 @@ function CrateEditor({ crate, onClose, onSaved }: { crate: Crate | null; onClose
     <Modal
       open={Boolean(crate)}
       onClose={onClose}
-      title={isNew ? 'New crate' : `Edit ${crate?.name ?? 'crate'}`}
+      title={isNew ? t("New crate") : t("Edit %@", crate?.name ?? 'crate')}
       footer={
         <>
           <button className="pill" onClick={onClose}>
-            Cancel
-          </button>
+            {t("Cancel")}</button>
           <button
             className="pill pill-accent"
             onClick={() => {
@@ -234,18 +225,17 @@ function CrateEditor({ crate, onClose, onSaved }: { crate: Crate | null; onClose
               onSaved(clean, isNew)
             }}
           >
-            Save
-          </button>
+            {t("Save")}</button>
         </>
       }
     >
       <div className="station-editor">
         <label className="station-editor__field">
-          <span>Name</span>
+          <span>{t("Name")}</span>
           <input className="field-input" value={draft.name} maxLength={80} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
         </label>
         <div className="station-editor__field">
-          <span>Icon</span>
+          <span>{t("Icon")}</span>
           <div className="icon-picker">
             {STATION_ICONS.map((entry) => (
               <button
@@ -253,7 +243,7 @@ function CrateEditor({ crate, onClose, onSaved }: { crate: Crate | null; onClose
                 type="button"
                 className="icon-picker__item"
                 data-on={draft.icon === entry.symbol || undefined}
-                aria-label={entry.label}
+                aria-label={t(entry.label)}
                 onClick={() => setDraft({ ...draft, icon: entry.symbol })}
               >
                 <entry.icon size={16} />
@@ -263,71 +253,66 @@ function CrateEditor({ crate, onClose, onSaved }: { crate: Crate | null; onClose
         </div>
         <div className="station-editor__toggles">
           <label>
-            <Switch checked={Boolean(rules)} onChange={(value) => setDraft({ ...draft, rules: value ? { id: 'rules', name: 'rules', icon: '', minRating: 4 } : null })} label="Fill by rules" />
-            Fill it by rules instead of by hand
-          </label>
+            <Switch checked={Boolean(rules)} onChange={(value) => setDraft({ ...draft, rules: value ? { id: 'rules', name: 'rules', icon: '', minRating: 4 } : null })} label={t("Fill by rules")} />
+            {t("Fill it by rules instead of by hand")}</label>
         </div>
         {rules ? (
           <>
             <div className="station-editor__pair">
               <label className="station-editor__field">
-                <span>Rating</span>
+                <span>{t("Rating")}</span>
                 <select className="field-input" value={rules.minRating ?? 0} onChange={(event) => patchRules({ minRating: Number(event.target.value) || null })}>
-                  <option value={0}>Any</option>
+                  <option value={0}>{t("Any")}</option>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <option key={n} value={n}>
-                      {n}★ and up
-                    </option>
+                      {t("%@★ and up", n)}</option>
                   ))}
                 </select>
               </label>
               <label className="station-editor__field">
-                <span>Added</span>
+                <span>{t("Added")}</span>
                 <select className="field-input" value={rules.addedDays ?? 0} onChange={(event) => patchRules({ addedDays: Number(event.target.value) || null })}>
-                  <option value={0}>Any time</option>
-                  <option value={30}>In the last 30 days</option>
-                  <option value={90}>In the last 90 days</option>
-                  <option value={365}>This year</option>
+                  <option value={0}>{t("Any time")}</option>
+                  <option value={30}>{t("In the last 30 days")}</option>
+                  <option value={90}>{t("In the last 90 days")}</option>
+                  <option value={365}>{t("This year")}</option>
                 </select>
               </label>
             </div>
             <div className="station-editor__pair">
               <label className="station-editor__field">
-                <span>Years from</span>
-                <input className="field-input" inputMode="numeric" placeholder="any" value={rules.years?.min ?? ''} onChange={(event) => patchRules({ years: { min: num(event.target.value), max: rules.years?.max ?? null } })} />
+                <span>{t("Years from")}</span>
+                <input className="field-input" inputMode="numeric" placeholder={t("any")} value={rules.years?.min ?? ''} onChange={(event) => patchRules({ years: { min: num(event.target.value), max: rules.years?.max ?? null } })} />
               </label>
               <label className="station-editor__field">
-                <span>to</span>
-                <input className="field-input" inputMode="numeric" placeholder="any" value={rules.years?.max ?? ''} onChange={(event) => patchRules({ years: { min: rules.years?.min ?? null, max: num(event.target.value) } })} />
+                <span>{t("to")}</span>
+                <input className="field-input" inputMode="numeric" placeholder={t("any")} value={rules.years?.max ?? ''} onChange={(event) => patchRules({ years: { min: rules.years?.min ?? null, max: num(event.target.value) } })} />
               </label>
             </div>
             <label className="station-editor__field">
-              <span>Genres (comma between)</span>
-              <input className="field-input" placeholder="any" value={(rules.genres ?? []).join(', ')} onChange={(event) => patchRules({ genres: event.target.value.split(',').map((g) => g.trim()).filter(Boolean) })} />
+              <span>{t("Genres (comma between)")}</span>
+              <input className="field-input" placeholder={t("any")} value={(rules.genres ?? []).join(', ')} onChange={(event) => patchRules({ genres: event.target.value.split(',').map((g) => g.trim()).filter(Boolean) })} />
             </label>
             <label className="station-editor__field">
-              <span>Tags (comma between)</span>
-              <input className="field-input" placeholder="any" value={(rules.tags ?? []).join(', ')} onChange={(event) => patchRules({ tags: event.target.value.split(',').map((g) => g.trim()).filter(Boolean) })} />
+              <span>{t("Tags (comma between)")}</span>
+              <input className="field-input" placeholder={t("any")} value={(rules.tags ?? []).join(', ')} onChange={(event) => patchRules({ tags: event.target.value.split(',').map((g) => g.trim()).filter(Boolean) })} />
             </label>
             <div className="station-editor__toggles">
               <label>
-                <Switch checked={Boolean(rules.favourites)} onChange={(value) => patchRules({ favourites: value })} label="Favourites only" />
-                Favourites only
-              </label>
+                <Switch checked={Boolean(rules.favourites)} onChange={(value) => patchRules({ favourites: value })} label={t("Favourites only")} />
+                {t("Favourites only")}</label>
               <label>
-                <Switch checked={Boolean(rules.unplayed)} onChange={(value) => patchRules({ unplayed: value })} label="Never played" />
-                Never played
-              </label>
+                <Switch checked={Boolean(rules.unplayed)} onChange={(value) => patchRules({ unplayed: value })} label={t("Never played")} />
+                {t("Never played")}</label>
             </div>
             <p className="row__hint">{summary(rules)}</p>
           </>
         ) : null}
         <div className="station-editor__toggles">
           <label>
-            <Switch checked={Boolean(draft.syncPlaylist)} onChange={(value) => setDraft({ ...draft, syncPlaylist: value })} label="Keep as a playlist" />
+            <Switch checked={Boolean(draft.syncPlaylist)} onChange={(value) => setDraft({ ...draft, syncPlaylist: value })} label={t("Keep as a playlist")} />
             <span>
-              <ListMusic size={13} style={{ verticalAlign: -2 }} /> Keep it as a playlist {local ? 'too' : 'on your server'}, in step whenever it changes
-            </span>
+              <ListMusic size={13} style={{ verticalAlign: -2 }} /> {' '}{t("Keep it as a playlist %@, in step whenever it changes", local ? t("too") : t("on your server"))}</span>
           </label>
         </div>
       </div>

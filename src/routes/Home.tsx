@@ -20,13 +20,14 @@ import { LocalMusicChooser, useMusicFolders } from '@/components/LocalMusic'
 import { isLocalProfile, useAuth } from '@/store/auth'
 import { StationShelf } from '@/components/StationShelf'
 import { HomeWidgets } from '@/components/HomeWidgets'
+import { t } from '@/i18n'
 
 function greeting(): string {
   const hour = new Date().getHours()
-  if (hour < 5) return 'Still up?'
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (hour < 5) return t('Still up?')
+  if (hour < 12) return t('Good morning')
+  if (hour < 18) return t('Good afternoon')
+  return t('Good evening')
 }
 
 const SONG_LIMIT = 10
@@ -102,22 +103,20 @@ export function Home() {
   if (!loading && data.albums.length === 0 && local) {
     if (running) {
       return (
-        <Empty icon={<Disc3 size={26} className="spin" />} title="Reading your music…">
-          {progress.message || 'Looking through your folders.'} The first time takes a while for a big
-          library; after that only new and changed files are read.
-        </Empty>
+        <Empty icon={<Disc3 size={26} className="spin" />} title={t("Reading your music…")}>
+          {t("%@ The first time takes a while for a big library; after that only new and changed files are read.", progress.message || t("Looking through your folders."))}</Empty>
       )
     }
     const none = !folders.loading && folders.rows.length === 0
     return (
       <Empty
         icon={<Disc3 size={26} />}
-        title={none ? 'Add the music on this computer' : 'No music found yet'}
+        title={none ? t("Add the music on this computer") : t("No music found yet")}
         action={<div style={{ width: 'min(420px, 100%)' }}><LocalMusicChooser /></div>}
       >
         {none
-          ? 'Choose the folder your music is in. Kultr reads the tags in the files to build albums and artists, and keeps favourites, ratings, playlists and play counts here.'
-          : 'Kultr found no music it can play in your folders. MP3, FLAC, AAC/M4A, Ogg Vorbis, Opus, WAV and AIFF are read; add another folder, or check Settings → Music on this computer.'}
+          ? t("Choose the folder your music is in. Kultr reads the tags in the files to build albums and artists, and keeps favourites, ratings, playlists and play counts here.")
+          : t("Kultr found no music it can play in your folders. MP3, FLAC, AAC/M4A, Ogg Vorbis, Opus, WAV and AIFF are read; add another folder, or check Settings → Music on this computer.")}
       </Empty>
     )
   }
@@ -126,32 +125,29 @@ export function Home() {
     return (
       <Empty
         icon={<Disc3 size={26} />}
-        title="Your library is not synced yet"
+        title={t("Your library is not synced yet")}
         action={
           <button className="pill pill-accent pill-lg" disabled={running} onClick={() => void run('full')}>
             <RefreshCw size={15} className={running ? 'spin' : undefined} />
-            {running ? 'Syncing…' : 'Sync my library'}
+            {running ? t("Syncing…") : t("Sync my library")}
           </button>
         }
       >
-        Kultr keeps a local copy of your Navidrome library so browsing is instant and works even when
-        the server is unreachable. This is a one-time job — after that, “Check for updates” only
-        pulls what changed.
-      </Empty>
+        {t("Kultr keeps a local copy of your Navidrome library so browsing is instant and works even when the server is unreachable. This is a one-time job — after that, “Check for updates” only pulls what changed.")}</Empty>
     )
   }
 
   const shuffleEverything = () => {
     if (!data.songs.length) return
     const picks = [...data.songs].sort(() => Math.random() - 0.5).slice(0, 100)
-    void usePlayer.getState().playNow(picks, 0, 'Shuffle all')
+    void usePlayer.getState().playNow(picks, 0, t('Shuffle all'))
   }
 
   const startInjeKt = async () => {
     if (!data.songs.length) return
     const seed = data.songs[Math.floor(Math.random() * data.songs.length)]
     const rest = await buildAutoQueue(seed, { count: 24 })
-    void usePlayer.getState().playNow([seed, ...rest], 0, 'InjeKt radio')
+    void usePlayer.getState().playNow([seed, ...rest], 0, t('InjeKt radio'))
   }
 
   return (
@@ -160,19 +156,16 @@ export function Home() {
         <div className="page-head__title">
           <h1>{greeting()}</h1>
           <span className="page-head__sub">
-            {formatCount(syncState.counts.songs, 'track')} · {formatCount(syncState.counts.albums, 'album')} ·
-            last checked {formatRelative(syncState.lastCheck)}
+            {t("%@ · %@ · last checked %@", formatCount(syncState.counts.songs, 'track'), formatCount(syncState.counts.albums, 'album'), formatRelative(syncState.lastCheck))}
           </span>
         </div>
         <div className="page-actions">
           <button className="pill" onClick={shuffleEverything}>
             <Shuffle size={14} />
-            Shuffle all
-          </button>
+            {t("Shuffle all")}</button>
           <button className="pill pill-accent" onClick={() => void startInjeKt()}>
             <Sparkles size={14} />
-            Start an InjeKt set
-          </button>
+            {t("Start an InjeKt set")}</button>
         </div>
       </div>
 
@@ -183,16 +176,14 @@ export function Home() {
       ) : (
         <>
           {content.map(({ tile, body }) => (
-            <Shelf key={tile.id} title={tile.title} to={tile.seeAll}>
+            <Shelf key={tile.id} title={t(tile.title)} to={tile.seeAll}>
               {body}
             </Shelf>
           ))}
 
           {content.length === 0 ? (
-            <Empty icon={<SettingsIcon size={24} />} title="Nothing on the home page yet">
-              Every shelf is switched off, or none of them has anything to show. Choose what appears
-              here — and in what order — in Settings → Home page.
-            </Empty>
+            <Empty icon={<SettingsIcon size={24} />} title={t("Nothing on the home page yet")}>
+              {t("Every shelf is switched off, or none of them has anything to show. Choose what appears here — and in what order — in Settings → Home page.")}</Empty>
           ) : null}
 
           <div style={{ marginTop: 32, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -208,12 +199,10 @@ export function Home() {
               }}
             >
               <SettingsIcon size={14} />
-              Customise this page
-            </button>
+              {t("Customise this page")}</button>
             <button className="pill" onClick={() => navigate('/sync')}>
               <RefreshCw size={14} />
-              Library and sync options
-            </button>
+              {t("Library and sync options")}</button>
           </div>
         </>
       )}
@@ -346,7 +335,7 @@ function buildShelves(
         )
         break
       case 'mostPlayedSongs':
-        body = songList(byPlayCount(data.songs, SONG_LIMIT), 'Played the most')
+        body = songList(byPlayCount(data.songs, SONG_LIMIT), t('Played the most'))
         break
       case 'mostPlayedAlbums':
         body = albumGrid(byPlayCount(data.albums, cardLimit))

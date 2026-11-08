@@ -1,6 +1,7 @@
 import { Infinity as InfinityIcon, Repeat, Repeat1, Shuffle } from 'lucide-react'
 import { shuffleModeOf, usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
+import { t } from '@/i18n'
 
 const SHUFFLE_LABEL = {
   off: 'Shuffle off',
@@ -28,8 +29,8 @@ export function ShuffleButton({ size }: { size: number }) {
       className="iconbtn iconbtn--mode"
       data-active={mode !== 'off'}
       data-mode={mode}
-      aria-label={SHUFFLE_LABEL[mode]}
-      title={`${SHUFFLE_LABEL[mode]} (tap to change)`}
+      aria-label={t(SHUFFLE_LABEL[mode])}
+      title={t("%@ (tap to change)", t(SHUFFLE_LABEL[mode]))}
       onClick={() => cycleShuffle()}
     >
       {mode === 'karousel' ? <InfinityIcon size={size + 2} /> : <Shuffle size={size} />}
@@ -45,8 +46,8 @@ export function RepeatButton({ size }: { size: number }) {
     <button
       className="iconbtn iconbtn--mode"
       data-active={repeat !== 'off'}
-      aria-label={REPEAT_LABEL[repeat]}
-      title={REPEAT_LABEL[repeat]}
+      aria-label={t(REPEAT_LABEL[repeat])}
+      title={t(REPEAT_LABEL[repeat])}
       onClick={cycleRepeat}
     >
       {repeat === 'one' ? <Repeat1 size={size} /> : <Repeat size={size} />}

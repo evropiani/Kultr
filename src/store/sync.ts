@@ -7,6 +7,7 @@ import { maybeClient } from '@/api/subsonic'
 import { syncListening } from '@/sync/listening'
 import { useAuth } from './auth'
 import { LOCAL_PROFILE_ID } from '@/local/client'
+import { t } from '@/i18n'
 
 interface SyncStoreState {
   running: boolean
@@ -53,7 +54,7 @@ export const useSync = create<SyncStoreState>((set, get) => ({
   async run(mode) {
     if (get().running) return null
     if (!maybeClient()) {
-      set({ error: 'Not connected to a server.' })
+      set({ error: t('Not connected to a server.') })
       return null
     }
     const controller = new AbortController()

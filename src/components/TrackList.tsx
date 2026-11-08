@@ -30,6 +30,7 @@ import { usePlaylistPicker } from './AddToPlaylist'
 import { draggableProps } from './DropZone'
 import { useCratePicker } from './Crates'
 import { Package } from 'lucide-react'
+import { t } from '@/i18n'
 
 export type SortField = 'none' | 'title' | 'artist' | 'album' | 'duration' | 'year' | 'added' | 'plays'
 
@@ -121,7 +122,7 @@ export function TrackList({
   )
 
   if (!songs.length) {
-    return <p className="row__hint" style={{ padding: '18px 12px' }}>{emptyMessage ?? 'No tracks here yet.'}</p>
+    return <p className="row__hint" style={{ padding: '18px 12px' }}>{emptyMessage ?? t("No tracks here yet.")}</p>
   }
 
   const allSelected = sorted.length > 0 && sorted.every((song) => selected.includes(song.id))
@@ -133,7 +134,7 @@ export function TrackList({
         className="checkbox"
         role="checkbox"
         aria-checked={allSelected}
-        aria-label={allSelected ? 'Deselect all' : 'Select all'}
+        aria-label={allSelected ? t("Deselect all") : t("Select all")}
         data-checked={allSelected || someSelected}
         onClick={() => (allSelected ? deselectMany(sorted) : selectMany(sorted))}
       >
@@ -141,19 +142,19 @@ export function TrackList({
       </button>
       <span>#</span>
       <span>
-        {sortable ? <button onClick={() => toggleSort('title')}>Title</button> : 'Title'}
+        {sortable ? <button onClick={() => toggleSort('title')}>{t("Title")}</button> : t("Title")}
       </span>
       <span className="col-album">
         {hideAlbum ? (
           sortable ? (
-            <button onClick={() => toggleSort('artist')}>Artist</button>
+            <button onClick={() => toggleSort('artist')}>{t("Artist")}</button>
           ) : (
-            'Artist'
+            t("Artist")
           )
         ) : sortable ? (
-          <button onClick={() => toggleSort('album')}>Album</button>
+          <button onClick={() => toggleSort('album')}>{t("Album")}</button>
         ) : (
-          'Album'
+          t("Album")
         )}
       </span>
       <span style={{ textAlign: 'right' }}>
@@ -243,73 +244,73 @@ function TrackRow({
 
   const items: MenuItem[] = [
     {
-      label: 'Play next',
+      label: t("Play next"),
       icon: <Play size={15} />,
       onSelect: () => usePlayer.getState().enqueue([song], 'next'),
     },
     {
-      label: 'Add to queue',
+      label: t("Add to queue"),
       icon: <ListPlus size={15} />,
       onSelect: () => usePlayer.getState().enqueue([song], 'end'),
     },
     {
-      label: 'Add to playlist…',
+      label: t("Add to playlist…"),
       icon: <ListPlus size={15} />,
       onSelect: () => usePlaylistPicker.getState().show([song.id]),
       separatorBefore: true,
     },
     {
-      label: starred ? 'Remove from favourites' : 'Add to favourites',
+      label: starred ? t("Remove from favourites") : t("Add to favourites"),
       icon: <Heart size={15} />,
       onSelect: async () => setStarred(await toggleStarSong(song, starred)),
     },
     {
-      label: 'Analyse for InjeKt',
+      label: t("Analyse for InjeKt"),
       icon: <Sparkles size={15} />,
       separatorBefore: true,
       onSelect: async () => {
-        useToast.getState().show(`Analysing “${song.title}”…`, 'info')
+        useToast.getState().show(t("Analysing “%@”…", song.title), 'info')
         const result = await analyseTrack(song, { force: true })
         useToast
           .getState()
           .show(
             result
-              ? `${song.title}: ${result.bpm.toFixed(0)} BPM, key ${result.keyName} (${result.camelot})`
+              ? t("%@: %@ BPM, key %@ (%@)", song.title, result.bpm.toFixed(0), result.keyName, result.camelot)
               : isLocalId(song.id)
-                ? 'Analysis failed — the file could not be read.'
-                : 'Analysis failed — check the connection to your server.',
+                ? t("Analysis failed — the file could not be read.")
+                : t("Analysis failed — check the connection to your server."),
             result ? 'success' : 'error',
           )
       },
     },
     isOffline
       ? {
-          label: 'Remove download',
+          label: t("Remove download"),
           icon: <Trash2 size={15} />,
           onSelect: () => void removeOffline([song.id]),
         }
       : {
-          label: 'Sync offline',
+          label: t("Sync offline"),
           icon: <FolderDown size={15} />,
           onSelect: () => void download([song], song.title),
         },
     {
-      label: 'Save file to disk',
+      label: t("Save file to disk"),
       icon: <Download size={15} />,
       onSelect: () => saveToDisk(song),
       separatorBefore: true,
     },
-    { label: 'Add to a crate…', icon: <Package size={15} />, onSelect: () => useCratePicker.getState().show({ kind: 'songs', songs: [song] }) },
-    { label: 'Copy share link', icon: <Share2 size={15} />, onSelect: () => void shareSong(song) },
+    { label: t("Add to a crate…"), icon: <Package size={15} />, onSelect: () => useCratePicker.getState().show({ kind: 'songs', songs: [song] }) },
+    { label: t("Copy share link"), icon: <Share2 size={15} />, onSelect: () => void shareSong(song) },
   ].filter((item) => {
     // A file on this computer is already offline, and has no server to share it from.
     if (!isLocalId(song.id)) return true
-    return item.label !== 'Sync offline' && item.label !== 'Remove download' && item.label !== 'Copy share link'
+    return ![t('Sync offline'), t('Remove download'), t('Copy share link')].includes(item.label)
   })
 
   if (onRemove) {
     items.push({
-      label: 'Remove from this list',
+      label: t("Remove from this list"),
       icon: <Trash2 size={15} />,
       danger: true,
       separatorBefore: true,
@@ -339,7 +340,7 @@ function TrackRow({
         className="checkbox"
         role="checkbox"
         aria-checked={isSelected}
-        aria-label={`Select ${song.title}`}
+        aria-label={t("Select %@", song.title)}
         data-checked={isSelected}
         onClick={(event) => {
           event.stopPropagation()
@@ -362,7 +363,7 @@ function TrackRow({
             <button
               className="trackrow__indexplay"
               onClick={onPlay}
-              aria-label={`Play ${song.title}`}
+              aria-label={t("Play %@", song.title)}
               style={numbering === 'none' ? { display: 'block', position: 'static' } : undefined}
             >
               <Play size={14} fill="currentColor" />
@@ -403,14 +404,14 @@ function TrackRow({
 
       <span className="trackrow__badges">
         {isOffline ? (
-          <span title="Stored offline" style={{ display: 'inline-flex', color: 'var(--success)' }}>
+          <span title={t("Stored offline")} style={{ display: 'inline-flex', color: 'var(--success)' }}>
             <HardDrive size={12} />
           </span>
         ) : null}
         <button
           className="iconbtn"
           data-active={starred}
-          aria-label={starred ? 'Remove from favourites' : 'Add to favourites'}
+          aria-label={starred ? t("Remove from favourites") : t("Add to favourites")}
           onClick={async () => setStarred(await toggleStarSong(song, starred))}
           style={{ width: 28, height: 28, opacity: starred ? 1 : undefined }}
         >
@@ -422,7 +423,7 @@ function TrackRow({
       <div className="trackrow__actions">
         <button
           className="iconbtn trackrow__more"
-          aria-label={`More options for ${song.title}`}
+          aria-label={t("More options for %@", song.title)}
           onClick={(event) => menu.open(event)}
         >
           <MoreHorizontal size={16} />

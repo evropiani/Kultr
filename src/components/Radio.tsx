@@ -3,6 +3,7 @@ import { Heart } from 'lucide-react'
 import type { RadioStation, Song } from '@/api/types'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
+import { t } from '@/i18n'
 
 /**
  * Internet radio, shared between the Radio page and the home page.
@@ -18,7 +19,7 @@ export function radioSongs(stations: RadioStation[]): Song[] {
   return stations.map((station) => ({
     id: station.id,
     title: station.name,
-    artist: 'Internet radio',
+    artist: t('Internet radio'),
     album: station.homePageUrl ?? '',
     duration: 0,
     kultrStreamUrl: station.streamUrl,
@@ -51,7 +52,7 @@ export function RadioGrid({
           <div key={station.id} className="radio glass glass-hit">
             <button
               className="radio__play"
-              onClick={() => void usePlayer.getState().playNow(songs, index, 'Radio')}
+              onClick={() => void usePlayer.getState().playNow(songs, index, t('Radio'))}
             >
               <span className="radio__name">{station.name}</span>
               <span className="radio__url">{station.streamUrl}</span>
@@ -59,7 +60,7 @@ export function RadioGrid({
             <button
               className="iconbtn"
               data-active={starred}
-              aria-label={starred ? `Unfavourite ${station.name}` : `Favourite ${station.name}`}
+              aria-label={starred ? t("Unfavourite %@", station.name) : t("Favourite %@", station.name)}
               aria-pressed={starred}
               onClick={() => toggle(station.id)}
             >

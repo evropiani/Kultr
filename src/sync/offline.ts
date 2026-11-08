@@ -11,6 +11,7 @@ import {
   type DirectoryHandle,
 } from '@/lib/filesystem'
 import { settings } from '@/store/settings'
+import { t } from '@/i18n'
 
 /**
  * Offline sync.
@@ -47,7 +48,7 @@ export interface OfflineOptions {
 
 export class NoFolderChosenError extends Error {
   constructor() {
-    super('No download folder has been chosen yet.')
+    super(t('No download folder has been chosen yet.'))
     this.name = 'NoFolderChosenError'
   }
 }

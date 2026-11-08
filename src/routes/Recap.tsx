@@ -10,8 +10,9 @@ import { monthRecap, recapMonths } from '@/lib/recap'
 import { usePlayer } from '@/store/player'
 import { useSync } from '@/store/sync'
 import { Art, Empty } from '@/components/ui'
+import { locale, t } from '@/i18n'
 
-const monthName = (ms: number) => new Date(ms).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+const monthName = (ms: number) => new Date(ms).toLocaleDateString(locale(), { month: 'long', year: 'numeric' })
 
 /**
  * The monthly recap: what you played in this browser in a month — the time,
@@ -36,9 +37,8 @@ export function Recap() {
   if (loading) return <div className="skeleton" style={{ height: 300 }} />
   if (!recap || !recap.plays) {
     return (
-      <Empty icon={<CalendarDays size={24} />} title="No recap yet">
-        The recap is made from what you play in this browser. Play some music and come back at the end of the month.
-      </Empty>
+      <Empty icon={<CalendarDays size={24} />} title={t("No recap yet")}>
+        {t("The recap is made from what you play in this browser. Play some music and come back at the end of the month.")}</Empty>
     )
   }
 
@@ -51,12 +51,11 @@ export function Recap() {
         <div className="page-head__title">
           <h1>{monthName(recap.month)}</h1>
           <span className="page-head__sub">
-            Your month in music, from what you played in this browser. <Link to="/stats">Listening</Link> has the counts from your server.
-          </span>
+            {t("Your month in music, from what you played in this browser.")}{' '}<Link to="/stats">{t("Listening")}</Link> {' '}{t("has the counts from your server.")}</span>
         </div>
         <div className="page-actions">
           {months.length > 1 ? (
-            <select className="field-input" style={{ width: 'auto' }} value={month ?? ''} onChange={(event) => setPicked(Number(event.target.value))} aria-label="Month">
+            <select className="field-input" style={{ width: 'auto' }} value={month ?? ''} onChange={(event) => setPicked(Number(event.target.value))} aria-label={t("Month")}>
               {months.map((m) => (
                 <option key={m} value={m}>
                   {monthName(m)}
@@ -67,8 +66,7 @@ export function Recap() {
           {recap.topSongs.length ? (
             <button className="pill pill-accent" onClick={() => void usePlayer.getState().playNow(recap.topSongs.map((e) => e.item), 0, `${monthName(recap.month)}: most played`)}>
               <Play size={14} />
-              Play the top songs
-            </button>
+              {t("Play the top songs")}</button>
           ) : null}
         </div>
       </div>
@@ -77,26 +75,25 @@ export function Recap() {
         <div className="recap-tile glass">
           <strong>{hours >= 1 ? `${hours.toFixed(hours < 10 ? 1 : 0)} h` : formatDuration(recap.seconds)}</strong>
           <span>
-            listened
-            {change !== null ? ` · ${change >= 0 ? '+' : ''}${change}% on the month before` : ''}
+            {t("listened%@", change !== null ? t(" · %@%@% on the month before", change >= 0 ? '+' : '', change) : '')}
           </span>
         </div>
         <div className="recap-tile glass">
           <strong>{recap.plays.toLocaleString()}</strong>
-          <span>plays of {recap.tracks.toLocaleString()} tracks</span>
+          <span>{t("plays of %@ tracks", recap.tracks.toLocaleString())}</span>
         </div>
         <div className="recap-tile glass">
           <strong>{recap.artists.toLocaleString()}</strong>
-          <span>artists</span>
+          <span>{t("artists")}</span>
         </div>
         <div className="recap-tile glass">
           <strong>{recap.firstListens.toLocaleString()}</strong>
-          <span>tracks heard for the first time</span>
+          <span>{t("tracks heard for the first time")}</span>
         </div>
         {recap.busiestDay ? (
           <div className="recap-tile glass">
-            <strong>{new Date(recap.busiestDay.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</strong>
-            <span>the busiest day · {formatDuration(recap.busiestDay.seconds)}</span>
+            <strong>{new Date(recap.busiestDay.date).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' })}</strong>
+            <span>{t("the busiest day · %@", formatDuration(recap.busiestDay.seconds))}</span>
           </div>
         ) : null}
       </div>
@@ -104,7 +101,7 @@ export function Recap() {
       <div className="recap-columns">
         <section className="section glass">
           <div className="section__head">
-            <h3>Most played</h3>
+            <h3>{t("Most played")}</h3>
           </div>
           <ol className="recap-list">
             {recap.topSongs.map((entry, index) => (
@@ -122,7 +119,7 @@ export function Recap() {
         </section>
         <section className="section glass">
           <div className="section__head">
-            <h3>Artists</h3>
+            <h3>{t("Artists")}</h3>
           </div>
           <ol className="recap-list">
             {recap.topArtists.map((entry, index) => (
@@ -139,7 +136,7 @@ export function Recap() {
         </section>
         <section className="section glass">
           <div className="section__head">
-            <h3>Albums</h3>
+            <h3>{t("Albums")}</h3>
           </div>
           <ol className="recap-list">
             {recap.topAlbums.map((entry, index) => (

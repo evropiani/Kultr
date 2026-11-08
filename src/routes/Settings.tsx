@@ -65,6 +65,7 @@ import { useToast, useUi } from '@/store/ui'
 import { Modal, Row, Section, Segmented, SliderRow, Spinner, Switch } from '@/components/ui'
 import { useFlip } from '@/lib/motion'
 import { DiscordIcon, RedditIcon } from '@/components/icons'
+import { locale, t, type Language } from '@/i18n'
 
 /**
  * A settings section that remembers whether it is open.
@@ -115,14 +116,14 @@ export function Settings() {
       settings.merge(result.patch)
       engine.applyEq()
       const added = result.servers.length ? auth.importProfiles(result.servers) : 0
-      const extra = result.skipped.length ? `, ${result.skipped.length} skipped` : ''
-      const servers = added ? `, ${added} server${added === 1 ? '' : 's'} added` : ''
-      toast.show(`Imported ${result.applied.length} settings${extra}${servers}.`, 'success')
+      const extra = result.skipped.length ? t(', %@ skipped', result.skipped.length) : ''
+      const servers = added ? t(added === 1 ? ', %@ server added' : ', %@ servers added', added) : ''
+      toast.show(t("Imported %@ settings%@%@.", result.applied.length, extra, servers), 'success')
       if (added) {
-        toast.show('Imported servers need a username and password before they can connect.', 'info', 9000)
+        toast.show(t("Imported servers need a username and password before they can connect."), 'info', 9000)
       }
     } catch (err) {
-      toast.show((err as Error).message || 'That file could not be read.', 'error')
+      toast.show((err as Error).message || t("That file could not be read."), 'error')
     }
   }
 
@@ -135,92 +136,102 @@ export function Settings() {
     <div className="settings">
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Settings</h1>
-          <span className="page-head__sub">Kultr {__KULTR_VERSION__}</span>
+          <h1>{t("Settings")}</h1>
+          <span className="page-head__sub">{t("Kultr %@", __KULTR_VERSION__)}</span>
         </div>
       </div>
 
       {/* ------------------------------------------------------ appearance */}
-      <Panel title="Appearance" icon={<Palette size={16} />}>
-        <Row label="Kultr Studio" hint="The whole look in one place: styles to start from, the player's info line, and sharing a style as a link or a file.">
+      <Panel title={t("Appearance")} icon={<Palette size={16} />}>
+        <Row label={t("Kultr Studio")} hint={t("The whole look in one place: styles to start from, the player's info line, and sharing a style as a link or a file.")}>
           <button className="pill pill-accent" onClick={() => navigate('/studio')}>
             <Palette size={14} />
-            Open Studio
-          </button>
+            {t("Open Studio")}</button>
         </Row>
-        <Row label="Theme">
+        <Row label={t("Language")} hint={t("Kultr in English or German. Device follows your browser's language.")}>
+          <Segmented<Language>
+            value={settings.language}
+            onChange={(value) => settings.set('language', value)}
+            options={[
+              { value: 'system', label: t('Device') },
+              { value: 'en', label: 'English' },
+              { value: 'de', label: 'Deutsch' },
+            ]}
+          />
+        </Row>
+        <Row label={t("Theme")}>
           <Segmented<ThemeMode>
             value={settings.theme}
             onChange={(value) => settings.set('theme', value)}
             options={[
-              { value: 'dark', label: 'Dark' },
-              { value: 'light', label: 'Light' },
-              { value: 'system', label: 'System' },
+              { value: 'dark', label: t("Dark") },
+              { value: 'light', label: t("Light") },
+              { value: 'system', label: t("System") },
             ]}
           />
         </Row>
         <Row
-          label="Night mode"
-          hint="Pure black instead of dark grey, for OLED screens: black pixels are switched off, which saves battery and is easiest on the eyes in a dark room. Applies whenever the dark theme is showing, System included. The artwork glow and the blur go with it."
+          label={t("Night mode")}
+          hint={t("Pure black instead of dark grey, for OLED screens: black pixels are switched off, which saves battery and is easiest on the eyes in a dark room. Applies whenever the dark theme is showing, System included. The artwork glow and the blur go with it.")}
         >
           <Switch
             checked={settings.nightMode}
             onChange={(value) => settings.set('nightMode', value)}
-            label="Night mode"
+            label={t("Night mode")}
           />
         </Row>
         <Row
-          label="Surface blur"
-          hint="Full is the complete effect. Reduced blurs less, and Off removes the blur entirely — pick one of those if scrolling feels heavy on older hardware."
+          label={t("Surface blur")}
+          hint={t("Full is the complete effect. Reduced blurs less, and Off removes the blur entirely — pick one of those if scrolling feels heavy on older hardware.")}
         >
           <Segmented<GlassLevel>
             value={settings.glass}
             onChange={(value) => settings.set('glass', value)}
             options={[
-              { value: 'liquid', label: 'Full' },
-              { value: 'frosted', label: 'Reduced' },
-              { value: 'solid', label: 'Off' },
+              { value: 'liquid', label: t("Full") },
+              { value: 'frosted', label: t("Reduced") },
+              { value: 'solid', label: t("Off") },
             ]}
           />
         </Row>
-        <Row label="Corners" hint="How round everything in Kultr is.">
+        <Row label={t("Corners")} hint={t("How round everything in Kultr is.")}>
           <Segmented<CornerStyle>
             value={settings.corners}
             onChange={(value) => settings.set('corners', value)}
             options={[
-              { value: 'sharp', label: 'Sharp' },
-              { value: 'soft', label: 'Soft' },
-              { value: 'round', label: 'Round' },
+              { value: 'sharp', label: t("Sharp") },
+              { value: 'soft', label: t("Soft") },
+              { value: 'round', label: t("Round") },
             ]}
           />
         </Row>
-        <Row label="Reduce motion" hint="Stops the spring animations and the movement between pages.">
+        <Row label={t("Reduce motion")} hint={t("Stops the spring animations and the movement between pages.")}>
           <Switch
             checked={settings.reduceMotion}
             onChange={(value) => settings.set('reduceMotion', value)}
-            label="Reduce motion"
+            label={t("Reduce motion")}
           />
         </Row>
         <Row
-          label="Colour from artwork"
-          hint="Tints the whole interface with the dominant colour of whatever is playing."
+          label={t("Colour from artwork")}
+          hint={t("Tints the whole interface with the dominant colour of whatever is playing.")}
         >
           <Switch
             checked={settings.accentMode === 'artwork'}
             onChange={(value) => settings.set('accentMode', value ? 'artwork' : 'fixed')}
-            label="Colour from artwork"
+            label={t("Colour from artwork")}
           />
         </Row>
         <Row
-          label="Accent colour"
+          label={t("Accent colour")}
           hint={
             settings.accentMode === 'artwork'
-              ? 'Used on its own when colour from artwork is off, and mixed into the artwork colour below when it is on.'
-              : 'Used everywhere: buttons, highlights, the playhead and switches. On cream it is drawn deeper, so it still reads as text there.'
+              ? t("Used on its own when colour from artwork is off, and mixed into the artwork colour below when it is on.")
+              : t("Used everywhere: buttons, highlights, the playhead and switches. On cream it is drawn deeper, so it still reads as text there.")
           }
           stack
         >
-          <div className="swatches" role="radiogroup" aria-label="Accent colour">
+          <div className="swatches" role="radiogroup" aria-label={t("Accent colour")}>
             {ACCENTS.map((colour) => (
               <button
                 key={colour}
@@ -238,20 +249,20 @@ export function Settings() {
               type="color"
               className="swatch swatch--custom"
               value={settings.accent}
-              aria-label="Another colour"
-              title="Another colour"
+              aria-label={t("Another colour")}
+              title={t("Another colour")}
               onChange={(event) => settings.set('accent', event.target.value)}
             />
           </div>
         </Row>
         {settings.accentMode === 'artwork' ? (
           <Row
-            label="How much of your colour"
-            hint="Your accent laid over the artwork's colour, like an opacity. At 0% the album decides; at 100% you do; in between the interface still moves with the music but stays recognisably yours."
+            label={t("How much of your colour")}
+            hint={t("Your accent laid over the artwork's colour, like an opacity. At 0% the album decides; at 100% you do; in between the interface still moves with the music but stays recognisably yours.")}
             stack
           >
             <SliderRow
-              label="How much of your colour"
+              label={t("How much of your colour")}
               min={0}
               max={100}
               step={5}
@@ -262,35 +273,35 @@ export function Settings() {
           </Row>
         ) : null}
         <Row
-          label="Blurred artwork background"
-          hint="The cover of what is playing, blurred behind every page and the full player. Off, every page is one flat colour."
+          label={t("Blurred artwork background")}
+          hint={t("The cover of what is playing, blurred behind every page and the full player. Off, every page is one flat colour.")}
         >
           <Switch
             checked={settings.backdropArtwork}
             onChange={(value) => settings.set('backdropArtwork', value)}
-            label="Blurred artwork background"
+            label={t("Blurred artwork background")}
           />
         </Row>
         <Row
-          label="Panel borders"
-          hint="Panels, cards and controls are outlined with a hairline. Accent colours it with the accent instead of the text colour."
+          label={t("Panel borders")}
+          hint={t("Panels, cards and controls are outlined with a hairline. Accent colours it with the accent instead of the text colour.")}
         >
           <Segmented<SurfaceBorder>
             value={settings.surfaceBorder}
             onChange={(value) => settings.set('surfaceBorder', value)}
             options={[
-              { value: 'neutral', label: 'Neutral' },
-              { value: 'accent', label: 'Accent' },
+              { value: 'neutral', label: t("Neutral") },
+              { value: 'accent', label: t("Accent") },
             ]}
           />
         </Row>
         <Row
-          label="Border opacity"
-          hint="How strongly those outlines are drawn. Low is a whisper on the edge of each panel; high is a definite frame."
+          label={t("Border opacity")}
+          hint={t("How strongly those outlines are drawn. Low is a whisper on the edge of each panel; high is a definite frame.")}
           stack
         >
           <SliderRow
-            label="Border opacity"
+            label={t("Border opacity")}
             min={0}
             max={100}
             step={5}
@@ -300,12 +311,12 @@ export function Settings() {
           />
         </Row>
         <Row
-          label="Panel opacity"
-          hint="How much of the background shows through the glass. Below 100% the panels get more transparent, above it they get more solid. Has no effect with surface blur switched off, since those panels are opaque by design."
+          label={t("Panel opacity")}
+          hint={t("How much of the background shows through the glass. Below 100% the panels get more transparent, above it they get more solid. Has no effect with surface blur switched off, since those panels are opaque by design.")}
           stack
         >
           <SliderRow
-            label="Panel opacity"
+            label={t("Panel opacity")}
             min={20}
             max={200}
             step={10}
@@ -314,27 +325,27 @@ export function Settings() {
             format={(value) => (value === 100 ? 'default' : `${value}%`)}
           />
         </Row>
-        <Row label="Grid size">
+        <Row label={t("Grid size")}>
           <Segmented<GridSize>
             value={settings.gridSize}
             onChange={(value) => settings.set('gridSize', value)}
             options={[
-              { value: 'small', label: 'Small' },
-              { value: 'medium', label: 'Medium' },
-              { value: 'large', label: 'Large' },
+              { value: 'small', label: t("Small") },
+              { value: 'medium', label: t("Medium") },
+              { value: 'large', label: t("Large") },
             ]}
           />
         </Row>
-        <Row label="Compact track rows">
+        <Row label={t("Compact track rows")}>
           <Switch
             checked={settings.compactRows}
             onChange={(value) => settings.set('compactRows', value)}
-            label="Compact track rows"
+            label={t("Compact track rows")}
           />
         </Row>
         <Row
-          label="Playhead"
-          hint={PLAYHEAD_STYLES.find((style) => style.id === settings.playhead)?.note}
+          label={t("Playhead")}
+          hint={t(PLAYHEAD_STYLES.find((style) => style.id === settings.playhead)?.note ?? '')}
           stack
         >
           <div className="playhead-picker">
@@ -352,39 +363,38 @@ export function Settings() {
                     <span className="scrub__fill" style={{ width: '62%' }} />
                   </span>
                 </span>
-                <small>{style.name}</small>
+                <small>{t(style.name)}</small>
               </button>
             ))}
           </div>
         </Row>
-        <Row label="Show lyrics tab">
+        <Row label={t("Show lyrics tab")}>
           <Switch
             checked={settings.showLyrics}
             onChange={(value) => settings.set('showLyrics', value)}
-            label="Show lyrics"
+            label={t("Show lyrics")}
           />
         </Row>
-        <Row label="Count time down" hint="Shows how much of the track is left instead of how much has played. Clicking the time in the player switches it too.">
+        <Row label={t("Count time down")} hint={t("Shows how much of the track is left instead of how much has played. Clicking the time in the player switches it too.")}>
           <Switch
             checked={settings.timeRemaining}
             onChange={(value) => settings.set('timeRemaining', value)}
-            label="Count time down"
+            label={t("Count time down")}
           />
         </Row>
       </Panel>
 
       {/* ------------------------------------------------------- home page */}
       <Panel
-        title="Home page"
+        title={t("Home page")}
         icon={<LayoutGrid size={16} />}
-        description="Which shelves the home page shows, and in what order. A shelf with nothing to put in it is skipped rather than shown empty, so switching one on may change nothing until there is something to fill it."
+        description={t("Which shelves the home page shows, and in what order. A shelf with nothing to put in it is skipped rather than shown empty, so switching one on may change nothing until there is something to fill it.")}
         actions={
           <button
             className="pill"
             onClick={() => settings.set('homeTiles', [...DEFAULT_SETTINGS.homeTiles])}
           >
-            Reset to defaults
-          </button>
+            {t("Reset to defaults")}</button>
         }
       >
         <WidgetEditor />
@@ -397,24 +407,24 @@ export function Settings() {
 
       {/* --------------------------------------------------------- playback */}
       <Panel
-        title="Playback"
+        title={t("Playback")}
         icon={<Blend size={16} />}
-        description="What happens between one track and the next, and what playing something does. InjeKt overrides the crossfade numbers when it is switched on and knows both tracks."
+        description={t("What happens between one track and the next, and what playing something does. InjeKt overrides the crossfade numbers when it is switched on and knows both tracks.")}
       >
-        <Row label="Crossfade between tracks">
+        <Row label={t("Crossfade between tracks")}>
           <Switch
             checked={settings.crossfadeEnabled}
             onChange={(value) => settings.set('crossfadeEnabled', value)}
-            label="Crossfade between tracks"
+            label={t("Crossfade between tracks")}
           />
         </Row>
         <Row
-          label="Crossfade length"
-          hint="How long the two tracks overlap. 0 turns it into a gapless hand-off."
+          label={t("Crossfade length")}
+          hint={t("How long the two tracks overlap. 0 turns it into a gapless hand-off.")}
           stack
         >
           <SliderRow
-            label="Crossfade length"
+            label={t("Crossfade length")}
             min={0}
             max={20}
             step={0.5}
@@ -424,116 +434,116 @@ export function Settings() {
           />
         </Row>
         <Row
-          label="Fade shape"
-          hint="Equal power keeps the perceived loudness steady through the blend — the usual choice."
+          label={t("Fade shape")}
+          hint={t("Equal power keeps the perceived loudness steady through the blend — the usual choice.")}
         >
           <Segmented<CrossfadeCurve>
             value={settings.crossfadeCurve}
             onChange={(value) => settings.set('crossfadeCurve', value)}
             options={[
-              { value: 'equalPower', label: 'Equal power' },
-              { value: 'linear', label: 'Linear' },
-              { value: 'smooth', label: 'Smooth' },
-              { value: 'sharp', label: 'Sharp' },
+              { value: 'equalPower', label: t("Equal power") },
+              { value: 'linear', label: t("Linear") },
+              { value: 'smooth', label: t("Smooth") },
+              { value: 'sharp', label: t("Sharp") },
             ]}
           />
         </Row>
-        <Row label="Also fade when you skip" hint="A short fade instead of a hard cut on next/previous.">
+        <Row label={t("Also fade when you skip")} hint={t("A short fade instead of a hard cut on next/previous.")}>
           <Switch
             checked={settings.crossfadeOnSkip}
             onChange={(value) => settings.set('crossfadeOnSkip', value)}
-            label="Fade when skipping"
+            label={t("Fade when skipping")}
           />
         </Row>
         <Row
-          label="Gapless playback"
-          hint="With crossfade off, the next track is preloaded and starts the instant the current one ends."
+          label={t("Gapless playback")}
+          hint={t("With crossfade off, the next track is preloaded and starts the instant the current one ends.")}
         >
           <Switch
             checked={settings.gapless}
             onChange={(value) => settings.set('gapless', value)}
-            label="Gapless playback"
+            label={t("Gapless playback")}
           />
         </Row>
         <Row
-          label="Karousel"
-          hint="When the queue runs out, music like what's been playing keeps coming: similar songs, artists like these and your own favourites. Its songs show under their own heading in Up next, and leave the queue when you turn it off. Tapping the shuffle button twice turns it on too."
+          label={t("Karousel")}
+          hint={t("When the queue runs out, music like what's been playing keeps coming: similar songs, artists like these and your own favourites. Its songs show under their own heading in Up next, and leave the queue when you turn it off. Tapping the shuffle button twice turns it on too.")}
         >
           <Switch
             checked={settings.injektAutoQueue}
             onChange={(value) => settings.set('injektAutoQueue', value)}
-            label="Karousel"
+            label={t("Karousel")}
           />
         </Row>
         <Row
-          label="Wind down before sleep"
-          hint="In a sleep timer's last 15 minutes, Karousel and stations play their calmest picks first, so the music settles before it stops."
+          label={t("Wind down before sleep")}
+          hint={t("In a sleep timer's last 15 minutes, Karousel and stations play their calmest picks first, so the music settles before it stops.")}
         >
           <Switch
             checked={settings.sleepWindDown}
             onChange={(value) => settings.set('sleepWindDown', value)}
-            label="Wind down before sleep"
+            label={t("Wind down before sleep")}
           />
         </Row>
-        <Row label="Resume where you left off" hint="Restores the queue and position when Kultr reopens.">
+        <Row label={t("Resume where you left off")} hint={t("Restores the queue and position when Kultr reopens.")}>
           <Switch
             checked={settings.resumeOnStart}
             onChange={(value) => settings.set('resumeOnStart', value)}
-            label="Resume on start"
+            label={t("Resume on start")}
           />
         </Row>
         <Row
-          label="Send plays to Navidrome"
-          hint="Counts each play on your server, so recently and most played are the same on every device and survive clearing this browser. Plays made offline are sent, with their real time, once you are back."
+          label={t("Send plays to Navidrome")}
+          hint={t("Counts each play on your server, so recently and most played are the same on every device and survive clearing this browser. Plays made offline are sent, with their real time, once you are back.")}
         >
           <Switch
             checked={settings.scrobble}
             onChange={(value) => settings.set('scrobble', value)}
-            label="Scrobble plays"
+            label={t("Scrobble plays")}
           />
         </Row>
       </Panel>
 
       {/* ---------------------------------------------------------- injekt */}
       <Panel
-        title="InjeKt"
+        title={t("InjeKt")}
         icon={<Sparkles size={16} />}
-        description="Kultr analyses each track's tempo, key, energy and structure, then mixes like a DJ would: it starts the blend at the outro, beat-matches the incoming track, swaps the basslines over and skips long intros. Everything degrades to a normal crossfade when two tracks simply do not fit."
+        description={t("Kultr analyses each track's tempo, key, energy and structure, then mixes like a DJ would: it starts the blend at the outro, beat-matches the incoming track, swaps the basslines over and skips long intros. Everything degrades to a normal crossfade when two tracks simply do not fit.")}
       >
-        <Row label="Enable InjeKt">
+        <Row label={t("Enable InjeKt")}>
           <Switch
             checked={settings.injektEnabled}
             onChange={(value) => settings.set('injektEnabled', value)}
-            label="Enable InjeKt"
+            label={t("Enable InjeKt")}
           />
         </Row>
         <Row
-          label="Beat-match"
-          hint="Time-stretches the two tracks until their beats line up, then eases the new one back to its own tempo."
+          label={t("Beat-match")}
+          hint={t("Time-stretches the two tracks until their beats line up, then eases the new one back to its own tempo.")}
         >
           <Switch
             checked={settings.injektBeatMatch}
             onChange={(value) => settings.set('injektBeatMatch', value)}
-            label="Beat-match"
+            label={t("Beat-match")}
           />
         </Row>
         <Row
-          label="Meet in the middle"
-          hint="Drifts the track you are listening to toward the next one's tempo before the blend starts, instead of making the new track do all the stretching. Because the change is shared, it is half as audible on each side — and pairs that were too far apart to match suddenly are not."
+          label={t("Meet in the middle")}
+          hint={t("Drifts the track you are listening to toward the next one's tempo before the blend starts, instead of making the new track do all the stretching. Because the change is shared, it is half as audible on each side — and pairs that were too far apart to match suddenly are not.")}
         >
           <Switch
             checked={settings.injektTempoRamp}
             onChange={(value) => settings.set('injektTempoRamp', value)}
-            label="Meet in the middle"
+            label={t("Meet in the middle")}
           />
         </Row>
         <Row
-          label="Tempo share"
-          hint="How much of the gap the current track closes. 0% leaves it alone, 100% makes it travel the whole way to the next track's tempo."
+          label={t("Tempo share")}
+          hint={t("How much of the gap the current track closes. 0% leaves it alone, 100% makes it travel the whole way to the next track's tempo.")}
           stack
         >
           <SliderRow
-            label="Tempo share"
+            label={t("Tempo share")}
             min={0}
             max={100}
             step={5}
@@ -543,12 +553,12 @@ export function Settings() {
           />
         </Row>
         <Row
-          label="Maximum tempo shift"
-          hint="How far either track may be stretched. Above roughly 8% it starts to be audible."
+          label={t("Maximum tempo shift")}
+          hint={t("How far either track may be stretched. Above roughly 8% it starts to be audible.")}
           stack
         >
           <SliderRow
-            label="Maximum tempo shift"
+            label={t("Maximum tempo shift")}
             min={0}
             max={20}
             step={0.5}
@@ -557,9 +567,9 @@ export function Settings() {
             format={(value) => `${value.toFixed(1)} %`}
           />
         </Row>
-        <Row label="Transition length" hint="In bars of the outgoing track. Shortened automatically when two tracks clash." stack>
+        <Row label={t("Transition length")} hint={t("In bars of the outgoing track. Shortened automatically when two tracks clash.")} stack>
           <SliderRow
-            label="Transition length"
+            label={t("Transition length")}
             min={2}
             max={32}
             step={2}
@@ -569,53 +579,53 @@ export function Settings() {
           />
         </Row>
         <Row
-          label="Bass swap"
-          hint="Rolls the outgoing bass off before the incoming bass comes up, so two kick drums never fight. Needs Web Audio mode."
+          label={t("Bass swap")}
+          hint={t("Rolls the outgoing bass off before the incoming bass comes up, so two kick drums never fight. Needs Web Audio mode.")}
         >
           <Switch
             checked={settings.injektBassSwap}
             onChange={(value) => settings.set('injektBassSwap', value)}
-            label="Bass swap"
+            label={t("Bass swap")}
           />
         </Row>
         <Row
-          label="Harmonic mixing"
-          hint="Uses the detected musical key. When two keys clash, the outgoing track is filtered out instead of blended."
+          label={t("Harmonic mixing")}
+          hint={t("Uses the detected musical key. When two keys clash, the outgoing track is filtered out instead of blended.")}
         >
           <Switch
             checked={settings.injektHarmonic}
             onChange={(value) => settings.set('injektHarmonic', value)}
-            label="Harmonic mixing"
+            label={t("Harmonic mixing")}
           />
         </Row>
-        <Row label="Skip long intros" hint="Brings the next track in at its first real downbeat.">
+        <Row label={t("Skip long intros")} hint={t("Brings the next track in at its first real downbeat.")}>
           <Switch
             checked={settings.injektSkipIntro}
             onChange={(value) => settings.set('injektSkipIntro', value)}
-            label="Skip long intros"
+            label={t("Skip long intros")}
           />
         </Row>
         <Row
-          label="Analyse ahead"
-          hint="The current and next track are always analysed the moment a track starts. This also analyses the one after, so skipping ahead lands on a transition that is ready too."
+          label={t("Analyse ahead")}
+          hint={t("The current and next track are always analysed the moment a track starts. This also analyses the one after, so skipping ahead lands on a transition that is ready too.")}
         >
           <Switch
             checked={settings.injektAnalyseAhead}
             onChange={(value) => settings.set('injektAnalyseAhead', value)}
-            label="Analyse ahead"
+            label={t("Analyse ahead")}
           />
         </Row>
       </Panel>
 
       {/* ------------------------------------------------------------ audio */}
       <Panel
-        title="Audio"
+        title={t("Audio")}
         icon={<Volume2 size={16} />}
-        description="Loudness, and what Kultr asks your server to send."
+        description={t("Loudness, and what Kultr asks your server to send.")}
       >
         <Row
-          label="Volume levelling"
-          hint="Uses the ReplayGain tags Navidrome reports so quiet and loud albums play at a similar level."
+          label={t("Volume levelling")}
+          hint={t("Uses the ReplayGain tags Navidrome reports so quiet and loud albums play at a similar level.")}
         >
           <Segmented<ReplayGainMode>
             value={settings.replayGainMode}
@@ -624,16 +634,16 @@ export function Settings() {
               engine.refreshGains()
             }}
             options={[
-              { value: 'off', label: 'Off' },
-              { value: 'track', label: 'Track' },
-              { value: 'album', label: 'Album' },
+              { value: 'off', label: t("Off") },
+              { value: 'track', label: t("Track") },
+              { value: 'album', label: t("Album") },
             ]}
           />
         </Row>
         {settings.replayGainMode !== 'off' ? (
-          <Row label="Pre-amp" hint="Applied on top of the ReplayGain value." stack>
+          <Row label={t("Pre-amp")} hint={t("Applied on top of the ReplayGain value.")} stack>
             <SliderRow
-              label="ReplayGain pre-amp"
+              label={t("ReplayGain pre-amp")}
               min={-12}
               max={12}
               step={0.5}
@@ -647,8 +657,8 @@ export function Settings() {
           </Row>
         ) : null}
         <Row
-          label="Streaming quality"
-          hint="0 means the original file. A lower number asks Navidrome to transcode, which helps on slow connections."
+          label={t("Streaming quality")}
+          hint={t("0 means the original file. A lower number asks Navidrome to transcode, which helps on slow connections.")}
         >
           <select
             className="field"
@@ -656,18 +666,18 @@ export function Settings() {
             value={settings.preferredBitrate}
             onChange={(event) => settings.set('preferredBitrate', Number(event.target.value))}
           >
-            <option value={0}>Original</option>
-            <option value={320}>320 kbps</option>
-            <option value={256}>256 kbps</option>
-            <option value={192}>192 kbps</option>
-            <option value={128}>128 kbps</option>
-            <option value={96}>96 kbps</option>
-            <option value={64}>64 kbps</option>
+            <option value={0}>{t("Original")}</option>
+            <option value={320}>{t("320 kbps")}</option>
+            <option value={256}>{t("256 kbps")}</option>
+            <option value={192}>{t("192 kbps")}</option>
+            <option value={128}>{t("128 kbps")}</option>
+            <option value={96}>{t("96 kbps")}</option>
+            <option value={64}>{t("64 kbps")}</option>
           </select>
         </Row>
         <Row
-          label="Transcode format"
-          hint="Leave empty to let the server decide. Useful if your browser cannot play the original format. FLAC stays lossless: FLAC files are sent exactly as they are and anything else is converted, which Navidrome can do out of the box. ALAC needs a transcoding rule adding on the server."
+          label={t("Transcode format")}
+          hint={t("Leave empty to let the server decide. Useful if your browser cannot play the original format. FLAC stays lossless: FLAC files are sent exactly as they are and anything else is converted, which Navidrome can do out of the box. ALAC needs a transcoding rule adding on the server.")}
         >
           <select
             className="field"
@@ -675,26 +685,26 @@ export function Settings() {
             value={settings.preferredFormat}
             onChange={(event) => settings.set('preferredFormat', event.target.value)}
           >
-            <option value="">Server default</option>
-            <option value="mp3">MP3</option>
-            <option value="opus">Opus</option>
-            <option value="aac">AAC</option>
-            <option value="flac">FLAC (lossless)</option>
-            <option value="alac">ALAC (lossless)</option>
-            <option value="raw">Raw (no transcoding)</option>
+            <option value="">{t("Server default")}</option>
+            <option value="mp3">{t("MP3")}</option>
+            <option value="opus">{t("Opus")}</option>
+            <option value="aac">{t("AAC")}</option>
+            <option value="flac">{t("FLAC (lossless)")}</option>
+            <option value="alac">{t("ALAC (lossless)")}</option>
+            <option value="raw">{t("Raw (no transcoding)")}</option>
           </select>
         </Row>
         <Row
-          label="Audio engine"
-          hint={`Currently running in ${engine.mode === 'webaudio' ? 'Web Audio' : 'compatibility'} mode. Web Audio enables the equaliser and the InjeKt bass swap, but needs the audio to be readable cross-origin. Changing this takes effect after a reload.`}
+          label={t("Audio engine")}
+          hint={t("Currently running in %@ mode. Web Audio enables the equaliser and the InjeKt bass swap, but needs the audio to be readable cross-origin. Changing this takes effect after a reload.", engine.mode === 'webaudio' ? 'Web Audio' : t('compatibility'))}
         >
           <Segmented<AudioEngineMode>
             value={settings.audioEngine}
             onChange={(value) => settings.set('audioEngine', value)}
             options={[
-              { value: 'auto', label: 'Auto' },
-              { value: 'webaudio', label: 'Web Audio' },
-              { value: 'element', label: 'Compatibility' },
+              { value: 'auto', label: t("Auto") },
+              { value: 'webaudio', label: t("Web Audio") },
+              { value: 'element', label: t("Compatibility") },
             ]}
           />
         </Row>
@@ -702,25 +712,25 @@ export function Settings() {
 
       {/* ------------------------------------------------------- equaliser */}
       <Panel
-        title="Equaliser"
+        title={t("Equaliser")}
         icon={<SlidersHorizontal size={16} />}
         description={
           engine.mode === 'webaudio'
-            ? 'Ten bands of parametric EQ applied to everything Kultr plays.'
-            : 'The equaliser needs Web Audio mode, which is unavailable right now — see the note under Audio.'
+            ? t("Ten bands of parametric EQ applied to everything Kultr plays.")
+            : t("The equaliser needs Web Audio mode, which is unavailable right now — see the note under Audio.")
         }
       >
-        <Row label="Enable the equaliser">
+        <Row label={t("Enable the equaliser")}>
           <Switch
             checked={settings.eqEnabled}
             onChange={(value) => {
               settings.set('eqEnabled', value)
               engine.applyEq()
             }}
-            label="Enable the equaliser"
+            label={t("Enable the equaliser")}
           />
         </Row>
-        <Row label="Preset">
+        <Row label={t("Preset")}>
           <select
             className="field"
             style={{ width: 170 }}
@@ -732,7 +742,7 @@ export function Settings() {
           >
             {Object.keys(EQ_PRESETS).map((preset) => (
               <option key={preset} value={preset}>
-                {preset}
+                {t(preset)}
               </option>
             ))}
           </select>
@@ -752,7 +762,7 @@ export function Settings() {
                 max={12}
                 step={1}
                 value={settings.eqGains[index] ?? 0}
-                aria-label={`${frequency} hertz`}
+                aria-label={t("%@ hertz", frequency)}
                 disabled={!settings.eqEnabled}
                 onChange={(event) => {
                   const gains = [...settings.eqGains]
@@ -768,9 +778,9 @@ export function Settings() {
           ))}
         </div>
 
-        <Row label="Pre-amp" hint="Pull this down if the equaliser makes things clip." stack>
+        <Row label={t("Pre-amp")} hint={t("Pull this down if the equaliser makes things clip.")} stack>
           <SliderRow
-            label="Equaliser pre-amp"
+            label={t("Equaliser pre-amp")}
             min={-12}
             max={6}
             step={0.5}
@@ -786,18 +796,18 @@ export function Settings() {
 
       {/* --------------------------------------------------------- offline */}
       <Panel
-        title="Offline"
+        title={t("Offline")}
         icon={<FolderDown size={16} />}
-        description="Where “Sync offline” puts the audio. Syncing is incremental — running it again only fetches tracks you do not already have."
+        description={t("Where “Sync offline” puts the audio. Syncing is incremental — running it again only fetches tracks you do not already have.")}
       >
         <Row
-          label="Download location"
+          label={t("Download location")}
           hint={
             settings.offlineDestination === 'folder'
               ? settings.offlineFolderName
-                ? `Saving to “${settings.offlineFolderName}”. Files are named Artist - Album - Track, so other players can read them.`
-                : 'No folder chosen yet — you will be asked the first time you download.'
-              : 'Stored inside this browser. Works everywhere, but only Kultr can reach the files and the browser may evict them if space runs short.'
+                ? t("Saving to “%@”. Files are named Artist - Album - Track, so other players can read them.", settings.offlineFolderName)
+                : t("No folder chosen yet — you will be asked the first time you download.")
+              : t("Stored inside this browser. Works everywhere, but only Kultr can reach the files and the browser may evict them if space runs short.")
           }
         >
           <Segmented<OfflineDestination>
@@ -808,7 +818,7 @@ export function Settings() {
                   useToast
                     .getState()
                     .show(
-                      'This browser cannot write to a folder. Chrome, Edge and other Chromium browsers can.',
+                      t("This browser cannot write to a folder. Chrome, Edge and other Chromium browsers can."),
                       'warning',
                     )
                   return
@@ -825,16 +835,16 @@ export function Settings() {
               }
             }}
             options={[
-              { value: 'browser', label: 'This browser' },
-              { value: 'folder', label: 'A folder' },
+              { value: 'browser', label: t("This browser") },
+              { value: 'folder', label: t("A folder") },
             ]}
           />
         </Row>
 
         {settings.offlineDestination === 'folder' ? (
           <Row
-            label="Folder"
-            hint="Browsers only allow writing where you have explicitly pointed the app, so the folder is chosen with a picker rather than typed as a path."
+            label={t("Folder")}
+            hint={t("Browsers only allow writing where you have explicitly pointed the app, so the folder is chosen with a picker rather than typed as a path.")}
           >
             <button
               className="pill"
@@ -844,12 +854,12 @@ export function Settings() {
               }}
             >
               <FolderDown size={14} />
-              {settings.offlineFolderName || 'Choose a folder…'}
+              {settings.offlineFolderName || t("Choose a folder…")}
             </button>
             {settings.offlineFolderName ? (
               <button
                 className="pill"
-                aria-label="Forget this folder"
+                aria-label={t("Forget this folder")}
                 onClick={async () => {
                   await clearDownloadFolder()
                   settings.merge({ offlineFolderName: '' })
@@ -862,12 +872,12 @@ export function Settings() {
         ) : null}
 
         <Row
-          label="Parallel downloads"
-          hint="How many tracks to fetch at once. Lower it if your server struggles."
+          label={t("Parallel downloads")}
+          hint={t("How many tracks to fetch at once. Lower it if your server struggles.")}
           stack
         >
           <SliderRow
-            label="Parallel downloads"
+            label={t("Parallel downloads")}
             min={1}
             max={8}
             step={1}
@@ -878,30 +888,30 @@ export function Settings() {
         </Row>
 
         <Row
-          label="Stored right now"
-          hint="Manage individual tracks on the Offline page in the sidebar."
+          label={t("Stored right now")}
+          hint={t("Manage individual tracks on the Offline page in the sidebar.")}
         >
           <span className="value" style={{ minWidth: 160 }}>
-            {offline.usage.count.toLocaleString()} track(s) · {formatBytes(offline.usage.bytes)}
+            {t("%@ track(s) · %@", offline.usage.count.toLocaleString(), formatBytes(offline.usage.bytes))}
           </span>
         </Row>
-        <Row label="Prefer offline copies" hint="Play a downloaded file instead of streaming when one exists.">
+        <Row label={t("Prefer offline copies")} hint={t("Play a downloaded file instead of streaming when one exists.")}>
           <Switch
             checked={settings.offlineFirst}
             onChange={(value) => settings.set('offlineFirst', value)}
-            label="Prefer offline copies"
+            label={t("Prefer offline copies")}
           />
         </Row>
       </Panel>
 
       {/* ------------------------------------------------ music on this computer */}
       <Panel
-        title="Music on this computer"
+        title={t("Music on this computer")}
         icon={<HardDrive size={16} />}
         description={
           isLocalProfile(auth.activeProfile())
-            ? 'The folders Kultr builds your library from. Albums come from the tags in the files, covers from the pictures beside them or inside them. Favourites, ratings, playlists and play counts are kept by Kultr on this computer.'
-            : 'Use Kultr without a server: add the folders your music is in. Using them switches Kultr from your server to this music; your server stays saved below.'
+            ? t("The folders Kultr builds your library from. Albums come from the tags in the files, covers from the pictures beside them or inside them. Favourites, ratings, playlists and play counts are kept by Kultr on this computer.")
+            : t("Use Kultr without a server: add the folders your music is in. Using them switches Kultr from your server to this music; your server stays saved below.")
         }
       >
         <MusicFoldersRows />
@@ -909,21 +919,20 @@ export function Settings() {
 
       {/* ---------------------------------------------------------- servers */}
       <Panel
-        title="Servers"
+        title={t("Servers")}
         icon={<Server size={16} />}
-        description="Add as many Navidrome servers as you like. Switching servers swaps the library, queue and downloads for that server's own. Turning one off keeps it in the list without connecting to it."
+        description={t("Add as many Navidrome servers as you like. Switching servers swaps the library, queue and downloads for that server's own. Turning one off keeps it in the list without connecting to it.")}
         actions={
           <button
             className="pill pill-accent"
             onClick={() => navigate('/login?add=1')}
           >
             <Plus size={14} />
-            Add a server
-          </button>
+            {t("Add a server")}</button>
         }
       >
         {servers.length === 0 ? (
-          <p className="row__hint">No servers saved yet.</p>
+          <p className="row__hint">{t("No servers saved yet.")}</p>
         ) : null}
 
         {servers.map((profile) => {
@@ -935,47 +944,45 @@ export function Settings() {
             <Row
               key={profile.id}
               label={profile.label}
-              hint={`${incomplete ? 'No sign-in details yet' : profile.username} · ${
-                profile.serverUrl || 'same origin as this page'
-              }${active ? ' · connected' : enabled ? '' : ' · switched off'}`}
+              hint={`${incomplete ? t('No sign-in details yet') : profile.username} · ${
+                profile.serverUrl || t('same origin as this page')
+              }${active ? t(' · connected') : enabled ? '' : t(' · switched off')}`}
             >
               <Switch
                 checked={enabled}
                 onChange={(value) => auth.setProfileEnabled(profile.id, value)}
-                label={`Enable ${profile.label}`}
+                label={t("Enable %@", profile.label)}
               />
               {active ? (
                 <span className="badge" data-tone="success">
-                  Active
-                </span>
+                  {t("Active")}</span>
               ) : (
                 <button
                   className="pill"
                   disabled={!enabled || incomplete}
                   title={
                     incomplete
-                      ? 'Add a username and password first'
+                      ? t("Add a username and password first")
                       : enabled
-                        ? 'Connect to this server'
-                        : 'Switch it on first'
+                        ? t("Connect to this server")
+                        : t("Switch it on first")
                   }
                   onClick={() => void auth.switchProfile(profile.id)}
                 >
-                  Connect
-                </button>
+                  {t("Connect")}</button>
               )}
               <button
                 className="pill pill-icon"
-                aria-label={`Edit ${profile.label}`}
-                title="Edit this server"
+                aria-label={t("Edit %@", profile.label)}
+                title={t("Edit this server")}
                 onClick={() => setEditing(profile.id)}
               >
                 <Pencil size={14} />
               </button>
               <button
                 className="pill pill-icon"
-                aria-label={`Forget ${profile.label}`}
-                title="Forget this server"
+                aria-label={t("Forget %@", profile.label)}
+                title={t("Forget this server")}
                 onClick={() => auth.removeProfile(profile.id)}
               >
                 <Trash2 size={14} />
@@ -984,7 +991,7 @@ export function Settings() {
           )
         })}
 
-        <Row label="Sign out" hint="Forgets the password for this session and returns to the login screen.">
+        <Row label={t("Sign out")} hint={t("Forgets the password for this session and returns to the login screen.")}>
           <button
             className="pill"
             onClick={() => {
@@ -993,31 +1000,30 @@ export function Settings() {
             }}
           >
             <LogOut size={14} />
-            Sign out
-          </button>
+            {t("Sign out")}</button>
         </Row>
       </Panel>
 
       {/* -------------------------------------------------------- custom css */}
       <Panel
-        title="Custom CSS"
+        title={t("Custom CSS")}
         icon={<Code2 size={16} />}
-        description="Applied last, so it overrides everything else. Kultr's own class names are not a stable interface — they can change between versions, and a rule that stops matching simply does nothing. Useful variables: --accent-r/g/b, --glass-tint, --glass-edge, --ink, --r-lg."
+        description={t("Applied last, so it overrides everything else. Kultr's own class names are not a stable interface — they can change between versions, and a rule that stops matching simply does nothing. Useful variables: --accent-r/g/b, --glass-tint, --glass-edge, --ink, --r-lg.")}
       >
-        <Row label="Stylesheet" stack>
+        <Row label={t("Stylesheet")} stack>
           <textarea
             className="codebox"
             spellCheck={false}
             rows={10}
-            placeholder={'/* e.g. a fatter playhead */\n.scrub__track { height: 8px; }'}
+            placeholder={t("/* e.g. a fatter playhead */\n.scrub__track { height: 8px; }")}
             value={settings.customCss}
-            aria-label="Custom CSS"
+            aria-label={t("Custom CSS")}
             onChange={(event) => settings.set('customCss', event.target.value)}
           />
         </Row>
         <Row
-          label="What it can and cannot do"
-          hint="CSS cannot read your library or reach your server, so a bad rule can only make the app look wrong — clear the box to undo it. It can, however, load images and fonts from other sites, which tells those sites your IP address. Only paste CSS you are willing to run."
+          label={t("What it can and cannot do")}
+          hint={t("CSS cannot read your library or reach your server, so a bad rule can only make the app look wrong — clear the box to undo it. It can, however, load images and fonts from other sites, which tells those sites your IP address. Only paste CSS you are willing to run.")}
         >
           <button
             className="pill"
@@ -1025,48 +1031,45 @@ export function Settings() {
             onClick={() => settings.set('customCss', '')}
           >
             <Trash2 size={14} />
-            Clear
-          </button>
+            {t("Clear")}</button>
         </Row>
       </Panel>
 
       {/* ------------------------------------------------- backup and reset */}
       <Panel
-        title="Backup and reset"
+        title={t("Backup and reset")}
         icon={<Download size={16} />}
-        description="Carry your setup to another browser or machine, or wipe it and start again. A plain export holds your preferences only — no servers, no usernames and no passwords — so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too."
+        description={t("Carry your setup to another browser or machine, or wipe it and start again. A plain export holds your preferences only — no servers, no usernames and no passwords — so it is safe to keep anywhere. Anything specific to this device, like the download folder, stays behind too.")}
       >
         <Row
-          label="Export settings"
-          hint="Saves a small JSON file with everything on this page. Your servers are not in it."
+          label={t("Export settings")}
+          hint={t("Saves a small JSON file with everything on this page. Your servers are not in it.")}
         >
           <button
             className="pill"
             onClick={() => {
               const name = downloadSettingsFile(buildSettingsFile(settings, __KULTR_VERSION__))
-              toast.show(`Saved ${name}.`, 'success')
+              toast.show(t("Saved %@.", name), 'success')
             }}
           >
             <Download size={14} />
-            Export
-          </button>
+            {t("Export")}</button>
           <button
             className="pill"
             disabled={servers.length === 0}
             title={
               servers.length === 0
-                ? 'No servers saved yet'
-                : 'Include the list of servers as well'
+                ? t("No servers saved yet")
+                : t("Include the list of servers as well")
             }
             onClick={() => setConfirmServerExport(true)}
           >
             <Server size={14} />
-            Export with servers
-          </button>
+            {t("Export with servers")}</button>
         </Row>
         <Row
-          label="Import settings"
-          hint="Replaces the preferences in the file and leaves everything else as it is. Unknown or credential-shaped entries are ignored."
+          label={t("Import settings")}
+          hint={t("Replaces the preferences in the file and leaves everything else as it is. Unknown or credential-shaped entries are ignored.")}
         >
           <input
             ref={importInput}
@@ -1081,64 +1084,57 @@ export function Settings() {
           />
           <button className="pill" onClick={() => importInput.current?.click()}>
             <Upload size={14} />
-            Import
-          </button>
+            {t("Import")}</button>
         </Row>
         <Row
-          label="Reset Kultr"
-          hint="Deletes the local library mirror, your settings, saved servers, music folders and offline files from this browser. Nothing on your server, and no file on your computer, is touched. Export first if you want any of it back."
+          label={t("Reset Kultr")}
+          hint={t("Deletes the local library mirror, your settings, saved servers, music folders and offline files from this browser. Nothing on your server, and no file on your computer, is touched. Export first if you want any of it back.")}
         >
           <button className="pill" style={{ color: 'var(--danger)' }} onClick={() => setConfirmReset(true)}>
             <Trash2 size={14} />
-            Reset everything
-          </button>
+            {t("Reset everything")}</button>
         </Row>
       </Panel>
 
       <Panel
-        title="About"
+        title={t("About")}
         icon={<Info size={16} />}
-        description="Kultr was vibecoded with Claude Code — designed, written, tested and deployed by prompting Anthropic's CLI rather than by hand. The whole thing, from the tempo detection to the reverse proxy, came out of that conversation."
+        description={t("Kultr was vibecoded with Claude Code — designed, written, tested and deployed by prompting Anthropic's CLI rather than by hand. The whole thing, from the tempo detection to the reverse proxy, came out of that conversation.")}
       >
-        <Row label="Built with" hint="Anthropic's agentic coding tool.">
+        <Row label={t("Built with")} hint={t("Anthropic's agentic coding tool.")}>
           <a className="pill" href="https://claude.ai/code" target="_blank" rel="noreferrer">
             <Sparkles size={14} />
-            Claude Code
-          </a>
+            {t("Claude Code")}</a>
         </Row>
-        <Row label="Keyboard shortcuts" hint="Space to play/pause, arrows to seek, and more.">
+        <Row label={t("Keyboard shortcuts")} hint={t("Space to play/pause, arrows to seek, and more.")}>
           <Switch
             checked={settings.keyboardShortcuts}
             onChange={(value) => settings.set('keyboardShortcuts', value)}
-            label="Keyboard shortcuts"
+            label={t("Keyboard shortcuts")}
           />
           <button className="pill" onClick={() => setShortcuts(true)}>
             <Keyboard size={14} />
-            View
-          </button>
+            {t("View")}</button>
         </Row>
-        <Row label="Version" hint="What changed in every version, newest first.">
+        <Row label={t("Version")} hint={t("What changed in every version, newest first.")}>
           <span className="value" style={{ minWidth: 60 }}>{__KULTR_VERSION__}</span>
           <button className="pill" onClick={() => navigate('/updates')}>
-            Update log
-          </button>
+            {t("Update log")}</button>
         </Row>
-        <Row label="Built">
+        <Row label={t("Built")}>
           <span className="value" style={{ minWidth: 160 }}>
-            {new Date(__KULTR_BUILD_DATE__).toLocaleString()}
+            {new Date(__KULTR_BUILD_DATE__).toLocaleString(locale())}
           </span>
         </Row>
-        <Row label="Source" hint="Issues and pull requests welcome.">
+        <Row label={t("Source")} hint={t("Issues and pull requests welcome.")}>
           <a className="pill" href="https://github.com/evropiani/Kultr" target="_blank" rel="noreferrer">
-            github.com/evropiani/Kultr
-          </a>
+            {t("github.com/evropiani/Kultr")}</a>
         </Row>
-        <Row label="Get in touch" hint="Questions, ideas, or something broken." wrap>
+        <Row label={t("Get in touch")} hint={t("Questions, ideas, or something broken.")} wrap>
           <div className="row__links">
             <a className="pill" href="https://www.reddit.com/r/Kultr/" target="_blank" rel="noreferrer">
               <RedditIcon size={14} />
-              r/Kultr
-            </a>
+              {t("r/Kultr")}</a>
             <a
               className="pill"
               href="https://discord.com/users/319246364246540288"
@@ -1146,8 +1142,7 @@ export function Settings() {
               rel="noreferrer"
             >
               <DiscordIcon size={14} />
-              @evropiani
-            </a>
+              {t("@evropiani")}</a>
           </div>
         </Row>
       </Panel>
@@ -1157,12 +1152,11 @@ export function Settings() {
       <Modal
         open={confirmServerExport}
         onClose={() => setConfirmServerExport(false)}
-        title="Export with servers?"
+        title={t("Export with servers?")}
         footer={
           <>
             <button className="pill" onClick={() => setConfirmServerExport(false)}>
-              Cancel
-            </button>
+              {t("Cancel")}</button>
             <button
               className="pill pill-accent"
               onClick={() => {
@@ -1170,38 +1164,28 @@ export function Settings() {
                   buildSettingsFile(settings, __KULTR_VERSION__, servers),
                 )
                 setConfirmServerExport(false)
-                toast.show(`Saved ${name}.`, 'success')
+                toast.show(t("Saved %@.", name), 'success')
               }}
             >
               <Download size={14} />
-              Export with servers
-            </button>
+              {t("Export with servers")}</button>
           </>
         }
       >
         <p className="row__hint" style={{ fontSize: 13 }}>
-          The file will list the name and address of each of your
-          {' '}
-          {servers.length === 1 ? 'server' : `${servers.length} servers`}. Usernames and
-          passwords are <strong>never</strong> included, so nobody could sign in with it — but the
-          addresses say where your music lives, and for a server reachable from the internet that is
-          worth keeping to yourself.
-        </p>
+          {t("The file will list the name and address of %@. Usernames and passwords are", servers.length === 1 ? t("your server") : t("each of your %@ servers", servers.length))}{' '}<strong>{t("never")}</strong> {' '}{t("included, so nobody could sign in with it — but the addresses say where your music lives, and for a server reachable from the internet that is worth keeping to yourself.")}</p>
         <p className="row__hint" style={{ fontSize: 13, marginTop: 10 }}>
-          <strong>Do not share this file.</strong> Use the plain export if you want something you can
-          pass on or paste into an issue.
-        </p>
+          <strong>{t("Do not share this file.")}</strong> {' '}{t("Use the plain export if you want something you can pass on or paste into an issue.")}</p>
       </Modal>
 
       <Modal
         open={confirmReset}
         onClose={() => setConfirmReset(false)}
-        title="Reset Kultr?"
+        title={t("Reset Kultr?")}
         footer={
           <>
             <button className="pill" onClick={() => setConfirmReset(false)}>
-              Cancel
-            </button>
+              {t("Cancel")}</button>
             <button
               className="pill"
               style={{ color: 'var(--danger)' }}
@@ -1210,21 +1194,16 @@ export function Settings() {
                 await forgetLocalLibrary()
                 localStorage.clear()
                 sessionStorage.clear()
-                useToast.getState().show('Everything cleared. Reloading…', 'info')
+                useToast.getState().show(t("Everything cleared. Reloading…"), 'info')
                 setTimeout(() => location.reload(), 600)
               }}
             >
-              Reset everything
-            </button>
+              {t("Reset everything")}</button>
           </>
         }
       >
         <p className="row__hint">
-          This wipes the local library mirror, your settings, saved servers, offline downloads and
-          InjeKt analysis from this browser, and forgets your music folders with their favourites,
-          ratings, play counts and playlists (music imported into the browser is deleted; folders on
-          your computer are not touched). Nothing on your Navidrome server is touched.
-        </p>
+          {t("This wipes the local library mirror, your settings, saved servers, offline downloads and InjeKt analysis from this browser, and forgets your music folders with their favourites, ratings, play counts and playlists (music imported into the browser is deleted; folders on your computer are not touched). Nothing on your Navidrome server is touched.")}</p>
       </Modal>
     </div>
   )
@@ -1266,9 +1245,7 @@ function HomeTileEditor({
     <>
       {enabled.length === 0 ? (
         <p className="row__hint">
-          Every shelf is switched off. The home page will only show the greeting and its two
-          buttons until you add one back.
-        </p>
+          {t("Every shelf is switched off. The home page will only show the greeting and its two buttons until you add one back.")}</p>
       ) : null}
 
       <ol className="tiles" ref={listRef}>
@@ -1278,7 +1255,7 @@ function HomeTileEditor({
               <button
                 className="iconbtn"
                 style={{ width: 26, height: 22 }}
-                aria-label={`Move ${tile.title} up`}
+                aria-label={t("Move %@ up", t(tile.title))}
                 disabled={index === 0}
                 onClick={() => move(index, -1)}
               >
@@ -1287,7 +1264,7 @@ function HomeTileEditor({
               <button
                 className="iconbtn"
                 style={{ width: 26, height: 22 }}
-                aria-label={`Move ${tile.title} down`}
+                aria-label={t("Move %@ down", t(tile.title))}
                 disabled={index === enabled.length - 1}
                 onClick={() => move(index, 1)}
               >
@@ -1295,13 +1272,13 @@ function HomeTileEditor({
               </button>
             </div>
             <div className="tile__text">
-              <span className="row__label">{tile.title}</span>
-              <span className="row__hint">{tile.note}</span>
+              <span className="row__label">{t(tile.title)}</span>
+              <span className="row__hint">{t(tile.note)}</span>
             </div>
             <button
               className="pill pill-icon"
-              aria-label={`Remove ${tile.title} from the home page`}
-              title="Remove from the home page"
+              aria-label={t("Remove %@ from the home page", t(tile.title))}
+              title={t("Remove from the home page")}
               onClick={() => onChange(enabled.filter((entry) => entry.id !== tile.id).map((entry) => entry.id))}
             >
               <Minus size={14} />
@@ -1313,17 +1290,17 @@ function HomeTileEditor({
       {available.length ? (
         <>
           <div className="hairline" style={{ margin: '14px 0 12px' }} />
-          <span className="row__label">Not shown</span>
+          <span className="row__label">{t("Not shown")}</span>
           <div className="tiles__add">
             {available.map((tile) => (
               <button
                 key={tile.id}
                 className="pill"
-                title={tile.note}
+                title={t(tile.note)}
                 onClick={() => onChange([...value, tile.id])}
               >
                 <Plus size={13} />
-                {tile.title}
+                {t(tile.title)}
               </button>
             ))}
           </div>
@@ -1381,10 +1358,10 @@ function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void 
     })
     setBusy(false)
     if (ok) {
-      toast.show(`${label.trim() || profile.label} saved.`, 'success')
+      toast.show(t("%@ saved.", label.trim() || profile.label), 'success')
       onClose()
     } else {
-      toast.show(auth.error ?? 'Could not connect with those details.', 'error')
+      toast.show(auth.error ?? t("Could not connect with those details."), 'error')
     }
   }
 
@@ -1392,25 +1369,24 @@ function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void 
     <Modal
       open
       onClose={onClose}
-      title={`Edit ${profile.label}`}
+      title={t("Edit %@", profile.label)}
       footer={
         <>
           <button className="pill" onClick={onClose}>
-            Cancel
-          </button>
+            {t("Cancel")}</button>
           <button
             className="pill pill-accent"
             disabled={busy || !username.trim()}
             onClick={() => void save()}
           >
             {busy ? <Spinner /> : null}
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? t("Saving…") : t("Save")}
           </button>
         </>
       }
     >
       <div className="login__field">
-        <label htmlFor="edit-label">Name</label>
+        <label htmlFor="edit-label">{t("Name")}</label>
         <div className="field">
           <Tag size={16} opacity={0.6} />
           <input
@@ -1424,25 +1400,24 @@ function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void 
       </div>
 
       <div className="login__field" style={{ marginTop: 12 }}>
-        <label htmlFor="edit-url">Server address</label>
+        <label htmlFor="edit-url">{t("Server address")}</label>
         <div className="field">
           <Server size={16} opacity={0.6} />
           <input
             id="edit-url"
             value={serverUrl}
-            placeholder="https://music.example.com"
+            placeholder={t("https://music.example.com")}
             autoComplete="url"
             spellCheck={false}
             onChange={(event) => setServerUrl(event.target.value)}
           />
         </div>
         <span className="login__hint">
-          Leave empty if Kultr is served from the same address as Navidrome.
-        </span>
+          {t("Leave empty if Kultr is served from the same address as Navidrome.")}</span>
       </div>
 
       <div className="login__field" style={{ marginTop: 12 }}>
-        <label htmlFor="edit-user">Username</label>
+        <label htmlFor="edit-user">{t("Username")}</label>
         <div className="field">
           <User size={16} opacity={0.6} />
           <input
@@ -1457,7 +1432,7 @@ function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void 
 
       <div className="login__field" style={{ marginTop: 12 }}>
         <label htmlFor="edit-pass">
-          Password <span className="login__optional">leave empty to keep the current one</span>
+          {t("Password")}{' '}<span className="login__optional">{t("leave empty to keep the current one")}</span>
         </label>
         <div className="field">
           <ShieldCheck size={16} opacity={0.6} />
@@ -1466,7 +1441,7 @@ function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void 
             type="password"
             value={password}
             autoComplete="current-password"
-            placeholder={profile.password ? '••••••••' : 'Not set'}
+            placeholder={profile.password ? '••••••••' : t("Not set")}
             onChange={(event) => setPassword(event.target.value)}
           />
         </div>
@@ -1474,20 +1449,16 @@ function ServerDialog({ id, onClose }: { id: string | null; onClose: () => void 
 
       <div className="row" style={{ borderTop: 0, paddingBottom: 0 }}>
         <div className="row__text">
-          <span className="row__label">Send the password in plain form</span>
+          <span className="row__label">{t("Send the password in plain form")}</span>
           <span className="row__hint">
-            Only needed if your server has token authentication disabled.
-          </span>
+            {t("Only needed if your server has token authentication disabled.")}</span>
         </div>
-        <Switch checked={plainAuth} onChange={setPlainAuth} label="Plain password" />
+        <Switch checked={plainAuth} onChange={setPlainAuth} label={t("Plain password")} />
       </div>
 
       {identityChanged ? (
         <p className="row__hint" style={{ marginTop: 4 }}>
-          Changing the address or the username points this entry at a different
-          account, so Kultr treats it as a different server. The local library mirror is
-          replaced the next time you sync.
-        </p>
+          {t("Changing the address or the username points this entry at a different account, so Kultr treats it as a different server. The local library mirror is replaced the next time you sync.")}</p>
       ) : null}
     </Modal>
   )

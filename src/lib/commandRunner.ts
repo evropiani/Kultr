@@ -1,11 +1,12 @@
 import type { Song } from '@/api/types'
 import { allAlbums, allArtists, allSongs, songsByAlbum, songsByArtist } from '@/db'
-import { decadeStations } from '@/audio/stations'
+import { decadeStations, stationName } from '@/audio/stations'
 import { usePlayer } from '@/store/player'
 import { settings } from '@/store/settings'
 import { useToast } from '@/store/ui'
 import { describeCommand, parseCommand, type CommandPlace, type KultrCommand } from './commands'
 import { crateSongs } from './crates'
+import { t } from '@/i18n'
 
 /**
  * Runs what the command bar understood. The rules live in commands.ts; this
@@ -24,7 +25,7 @@ export function refreshCommandNames(): void {
 
 export function commandFor(text: string): KultrCommand | null {
   const s = settings()
-  return parseCommand(text, [...s.stations.map((station) => station.name), ...decadeNames], s.crates.map((crate) => crate.name))
+  return parseCommand(text, [...s.stations.flatMap((station) => [stationName(station), station.name]), ...decadeNames], s.crates.map((crate) => crate.name))
 }
 
 export { describeCommand }
@@ -76,7 +77,7 @@ export async function runCommand(command: KultrCommand, navigate: (to: string) =
     case 'shuffle': {
       const songs = await music(command.what)
       if (!songs.length) {
-        toast.show(`Nothing in your library matches “${command.what}”.`, 'warning')
+        toast.show(t("Nothing in your library matches “%@”.", command.what), 'warning')
         return
       }
       await player.playNow(command.kind === 'shuffle' ? shuffled(songs) : songs, 0, command.what)
@@ -85,14 +86,14 @@ export async function runCommand(command: KultrCommand, navigate: (to: string) =
     case 'shuffleAll': {
       const songs = await allSongs()
       if (!songs.length) return
-      await player.playNow(shuffled(songs).slice(0, 200), 0, 'Shuffle all')
+      await player.playNow(shuffled(songs).slice(0, 200), 0, t('Shuffle all'))
       return
     }
     case 'station': {
       const all = [...settings().stations, ...decadeStations((await allSongs()).map((song) => song.year))]
       const station = all.find((entry) => entry.name.toLowerCase() === command.name.toLowerCase())
       if (!station) {
-        toast.show(`There’s no station called “${command.name}”. Stations has the list.`, 'warning')
+        toast.show(t("There’s no station called “%@”. Stations has the list.", command.name), 'warning')
         return
       }
       if (player.station && player.playback === 'playing') await player.switchStation(station)
@@ -101,11 +102,11 @@ export async function runCommand(command: KultrCommand, navigate: (to: string) =
     }
     case 'sleep':
       player.setSleepTimer(command.minutes)
-      toast.show(`Sleep timer: ${command.minutes} minutes.`, 'info')
+      toast.show(t("Sleep timer: %@ minutes.", command.minutes), 'info')
       return
     case 'sleepAfterTrack':
       player.setSleepTimer(null, true)
-      toast.show('Stopping after this track.', 'info')
+      toast.show(t("Stopping after this track."), 'info')
       return
     case 'pause':
       if (player.playback === 'playing') await player.toggle()
@@ -120,7 +121,7 @@ export async function runCommand(command: KultrCommand, navigate: (to: string) =
       await player.previous()
       return
     case 'mixNow':
-      if (!(await player.mixNow())) toast.show('Nothing to mix into: this is the last track', 'info')
+      if (!(await player.mixNow())) toast.show(t("Nothing to mix into: this is the last track"), 'info')
       return
     case 'plan':
       navigate(command.minutes ? `/planner?minutes=${command.minutes}` : '/planner')
@@ -137,7 +138,7 @@ export async function runCommand(command: KultrCommand, navigate: (to: string) =
         return
       }
       const songs = await crateSongs(crate)
-      if (!songs.length) toast.show(`“${crate.name}” is empty.`, 'info')
+      if (!songs.length) toast.show(t("“%@” is empty.", crate.name), 'info')
       else await player.playNow(songs, 0, crate.name)
       return
     }

@@ -6,6 +6,7 @@ import { useSettings } from '@/store/settings'
 import { useSelection } from '@/store/selection'
 import { useUi } from '@/store/ui'
 import { Modal } from './ui'
+import { t } from '@/i18n'
 
 const SHORTCUTS: [string, string][] = [
   ['Space', 'Play or pause'],
@@ -134,7 +135,7 @@ export function ShortcutsModal() {
   const setShortcuts = useUi((state) => state.setShortcuts)
 
   return (
-    <Modal open={open} onClose={() => setShortcuts(false)} title="Keyboard shortcuts">
+    <Modal open={open} onClose={() => setShortcuts(false)} title={t("Keyboard shortcuts")}>
       <div style={{ display: 'grid', gap: 2 }}>
         {SHORTCUTS.map(([keys, description]) => (
           <div
@@ -148,7 +149,7 @@ export function ShortcutsModal() {
               borderTop: '1px solid var(--line)',
             }}
           >
-            <span style={{ fontSize: 13.5 }}>{description}</span>
+            <span style={{ fontSize: 13.5 }}>{t(description)}</span>
             <kbd
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -160,7 +161,7 @@ export function ShortcutsModal() {
                 whiteSpace: 'nowrap',
               }}
             >
-              {keys}
+              {t(keys)}
             </kbd>
           </div>
         ))}

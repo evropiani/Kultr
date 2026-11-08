@@ -9,13 +9,14 @@ import { crateSongs } from '@/lib/crates'
 import { useAsync } from '@/lib/hooks'
 import { libraryDecades } from '@/lib/stationLibrary'
 import { widgetRows, type HomeWidget } from '@/lib/widgets'
-import { summary, type Station } from '@/audio/stations'
+import { stationName, summary, type Station } from '@/audio/stations'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { useUi } from '@/store/ui'
 import { StationIcon } from './StationIcon'
 import { Art } from './ui'
+import { t } from '@/i18n'
 
 /** The widgets at the top of Home, in rows: small ones side by side. As in Kultr for iOS. */
 export function HomeWidgets() {
@@ -59,20 +60,20 @@ function NowPlayingWidget({ widget }: { widget: HomeWidget }) {
   return (
     <div className="widget glass" data-size={widget.size}>
       <button className="widget__main" onClick={() => song && setNowPlaying(true)} disabled={!song}>
-        <Art src={song ? artUrl(song, 200) : ''} alt={song?.album ?? 'Nothing playing'} className="widget__art" />
+        <Art src={song ? artUrl(song, 200) : ''} alt={song?.album ?? t("Nothing playing")} className="widget__art" />
         <span className="widget__text">
-          <small>Now playing</small>
-          <strong>{song?.title ?? 'Nothing yet'}</strong>
-          <span>{song ? song.artist : 'Pick something, or start a station'}</span>
+          <small>{t("Now playing")}</small>
+          <strong>{song?.title ?? t("Nothing yet")}</strong>
+          <span>{song ? song.artist : t("Pick something, or start a station")}</span>
         </span>
       </button>
       {song ? (
         <span className="widget__buttons">
-          <button className="iconbtn" aria-label={playing ? 'Pause' : 'Play'} onClick={() => void usePlayer.getState().toggle()}>
+          <button className="iconbtn" aria-label={playing ? t("Pause") : t("Play")} onClick={() => void usePlayer.getState().toggle()}>
             {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
           </button>
           {widget.size !== 'small' ? (
-            <button className="iconbtn" aria-label="Next track" onClick={() => void usePlayer.getState().next(true)}>
+            <button className="iconbtn" aria-label={t("Next track")} onClick={() => void usePlayer.getState().next(true)}>
               <SkipForward size={18} fill="currentColor" />
             </button>
           ) : null}
@@ -110,9 +111,9 @@ function ListeningWidget({ widget }: { widget: HomeWidget }) {
         <BarChart3 size={18} />
       </span>
       <span className="widget__text">
-        <small>This week</small>
-        <strong>{hours >= 1 ? `${hours.toFixed(hours < 10 ? 1 : 0)} h` : `${Math.round(data.thisWeek / 60)} min`}</strong>
-        <span>{ratio === null ? 'of listening' : ratio >= 1.05 ? `${Math.round((ratio - 1) * 100)}% more than usual` : ratio <= 0.95 ? `${Math.round((1 - ratio) * 100)}% less than usual` : 'about as usual'}</span>
+        <small>{t("This week")}</small>
+        <strong>{hours >= 1 ? `${hours.toFixed(hours < 10 ? 1 : 0)} h` : t("%@ min", Math.round(data.thisWeek / 60))}</strong>
+        <span>{ratio === null ? t("of listening") : ratio >= 1.05 ? t("%@% more than usual", Math.round((ratio - 1) * 100)) : ratio <= 0.95 ? t("%@% less than usual", Math.round((1 - ratio) * 100)) : t("about as usual")}</span>
       </span>
     </button>
   )
@@ -135,14 +136,16 @@ function NextMixWidget({ widget }: { widget: HomeWidget }) {
         <GitMerge size={18} />
       </span>
       <span className="widget__text">
-        <small>Next mix</small>
-        <strong>{next?.title ?? 'Nothing next'}</strong>
+        <small>{t("Next mix")}</small>
+        <strong>{next?.title ?? t("Nothing next")}</strong>
         <span>
           {next
             ? plan
-              ? `${MIX_WORDS[plan.type] ?? 'a mix'}${plan.duration > 0.5 ? ` over ${Math.round(plan.duration)} s` : ''}`
+              ? plan.duration > 0.5
+                ? t('%@ over %@ s', t(MIX_WORDS[plan.type] ?? 'a mix'), Math.round(plan.duration))
+                : t(MIX_WORDS[plan.type] ?? 'a mix')
               : next.artist
-            : 'Karousel or a station keeps it going'}
+            : t("Karousel or a station keeps it going")}
         </span>
       </span>
     </div>
@@ -166,8 +169,8 @@ function StationWidget({ widget }: { widget: HomeWidget }) {
         <StationIcon symbol={station.icon} size={18} />
       </span>
       <span className="widget__text">
-        <small>{playing ? 'Playing' : 'Station'}</small>
-        <strong>{station.name}</strong>
+        <small>{playing ? t("Playing") : t("Station")}</small>
+        <strong>{stationName(station)}</strong>
         <span>{summary(station)}</span>
       </span>
     </button>
@@ -201,9 +204,9 @@ function CrateWidget({ widget }: { widget: HomeWidget }) {
         </span>
       )}
       <span className="widget__text">
-        <small>Crate</small>
+        <small>{t("Crate")}</small>
         <strong>{crate.name}</strong>
-        <span>Click to play it</span>
+        <span>{t("Click to play it")}</span>
       </span>
     </button>
   )
@@ -219,7 +222,7 @@ function ShortcutWidget({ widget }: { widget: HomeWidget }) {
         <Zap size={18} />
       </span>
       <span className="widget__text">
-        <small>Shortcut</small>
+        <small>{t("Shortcut")}</small>
         <strong>{command ? describeCommand(command) : words}</strong>
         <span>“{words}”</span>
       </span>

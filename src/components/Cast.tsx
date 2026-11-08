@@ -3,6 +3,7 @@ import { Cast } from 'lucide-react'
 import { engine } from '@/audio/engine'
 import { castKind, promptCast, watchCast } from '@/audio/cast'
 import { useToast } from '@/store/ui'
+import { t } from '@/i18n'
 
 /**
  * Send playback to a Chromecast, an AirPlay device or anything else the
@@ -25,10 +26,10 @@ export function CastButton({ size = 17 }: { size?: number }) {
   if (kind === 'none') return null
 
   const label = state.connected
-    ? 'Playing on another device'
+    ? t('Playing on another device')
     : state.available
-      ? 'Play on another device'
-      : 'No devices found yet'
+      ? t('Play on another device')
+      : t('No devices found yet')
 
   return (
     <button
@@ -38,7 +39,7 @@ export function CastButton({ size = 17 }: { size?: number }) {
       title={
         state.available || state.connected
           ? label
-          : `${label}. The receiver streams from your Navidrome directly, so it has to be able to reach the server itself.`
+          : t("%@. The receiver streams from your Navidrome directly, so it has to be able to reach the server itself.", label)
       }
       onClick={async () => {
         try {
@@ -46,7 +47,7 @@ export function CastButton({ size = 17 }: { size?: number }) {
         } catch (err) {
           // A dismissed picker rejects too, and that is not worth a toast.
           if ((err as Error)?.name === 'NotAllowedError' || (err as Error)?.name === 'AbortError') return
-          useToast.getState().show('Could not open the device picker.', 'error')
+          useToast.getState().show(t("Could not open the device picker."), 'error')
         }
       }}
     >

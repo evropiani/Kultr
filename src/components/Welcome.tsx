@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Infinity as InfinityIcon, Library, Palette, Search, Sparkles } from 'lucide-react'
 import { useSettings, WAS_INSTALLED } from '@/store/settings'
 import { Modal } from './ui'
+import { t } from '@/i18n'
 
 const SLIDES = [
   {
@@ -53,19 +54,17 @@ export function Welcome() {
     <Modal
       open={open}
       onClose={close}
-      title={`${index + 1} of ${SLIDES.length}`}
+      title={t("%@ of %@", index + 1, SLIDES.length)}
       footer={
         <>
           <button className="pill" style={{ marginRight: 'auto' }} onClick={close}>
-            Skip
-          </button>
+            {t("Skip")}</button>
           {index > 0 ? (
             <button className="pill" onClick={() => setIndex(index - 1)}>
-              Back
-            </button>
+              {t("Back")}</button>
           ) : null}
           <button className="pill pill-accent" onClick={() => (last ? close() : setIndex(index + 1))}>
-            {last ? 'Start listening' : 'Next'}
+            {last ? t("Start listening") : t("Next")}
           </button>
         </>
       }
@@ -74,11 +73,11 @@ export function Welcome() {
         <span className="welcome__icon">
           <Icon size={30} />
         </span>
-        <h2>{slide.title}</h2>
-        <p>{slide.text}</p>
+        <h2>{t(slide.title)}</h2>
+        <p>{t(slide.text)}</p>
         {'link' in slide && slide.link ? (
           <Link className="welcome__link" to={slide.link.to} onClick={close}>
-            {slide.link.label}
+            {t(slide.link.label)}
           </Link>
         ) : null}
         <div className="welcome__dots" aria-hidden="true">

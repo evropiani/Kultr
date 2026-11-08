@@ -33,7 +33,7 @@ import {
 } from 'lucide-react'
 import { artUrl, dominantColor, hexToRgb, onAccent, readableOnLight } from '@/lib/artwork'
 import { usePlayer } from '@/store/player'
-import { isLocalProfile, useAuth } from '@/store/auth'
+import { isLocalProfile, profileName, useAuth } from '@/store/auth'
 import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { useToast, useUi } from '@/store/ui'
@@ -42,6 +42,7 @@ import { OfflineProgressBar } from './Offline'
 import { afterNextPaint, usePresence, useSlidingIndicator } from '@/lib/motion'
 import { Logo } from './Logo'
 import { commandFor, runCommand } from '@/lib/commandRunner'
+import { t } from '@/i18n'
 
 /* ------------------------------------------------------------------ backdrop */
 
@@ -164,15 +165,15 @@ export function Sidebar() {
   const local = useAuth((state) => isLocalProfile(state.activeProfile()))
   const crateCount = useSettings((state) => state.crates.length)
   const library = [
-    { to: '/albums', label: 'Albums', icon: Disc3, count: counts.albums },
-    { to: '/artists', label: 'Artists', icon: Users, count: counts.artists },
-    { to: '/songs', label: 'Songs', icon: Music2, count: counts.songs },
-    { to: '/genres', label: 'Genres', icon: Tags, count: counts.genres },
-    { to: '/playlists', label: 'Playlists', icon: ListMusic, count: counts.playlists },
-    { to: '/crates', label: 'Crates', icon: Package, count: crateCount || undefined },
-    { to: '/favourites', label: 'Favourites', icon: Heart },
+    { to: '/albums', label: t("Albums"), icon: Disc3, count: counts.albums },
+    { to: '/artists', label: t("Artists"), icon: Users, count: counts.artists },
+    { to: '/songs', label: t("Songs"), icon: Music2, count: counts.songs },
+    { to: '/genres', label: t("Genres"), icon: Tags, count: counts.genres },
+    { to: '/playlists', label: t("Playlists"), icon: ListMusic, count: counts.playlists },
+    { to: '/crates', label: t("Crates"), icon: Package, count: crateCount || undefined },
+    { to: '/favourites', label: t("Favourites"), icon: Heart },
     // Music on this computer is offline already.
-    ...(local ? [] : [{ to: '/downloads', label: 'Offline', icon: HardDrive }]),
+    ...(local ? [] : [{ to: '/downloads', label: t("Offline"), icon: HardDrive }]),
   ]
 
   return (
@@ -180,15 +181,15 @@ export function Sidebar() {
       {scrim.present ? (
         <div className="sidebar-scrim" data-leaving={scrim.leaving} onClick={() => setSidebar(false)} />
       ) : null}
-      <nav className="sidebar glass" data-open={open} aria-label="Main navigation" ref={navRef}>
+      <nav className="sidebar glass" data-open={open} aria-label={t("Main navigation")} ref={navRef}>
         <div className="sidebar__mark" ref={markRef} aria-hidden="true" />
         <div className="sidebar__brand">
           <Logo size={32} />
-          <span className="sidebar__name">Kultr</span>
+          <span className="sidebar__name">{t("Kultr")}</span>
           <button
             className="iconbtn mobile-only"
             style={{ marginLeft: 'auto' }}
-            aria-label="Close the menu"
+            aria-label={t("Close the menu")}
             onClick={() => setSidebar(false)}
           >
             <X size={18} />
@@ -199,24 +200,24 @@ export function Sidebar() {
           <NavItem key={item.to} {...item} onPick={slideTo} />
         ))}
 
-        <div className="sidebar__section">Library</div>
+        <div className="sidebar__section">{t("Library")}</div>
         {library.map((item) => (
           <NavItem key={item.to} {...item} onPick={slideTo} />
         ))}
 
-        <div className="sidebar__section">{local ? 'This computer' : 'Server'}</div>
-        <NavItem to="/sync" label="Sync" icon={RefreshCw} onPick={slideTo} />
-        <NavItem to="/stats" label="Listening" icon={BarChart3} onPick={slideTo} />
-        <NavItem to="/studio" label="Studio" icon={Palette} onPick={slideTo} />
-        <NavItem to="/settings" label="Settings" icon={SettingsIcon} onPick={slideTo} />
+        <div className="sidebar__section">{local ? t("This computer") : t("Server")}</div>
+        <NavItem to="/sync" label={t("Sync")} icon={RefreshCw} onPick={slideTo} />
+        <NavItem to="/stats" label={t("Listening")} icon={BarChart3} onPick={slideTo} />
+        <NavItem to="/studio" label={t("Studio")} icon={Palette} onPick={slideTo} />
+        <NavItem to="/settings" label={t("Settings")} icon={SettingsIcon} onPick={slideTo} />
 
         <div className="sidebar__footer">
           <OfflineProgressBar />
           <div className="sidebar__server">
             <span className="dot" data-state={status === 'connected' ? 'ok' : status} />
             <span style={{ minWidth: 0 }}>
-              <strong>{profile?.label ?? 'Not connected'}</strong>
-              {profile?.username ?? 'Sign in to start'}
+              <strong>{profile ? profileName(profile) : t("Not connected")}</strong>
+              {profile?.username ?? t("Sign in to start")}
             </span>
           </div>
         </div>
@@ -258,7 +259,7 @@ function NavItem({
       }}
     >
       <Icon size={17} />
-      {label}
+      {t(label)}
       {count ? <span className="navitem__count">{count.toLocaleString()}</span> : null}
     </NavLink>
   )
@@ -303,13 +304,13 @@ export function TopBar() {
 
   const profileItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = auth.profiles.map((profile) => ({
-      label: `${profile.label} · ${profile.username}`,
+      label: isLocalProfile(profile) ? profileName(profile) : `${profile.label} · ${profile.username}`,
       icon: <Server size={15} />,
       onSelect: () => void auth.switchProfile(profile.id),
       disabled: profile.id === auth.activeId,
     }))
     items.push({
-      label: 'Add another server…',
+      label: t("Add another server…"),
       icon: <Server size={15} />,
       separatorBefore: true,
       onSelect: () => {
@@ -318,12 +319,12 @@ export function TopBar() {
       },
     })
     items.push({
-      label: 'Keyboard shortcuts',
+      label: t("Keyboard shortcuts"),
       icon: <Keyboard size={15} />,
       onSelect: () => setShortcuts(true),
     })
     items.push({
-      label: 'Sign out',
+      label: t("Sign out"),
       icon: <LogOut size={15} />,
       danger: true,
       separatorBefore: true,
@@ -339,17 +340,17 @@ export function TopBar() {
     <header className="topbar">
       <button
         className="iconbtn mobile-only"
-        aria-label="Open the menu"
+        aria-label={t("Open the menu")}
         onClick={() => setSidebar(true)}
       >
         <MenuIcon size={19} />
       </button>
 
       <div className="topbar__nav">
-        <button className="iconbtn" aria-label="Back" onClick={() => navigate(-1)}>
+        <button className="iconbtn" aria-label={t("Back")} onClick={() => navigate(-1)}>
           <ChevronLeft size={19} />
         </button>
-        <button className="iconbtn" aria-label="Forward" onClick={() => navigate(1)}>
+        <button className="iconbtn" aria-label={t("Forward")} onClick={() => navigate(1)}>
           <ChevronRight size={19} />
         </button>
       </div>
@@ -382,8 +383,8 @@ export function TopBar() {
         <input
           type="search"
           value={query}
-          placeholder="Search, or tell Kultr what to play…  (press /)"
-          aria-label="Search your library, or type a command"
+          placeholder={t("Search, or tell Kultr what to play…  (press /)")}
+          aria-label={t("Search your library, or type a command")}
           data-search-input="true"
           enterKeyHint="search"
           onChange={(event) => typeQuery(event.target.value)}
@@ -396,8 +397,8 @@ export function TopBar() {
         className="pill pill--sync"
         onClick={() => void sync.run('check')}
         disabled={sync.running}
-        aria-label="Check for updates"
-        title="Check the server for changes and pull in anything new"
+        aria-label={t("Check for updates")}
+        title={t("Check the server for changes and pull in anything new")}
       >
         <RefreshCw size={14} className={sync.running ? 'spin' : undefined} />
         {/* The label folds away on a phone; the percentage does not, because
@@ -405,13 +406,13 @@ export function TopBar() {
         {sync.running ? (
           <span>{Math.round(sync.progress.percent * 100)}%</span>
         ) : (
-          <span className="pill__label">Check for updates</span>
+          <span className="pill__label">{t("Check for updates")}</span>
         )}
       </button>
 
       <button
         className="iconbtn"
-        aria-label="Toggle theme"
+        aria-label={t("Toggle theme")}
         onClick={() => setSetting('theme', theme === 'dark' ? 'light' : 'dark')}
       >
         {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
@@ -420,7 +421,7 @@ export function TopBar() {
       <button
         ref={profileButton}
         className="iconbtn"
-        aria-label="Account and servers"
+        aria-label={t("Account and servers")}
         onClick={() => menu.openFrom(profileButton.current)}
       >
         <Activity size={17} />
@@ -458,7 +459,7 @@ export function Toasts() {
             <button
               className="iconbtn toast__close"
               style={{ width: 26, height: 26 }}
-              aria-label="Dismiss"
+              aria-label={t("Dismiss")}
               onClick={() => dismiss(toast.id)}
             >
               <X size={14} />

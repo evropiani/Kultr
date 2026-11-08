@@ -13,7 +13,7 @@
  */
 import { build } from 'esbuild'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -36,7 +36,11 @@ const aliasPlugin = {
   setup(pluginBuild) {
     pluginBuild.onResolve({ filter: /^@\// }, (args) => {
       if (alias[args.path]) return { path: alias[args.path] }
-      return { path: join(root, 'src', args.path.slice(2)) + '.ts' }
+      const base = join(root, 'src', args.path.slice(2))
+      // A folder is its index.ts (src/i18n), and a .json is itself.
+      if (existsSync(join(base, 'index.ts'))) return { path: join(base, 'index.ts') }
+      if (base.endsWith('.json')) return { path: base }
+      return { path: base + '.ts' }
     })
   },
 }
@@ -61,6 +65,9 @@ for (const suite of SUITES) {
 }
 
 rmSync(out, { recursive: true, force: true })
+
+console.log(`\n── i18n ${'─'.repeat(52)}`)
+if (spawnSync(process.execPath, [join(here, 'i18n-check.mjs')], { stdio: 'inherit' }).status !== 0) failed++
 
 if (failed > 0) {
   console.error(`\n${failed} suite(s) failed.\n`)

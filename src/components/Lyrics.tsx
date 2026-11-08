@@ -3,6 +3,7 @@ import type { Song, StructuredLyrics } from '@/api/types'
 import { maybeClient } from '@/api/subsonic'
 import { engine } from '@/audio/engine'
 import { Spinner } from './ui'
+import { t } from '@/i18n'
 
 interface Line {
   start: number | null
@@ -118,10 +119,7 @@ export function Lyrics({ song }: { song: Song }) {
   if (!lines?.length) {
     return (
       <p className="row__hint" style={{ padding: 12 }}>
-        No lyrics for this track. Navidrome reads lyrics from the file's tags (or a matching
-        <code> .lrc</code> file next to it) — add them there and they will show up here, time-synced
-        if the <code>.lrc</code> has timestamps.
-      </p>
+        {t("No lyrics for this track. Navidrome reads lyrics from the file's tags (or a matching")}<code> {' '}{t(".lrc")}</code> {' '}{t("file next to it) — add them there and they will show up here, time-synced if the")}{' '}<code>{t(".lrc")}</code> {' '}{t("has timestamps.")}</p>
     )
   }
 

@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import { initials } from '@/lib/format'
 import { useDismiss } from '@/lib/hooks'
 import { prefersReducedMotion, useLastWhile, usePresence, useSlidingIndicator } from '@/lib/motion'
+import { t } from '@/i18n'
 
 /** Artwork with a graceful fallback when the image is missing or blocked. */
 export function Art({
@@ -300,7 +301,7 @@ export function Modal({
       <div className="sheet glass glass-strong" ref={ref}>
         <div className="sheet__head">
           <h2>{shown.title}</h2>
-          <button className="iconbtn" onClick={onClose} aria-label="Close">
+          <button className="iconbtn" onClick={onClose} aria-label={t("Close")}>
             <X size={18} />
           </button>
         </div>
@@ -416,7 +417,7 @@ export function Empty({
 }
 
 export function Spinner() {
-  return <span className="spinner" role="status" aria-label="Loading" />
+  return <span className="spinner" role="status" aria-label={t("Loading")} />
 }
 
 export function SkeletonGrid({ count = 12 }: { count?: number }) {

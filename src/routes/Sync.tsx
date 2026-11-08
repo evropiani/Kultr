@@ -20,6 +20,23 @@ import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { useToast } from '@/store/ui'
 import { Modal, Row, Section, Switch } from '@/components/ui'
+import { locale, t } from '@/i18n'
+import type { SyncPhase } from '@/sync/engine'
+
+const PHASE_LABEL: Record<SyncPhase, string> = {
+  idle: 'waiting',
+  connecting: 'connecting',
+  scanning: 'reading files',
+  artists: 'artists',
+  albums: 'albums',
+  songs: 'tracks',
+  playlists: 'playlists',
+  genres: 'genres',
+  cleanup: 'tidying up',
+  done: 'done',
+  error: 'error',
+  cancelled: 'cancelled',
+}
 
 export function SyncPage() {
   const sync = useSync()
@@ -52,7 +69,7 @@ export function SyncPage() {
       setScan(status ?? null)
       useToast
         .getState()
-        .show('Navidrome is rescanning its music folder. Run “Check for updates” when it finishes.', 'info')
+        .show(t("Navidrome is rescanning its music folder. Run “Check for updates” when it finishes."), 'info')
     } catch (err) {
       useToast.getState().show(describeError(err), 'error')
     }
@@ -64,26 +81,22 @@ export function SyncPage() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Library sync</h1>
+          <h1>{t("Library sync")}</h1>
           <span className="page-head__sub">
-            Kultr keeps its own copy of your library so browsing is instant and works offline.
-          </span>
+            {t("Kultr keeps its own copy of your library so browsing is instant and works offline.")}</span>
         </div>
         <div className="page-actions">
           {running ? (
             <button className="pill" onClick={sync.cancel}>
               <X size={14} />
-              Cancel
-            </button>
+              {t("Cancel")}</button>
           ) : null}
           <button className="pill" disabled={running} onClick={() => void sync.run('check')}>
             <RefreshCw size={14} className={running ? 'spin' : undefined} />
-            Check for updates
-          </button>
+            {t("Check for updates")}</button>
           <button className="pill pill-accent" disabled={running} onClick={() => void sync.run('full')}>
             <Database size={14} />
-            Sync everything
-          </button>
+            {t("Sync everything")}</button>
         </div>
       </div>
 
@@ -91,15 +104,14 @@ export function SyncPage() {
         <section className="section glass" style={{ marginBottom: 18 }}>
           <div className="section__head">
             <RefreshCw size={16} className="spin" />
-            <h3>{progress.message || 'Working…'}</h3>
+            <h3>{progress.message || t("Working…")}</h3>
             <span className="value">{Math.round(progress.percent * 100)}%</span>
           </div>
           <div className="syncbar">
             <div className="syncbar__fill" style={{ width: `${Math.max(2, progress.percent * 100)}%` }} />
           </div>
           <p className="section__desc" style={{ marginTop: 10, marginBottom: 0 }}>
-            Phase: {progress.phase}
-            {progress.total > 1 ? ` · ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()}` : ''}
+            {t("Phase: %@%@", t(PHASE_LABEL[progress.phase]), progress.total > 1 ? t(" · %@ of %@", progress.current.toLocaleString(), progress.total.toLocaleString()) : '')}
           </p>
         </section>
       ) : null}
@@ -108,7 +120,7 @@ export function SyncPage() {
         <section className="section glass" style={{ marginBottom: 18, borderColor: 'rgb(255 95 87 / 0.4)' }}>
           <div className="section__head">
             <AlertTriangle size={16} color="var(--danger)" />
-            <h3>Sync failed</h3>
+            <h3>{t("Sync failed")}</h3>
           </div>
           <p className="section__desc" style={{ marginBottom: 0 }}>{error}</p>
         </section>
@@ -118,10 +130,9 @@ export function SyncPage() {
         <section className="section glass" style={{ marginBottom: 18 }}>
           <div className="section__head">
             <AlertTriangle size={16} color="var(--warning)" />
-            <h3>Your server has changed</h3>
+            <h3>{t("Your server has changed")}</h3>
             <button className="pill pill-accent" onClick={() => void sync.run('check')}>
-              Update now
-            </button>
+              {t("Update now")}</button>
           </div>
           <p className="section__desc" style={{ marginBottom: 0 }}>{hint}</p>
         </section>
@@ -131,82 +142,80 @@ export function SyncPage() {
         <section className="section glass" style={{ marginBottom: 18 }}>
           <div className="section__head">
             <CheckCircle2 size={16} color="var(--success)" />
-            <h3>{lastSummary.upToDate ? 'Everything is up to date' : 'Sync finished'}</h3>
+            <h3>{lastSummary.upToDate ? t("Everything is up to date") : t("Sync finished")}</h3>
             <span className="value">
               {((lastSummary.finishedAt - lastSummary.startedAt) / 1000).toFixed(1)}s
             </span>
           </div>
           <p className="section__desc" style={{ marginBottom: 0 }}>
             {lastSummary.upToDate
-              ? 'Nothing on the server had changed since the last check.'
-              : `${lastSummary.albumsAdded} album(s) added, ${lastSummary.albumsUpdated} updated, ${lastSummary.albumsRemoved} removed, ${lastSummary.songsRemoved} stale track(s) cleaned up.`}
+              ? t("Nothing on the server had changed since the last check.")
+              : t("%@ album(s) added, %@ updated, %@ removed, %@ stale track(s) cleaned up.", lastSummary.albumsAdded, lastSummary.albumsUpdated, lastSummary.albumsRemoved, lastSummary.songsRemoved)}
             {lastSummary.errors.length
-              ? ` ${lastSummary.errors.length} album(s) could not be read — check the server log.`
+              ? t(" %@ album(s) could not be read — check the server log.", lastSummary.errors.length)
               : ''}
           </p>
         </section>
       ) : null}
 
-      <Section title="What Kultr has stored" icon={<Database size={16} />}>
+      <Section title={t("What Kultr has stored")} icon={<Database size={16} />}>
         <div className="stats" style={{ marginTop: 6 }}>
-          <Stat value={state.counts.songs} label="Tracks" />
-          <Stat value={state.counts.albums} label="Albums" />
-          <Stat value={state.counts.artists} label="Artists" />
-          <Stat value={state.counts.playlists} label="Playlists" />
-          <Stat value={state.counts.genres} label="Genres" />
+          <Stat value={state.counts.songs} label={t("Tracks")} />
+          <Stat value={state.counts.albums} label={t("Albums")} />
+          <Stat value={state.counts.artists} label={t("Artists")} />
+          <Stat value={state.counts.playlists} label={t("Playlists")} />
+          <Stat value={state.counts.genres} label={t("Genres")} />
         </div>
-        <Row label="Last full sync" hint="A full sync re-reads every album's track list.">
+        <Row label={t("Last full sync")} hint={t("A full sync re-reads every album's track list.")}>
           <span className="value" style={{ minWidth: 120 }}>{formatRelative(state.lastFullSync)}</span>
         </Row>
-        <Row label="Last check" hint="Checks read the album index and only pull what changed.">
+        <Row label={t("Last check")} hint={t("Checks read the album index and only pull what changed.")}>
           <span className="value" style={{ minWidth: 120 }}>{formatRelative(state.lastCheck)}</span>
         </Row>
       </Section>
 
       <Section
-        title="Your server"
+        title={t("Your server")}
         icon={<Server size={16} />}
-        description="Navidrome scans your music folder on its own schedule. If you just added files, ask it to scan, wait for it to finish, then check for updates here."
+        description={t("Navidrome scans your music folder on its own schedule. If you just added files, ask it to scan, wait for it to finish, then check for updates here.")}
       >
-        <Row label="Connected to" hint={auth.activeProfile()?.serverUrl || 'Same origin as this page'}>
+        <Row label={t("Connected to")} hint={auth.activeProfile()?.serverUrl || t("Same origin as this page")}>
           <span className="value" style={{ minWidth: 140 }}>
-            {auth.serverInfo?.type ?? 'navidrome'} {auth.serverInfo?.serverVersion ?? auth.serverInfo?.version ?? ''}
+            {auth.serverInfo?.type ?? t("navidrome")} {auth.serverInfo?.serverVersion ?? auth.serverInfo?.version ?? ''}
           </span>
         </Row>
         <Row
-          label="Server scan"
+          label={t("Server scan")}
           hint={
             scan
               ? scan.scanning
-                ? 'A scan is running right now.'
-                : `Server reports ${formatCount(scan.count ?? 0, 'track')}${scan.lastScan ? `, last scanned ${new Date(scan.lastScan).toLocaleString()}` : ''}.`
-              : 'Scan status is unavailable — your account may not have admin rights.'
+                ? t("A scan is running right now.")
+                : t("Server reports %@%@.", formatCount(scan.count ?? 0, 'track'), scan.lastScan ? t(", last scanned %@", new Date(scan.lastScan).toLocaleString(locale())) : '')
+              : t("Scan status is unavailable — your account may not have admin rights.")
           }
         >
           <button className="pill" onClick={() => void refreshScan()}>
-            Refresh
-          </button>
+            {t("Refresh")}</button>
           <button className="pill" disabled={scan?.scanning} onClick={() => void triggerServerScan()}>
-            Start a scan
-          </button>
+            {t("Start a scan")}</button>
         </Row>
       </Section>
 
       <Section
-        title="Automatic syncing"
+        title={t("Automatic syncing")}
         icon={<RefreshCw size={16} />}
-        description="Kultr can quietly check for changes while it is open."
+        description={t("Kultr can quietly check for changes while it is open.")}
       >
-        <Row label="Check on startup" hint="Runs an incremental check a few seconds after you connect.">
+        <Row label={t("Check on startup")} hint={t("Runs an incremental check a few seconds after you connect.")}>
           <Switch
             checked={settings.autoSyncOnStart}
             onChange={(value) => settings.set('autoSyncOnStart', value)}
-            label="Check on startup"
+            label={t("Check on startup")}
           />
         </Row>
         <Row
-          label="Repeat check"
-          hint="How often to look for changes while Kultr stays open. Set to 0 to disable."
+          label={t("Repeat check")}
+          hint={t("How often to look for changes while Kultr stays open. Set to 0 to disable.")}
         >
           <input
             className="field"
@@ -217,16 +226,16 @@ export function SyncPage() {
             value={settings.autoSyncMinutes}
             onChange={(event) => settings.set('autoSyncMinutes', Number(event.target.value))}
           />
-          <span className="value">minutes</span>
+          <span className="value">{t("minutes")}</span>
         </Row>
         <Row
-          label="Include playlist contents"
-          hint="Fetches every playlist's track list during a sync. Turn off if you have hundreds of playlists."
+          label={t("Include playlist contents")}
+          hint={t("Fetches every playlist's track list during a sync. Turn off if you have hundreds of playlists.")}
         >
           <Switch
             checked={settings.syncPlaylistContents}
             onChange={(value) => settings.set('syncPlaylistContents', value)}
-            label="Include playlist contents"
+            label={t("Include playlist contents")}
           />
         </Row>
       </Section>
@@ -234,45 +243,40 @@ export function SyncPage() {
       <AnalysisSection />
 
       <Section
-        title="Local storage"
+        title={t("Local storage")}
         icon={<HardDrive size={16} />}
-        description="Clearing the mirror does not touch anything on your server — you can always sync again."
+        description={t("Clearing the mirror does not touch anything on your server — you can always sync again.")}
       >
-        <Row label="Clear the local library" hint="Removes mirrored tracks, albums, artists and playlists.">
+        <Row label={t("Clear the local library")} hint={t("Removes mirrored tracks, albums, artists and playlists.")}>
           <button className="pill" onClick={() => setConfirmWipe(true)}>
             <Trash2 size={14} />
-            Clear
-          </button>
+            {t("Clear")}</button>
         </Row>
       </Section>
 
       <Modal
         open={confirmWipe}
         onClose={() => setConfirmWipe(false)}
-        title="Clear the local library?"
+        title={t("Clear the local library?")}
         footer={
           <>
             <button className="pill" onClick={() => setConfirmWipe(false)}>
-              Cancel
-            </button>
+              {t("Cancel")}</button>
             <button
               className="pill"
               style={{ color: 'var(--danger)' }}
               onClick={async () => {
                 await sync.wipe()
                 setConfirmWipe(false)
-                useToast.getState().show('Local library cleared.', 'info')
+                useToast.getState().show(t("Local library cleared."), 'info')
               }}
             >
-              Clear it
-            </button>
+              {t("Clear it")}</button>
           </>
         }
       >
         <p className="row__hint">
-          Your music, playlists and favourites stay safe on Navidrome. You will need to sync again
-          before browsing works offline.
-        </p>
+          {t("Your music, playlists and favourites stay safe on Navidrome. You will need to sync again before browsing works offline.")}</p>
       </Modal>
     </>
   )
@@ -315,7 +319,7 @@ function AnalysisSection() {
       queue = songs.filter((song) => !known.has(song.id))
     }
     if (!queue.length) {
-      useToast.getState().show('Every track has already been analysed.', 'success')
+      useToast.getState().show(t("Every track has already been analysed."), 'success')
       return
     }
     controller.current = new AbortController()
@@ -334,20 +338,20 @@ function AnalysisSection() {
     await refresh()
     useToast
       .getState()
-      .show(`Analysed ${succeeded.toLocaleString()} of ${queue.length.toLocaleString()} tracks.`, 'success')
+      .show(t("Analysed %@ of %@ tracks.", succeeded.toLocaleString(), queue.length.toLocaleString()), 'success')
   }
 
   const percent = total ? done / total : 0
 
   return (
     <Section
-      title="InjeKt analysis"
+      title={t("InjeKt analysis")}
       icon={<Sparkles size={16} />}
-      description="InjeKt needs each track's tempo, key, energy and intro/outro points. Analysis happens automatically for whatever is about to play, but you can do it in bulk so every transition is ready from the first play. Each track is streamed once at a low bitrate; nothing is written to your server."
+      description={t("InjeKt needs each track's tempo, key, energy and intro/outro points. Analysis happens automatically for whatever is about to play, but you can do it in bulk so every transition is ready from the first play. Each track is streamed once at a low bitrate; nothing is written to your server.")}
     >
       <div className="stats" style={{ marginTop: 6 }}>
-        <Stat value={analysed} label="Analysed" />
-        <Stat value={Math.max(0, library - analysed)} label="Remaining" />
+        <Stat value={analysed} label={t("Analysed")} />
+        <Stat value={Math.max(0, library - analysed)} label={t("Remaining")} />
       </div>
 
       {running ? (
@@ -361,7 +365,7 @@ function AnalysisSection() {
         </>
       ) : null}
 
-      <Row label="Analyse the library" hint="Only the tracks that have not been analysed yet.">
+      <Row label={t("Analyse the library")} hint={t("Only the tracks that have not been analysed yet.")}>
         {running ? (
           <button
             className="pill"
@@ -371,32 +375,28 @@ function AnalysisSection() {
             }}
           >
             <X size={14} />
-            Stop
-          </button>
+            {t("Stop")}</button>
         ) : (
           <>
             <button className="pill" onClick={() => void start('missing')}>
-              Analyse missing
-            </button>
+              {t("Analyse missing")}</button>
             <button className="pill" onClick={() => void start('all')}>
-              Re-analyse all
-            </button>
+              {t("Re-analyse all")}</button>
           </>
         )}
       </Row>
-      <Row label="Clear analysis" hint="Throw the cached tempo and key data away.">
+      <Row label={t("Clear analysis")} hint={t("Throw the cached tempo and key data away.")}>
         <button
           className="pill"
           disabled={running}
           onClick={async () => {
             await clearAnalysis()
             await refresh()
-            useToast.getState().show('Analysis cache cleared.', 'info')
+            useToast.getState().show(t("Analysis cache cleared."), 'info')
           }}
         >
           <Trash2 size={14} />
-          Clear
-        </button>
+          {t("Clear")}</button>
       </Row>
     </Section>
   )

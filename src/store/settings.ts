@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { STATION_PRESETS, type Station } from '@/audio/stations'
 import type { Annotation, Crate } from '@/lib/collection'
 import { DEFAULT_HOME_WIDGETS, type HomeWidget } from '@/lib/widgets'
+import type { Language } from '@/i18n'
 
 export type ThemeMode = 'dark' | 'light' | 'system'
 export type AccentMode = 'artwork' | 'fixed'
@@ -171,6 +172,8 @@ export interface SettingsState {
   homeWidgets: HomeWidget[]
   /** Whether Home shows them at all. */
   showHomeWidgets: boolean
+  /** The language of the app: the browser's, English or German. */
+  language: Language
 
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void
   merge: (patch: Partial<SettingsState>) => void
@@ -259,6 +262,7 @@ export const DEFAULT_SETTINGS = {
   factsTemplate: '',
   homeWidgets: DEFAULT_HOME_WIDGETS,
   showHomeWidgets: true,
+  language: 'system' as Language,
 }
 
 /** Brings settings saved by an older version up to date. */

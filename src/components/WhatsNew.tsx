@@ -5,6 +5,10 @@ import { parseChangelog, releasesSince, type Release } from '@/lib/changelog'
 import { WAS_INSTALLED } from '@/store/settings'
 import { Markdown } from './Markdown'
 import { Modal } from './ui'
+import { language, t } from '@/i18n'
+
+/** The notes themselves are written in English, as in the other apps. */
+const InEnglish = () => (language() === 'en' ? null : <p className="row__hint">{t('The release notes are in English.')}</p>)
 
 const SEEN_KEY = 'kultr.lastSeenVersion'
 
@@ -30,7 +34,7 @@ export function ReleaseNotes({ release }: { release: Release }) {
   return (
     <article className="release">
       <h2>
-        Kultr {release.version} <small>{release.date}</small>
+        {t("Kultr %@", release.version)} <small>{release.date}</small>
       </h2>
       {release.entries.map((entry) => (
         <section key={entry.when + entry.title}>
@@ -77,19 +81,18 @@ export function WhatsNew() {
     <Modal
       open={open}
       onClose={close}
-      title="What’s new in Kultr"
+      title={t("What’s new in Kultr")}
       footer={
         <>
           <Link className="pill" to="/updates" onClick={close}>
-            The whole update log
-          </Link>
+            {t("The whole update log")}</Link>
           <button className="pill pill-accent" onClick={close}>
-            Got it
-          </button>
+            {t("Got it")}</button>
         </>
       }
     >
       <div className="whats-new">
+        <InEnglish />
         {releases.map((release) => (
           <ReleaseNotes key={release.version} release={release} />
         ))}
@@ -104,12 +107,12 @@ export function UpdateLog() {
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Update log</h1>
+          <h1>{t("Update log")}</h1>
           <span className="page-head__sub">
-            Every change to Kultr, newest first. You have version {__KULTR_VERSION__}.
-          </span>
+            {t("Every change to Kultr, newest first. You have version %@.", __KULTR_VERSION__)}</span>
         </div>
       </div>
+      <InEnglish />
       <div className="update-log">
         {RELEASES.map((release) => (
           <section key={release.version} className="section glass">

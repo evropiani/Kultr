@@ -7,6 +7,7 @@ import type { Annotation, Crate } from './collection'
 import { isEmptyAnnotation, toggleIn } from './collection'
 import { sortKey } from './format'
 import { stationPool } from './stationLibrary'
+import { t } from '@/i18n'
 
 /**
  * Crates and notes: kept with the settings (so a settings backup keeps
@@ -63,7 +64,7 @@ export function toggleInCrate(item: CrateItem, crateId: string): void {
     next.songs = songs
   }
   saveCrate(next)
-  useToast.getState().show(wasIn ? `Taken out of “${crate.name}”` : `Added to “${crate.name}”`, 'success')
+  useToast.getState().show(wasIn ? t("Taken out of “%@”", crate.name) : t("Added to “%@”", crate.name), 'success')
 }
 
 /** Every track in a crate: its albums, its artists' tracks and its own tracks, or what fits its rules. */
@@ -133,7 +134,7 @@ export async function syncCrateNow(crateId: string): Promise<string | null> {
     return null
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    useToast.getState().show(`“${crate.name}” could not be kept as a playlist: ${message}`, 'error')
+    useToast.getState().show(t("“%@” could not be kept as a playlist: %@", crate.name, message), 'error')
     return message
   }
 }

@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * The command bar: words typed into search that Kultr can do rather than
  * look for — "play night drive", "shuffle radiohead", "sleep in 30 minutes",
@@ -28,12 +30,56 @@ const SIMPLE: Record<string, KultrCommand> = {}
 const simple = (command: KultrCommand, ...phrases: string[]) => {
   for (const phrase of phrases) SIMPLE[phrase] = command
 }
-simple({ kind: 'pause' }, 'pause', 'stop', 'stop the music', 'be quiet')
-simple({ kind: 'resume' }, 'play', 'resume', 'continue', 'go on', 'unpause')
-simple({ kind: 'next' }, 'next', 'skip', 'next track', 'next song', 'skip this')
-simple({ kind: 'previous' }, 'previous', 'back', 'go back', 'previous track', 'previous song', 'last song')
-simple({ kind: 'mixNow' }, 'mix', 'mix now', 'mix it', 'blend', 'mix into the next one')
-simple({ kind: 'shuffleAll' }, 'shuffle', 'shuffle all', 'shuffle everything', 'shuffle my library', 'surprise me')
+// English and German, as in Kultr for iOS and Android.
+simple({ kind: 'pause' }, 'pause', 'stop', 'stop the music', 'be quiet', 'stopp', 'stopp die musik', 'anhalten', 'ruhe', 'pausieren', 'pausiere')
+simple({ kind: 'resume' }, 'play', 'resume', 'continue', 'go on', 'unpause', 'fortsetzen', 'weiterspielen', 'spiel weiter', 'spiele weiter', 'abspielen', 'wiedergeben')
+simple(
+  { kind: 'next' },
+  'next',
+  'skip',
+  'next track',
+  'next song',
+  'skip this',
+  'weiter',
+  'nächster',
+  'nächstes',
+  'nächster titel',
+  'nächstes lied',
+  'nächster song',
+  'überspringen',
+  'skippen',
+)
+simple(
+  { kind: 'previous' },
+  'previous',
+  'back',
+  'go back',
+  'previous track',
+  'previous song',
+  'last song',
+  'zurück',
+  'vorheriger',
+  'vorheriger titel',
+  'voriger titel',
+  'vorheriges lied',
+  'letzter titel',
+  'letztes lied',
+)
+simple({ kind: 'mixNow' }, 'mix', 'mix now', 'mix it', 'blend', 'mix into the next one', 'mischen', 'jetzt mischen', 'mixen', 'jetzt mixen', 'überblenden', 'in den nächsten mischen')
+simple(
+  { kind: 'shuffleAll' },
+  'shuffle',
+  'shuffle all',
+  'shuffle everything',
+  'shuffle my library',
+  'surprise me',
+  'zufällig',
+  'zufall',
+  'alles zufällig',
+  'zufallswiedergabe',
+  'überrasch mich',
+  'überrasche mich',
+)
 simple(
   { kind: 'sleepAfterTrack' },
   'sleep after this',
@@ -41,7 +87,20 @@ simple(
   'sleep after this track',
   'stop after this song',
   'stop after this track',
+  'nach diesem titel stoppen',
+  'nach diesem lied stoppen',
+  'stopp nach diesem titel',
+  'stopp nach diesem lied',
+  'schlafen nach diesem titel',
+  'schlafen nach diesem lied',
 )
+
+const SLEEP = new Set(['sleep', 'timer', 'stop', 'schlaf', 'schlafe', 'schlafen', 'schlaftimer', 'stopp', 'stoppe'])
+const OPEN = new Set(['open', 'show', 'go', 'öffne', 'öffnen', 'zeig', 'zeige', 'geh', 'gehe'])
+const CRATE = new Set(['crate', 'kiste'])
+const PLAN_LINES = ['build a set', 'make a set', 'set planen', 'ein set planen', 'bau ein set', 'baue ein set']
+const STATION_LINES = ['play the station ', 'spiel die station ', 'spiele die station ']
+const FILLERS = ['some ', 'etwas von ', 'was von ', 'etwas ', 'was ']
 
 const PLACES: Record<string, CommandPlace> = {
   home: 'home',
@@ -62,6 +121,22 @@ const PLACES: Record<string, CommandPlace> = {
   planner: 'planner',
   'energy planner': 'planner',
   search: 'search',
+  start: 'home',
+  startseite: 'home',
+  mediathek: 'library',
+  bibliothek: 'library',
+  einstellungen: 'settings',
+  hörstatistik: 'listening',
+  statistik: 'listening',
+  verlauf: 'listening',
+  rückblick: 'recap',
+  monatsrückblick: 'recap',
+  stationen: 'stations',
+  regler: 'stations',
+  kisten: 'crates',
+  planer: 'planner',
+  energieplaner: 'planner',
+  suche: 'search',
 }
 
 const NUMBERS: Record<string, number> = {
@@ -77,16 +152,29 @@ const NUMBERS: Record<string, number> = {
   fifty: 50,
   sixty: 60,
   ninety: 90,
+  eins: 1,
+  zwei: 2,
+  drei: 3,
+  fünf: 5,
+  zehn: 10,
+  fünfzehn: 15,
+  zwanzig: 20,
+  dreißig: 30,
+  vierzig: 40,
+  fünfzig: 50,
+  sechzig: 60,
+  neunzig: 90,
 }
 
-/** "30", "30 minutes", "half an hour", "an hour", "2 hours", "1h", "90min". */
+/** "30", "30 minutes", "half an hour", "an hour", "2 hours", "1h", "90min"; "eine Stunde", "30 Minuten". */
 function minutesIn(input: string[]): number | null {
   const words = [...input]
-  if (['in', 'for', 'after'].includes(words[0] ?? '')) words.shift()
+  if (['in', 'for', 'after', 'nach', 'für'].includes(words[0] ?? '')) words.shift()
   const line = words.join(' ')
-  if (line.startsWith('half an hour') || line.startsWith('half hour')) return 30
-  if (line.startsWith('an hour and a half') || line.startsWith('one and a half hours')) return 90
-  if (line.startsWith('an hour') || line.startsWith('one hour') || line === 'hour') return 60
+  const starts = (...phrases: string[]) => phrases.some((phrase) => line.startsWith(phrase))
+  if (starts('half an hour', 'half hour', 'einer halben stunde', 'eine halbe stunde', 'halbe stunde')) return 30
+  if (starts('an hour and a half', 'one and a half hours', 'anderthalb stunden', 'eineinhalb stunden')) return 90
+  if (starts('an hour', 'one hour', 'einer stunde', 'eine stunde') || line === 'hour' || line === 'stunde') return 60
   const first = words[0]
   if (!first) return null
   const digits = /^\d*/.exec(first)![0]
@@ -94,7 +182,7 @@ function minutesIn(input: string[]): number | null {
   const value = digits ? Number(digits) : NUMBERS[first]
   if (value === undefined || !Number.isFinite(value)) return null
   const unit = unitInline || (words.length > 1 ? words[1] : 'min')
-  const minutes = unit.startsWith('h') ? value * 60 : value
+  const minutes = unit.startsWith('h') || unit.startsWith('stund') || unit.startsWith('std') ? value * 60 : value
   return minutes >= 1 && minutes <= 24 * 60 ? minutes : null
 }
 
@@ -124,48 +212,53 @@ export function parseCommand(text: string, stations: string[] = [], crates: stri
 
   if (SIMPLE[line]) return SIMPLE[line]
 
-  // Sleep in 30 minutes, stop in an hour, timer 45.
-  if (['sleep', 'timer', 'stop'].includes(words[0]) || line.startsWith('sleep timer')) {
-    const minutes = minutesIn(words.slice(words[0] === 'sleep' && words[1] === 'timer' ? 2 : 1))
+  const first = words[0]
+  // Sleep in 30 minutes, stop in an hour, timer 45; schlaf in 30 Minuten.
+  if (SLEEP.has(first) || line.startsWith('sleep timer')) {
+    const minutes = minutesIn(words.slice(line.startsWith('sleep timer') ? 2 : 1))
     if (minutes) return { kind: 'sleep', minutes }
   }
-  // Plan a set, plan an hour, plan 90 minutes.
-  if (words[0] === 'plan' || line.startsWith('build a set') || line.startsWith('make a set')) {
+  // Plan a set, plan an hour, plan 90 minutes; plane eine Stunde, Set planen.
+  if (['plan', 'plane', 'planen'].includes(first) || PLAN_LINES.some((phrase) => line.startsWith(phrase))) {
     return { kind: 'plan', minutes: minutesIn(words.slice(1)) }
   }
-  // Open settings, show my stations, go to listening.
-  if (['open', 'show', 'go'].includes(words[0])) {
+  // Open settings, show my stations, go to listening; öffne Einstellungen, zeig meine Kisten.
+  if (OPEN.has(first)) {
     const target = words.slice(1)
-    if (target[0] === 'to') target.shift()
-    if (['my', 'the'].includes(target[0] ?? '')) target.shift()
+    if (['to', 'zu', 'zur', 'zum', 'in', 'ins'].includes(target[0] ?? '')) target.shift()
+    if (['my', 'the', 'mein', 'meine', 'meinen', 'die', 'den', 'das', 'der'].includes(target[0] ?? '')) target.shift()
+    if (['an', 'auf'].includes(target[target.length - 1] ?? '')) target.pop()
     const place = target.join(' ')
     if (PLACES[place]) return { kind: 'open', place: PLACES[place] }
-    if (target[0] === 'crate') {
+    if (CRATE.has(target[0] ?? '')) {
       const crate = named(target.slice(1).join(' '), crates)
       if (crate) return { kind: 'crate', name: crate }
     }
     const crate = named(place, crates)
     if (crate) return { kind: 'crate', name: crate }
   }
-  if (words[0] === 'crate') {
+  if (CRATE.has(first)) {
     const crate = named(rest(1), crates)
     if (crate) return { kind: 'crate', name: crate }
   }
-  // Station night drive, tune in to warm up, play the station peak hour.
-  if (words[0] === 'station') return { kind: 'station', name: named(rest(1), stations) ?? rest(1) }
-  if (words.length > 2 && words[0] === 'tune' && (words[1] === 'in' || words[1] === 'to')) {
+  // Station night drive, tune in to warm up, play the station peak hour; spiele die Station Nachtfahrt.
+  if (first === 'station') return { kind: 'station', name: named(rest(1), stations) ?? rest(1) }
+  if (words.length > 2 && first === 'tune' && (words[1] === 'in' || words[1] === 'to')) {
     const name = words[1] === 'in' && words.length > 3 && words[2] === 'to' ? rest(3) : rest(2)
     return { kind: 'station', name: named(name, stations) ?? name }
   }
-  if (line.startsWith('play the station ')) return { kind: 'station', name: named(rest(3), stations) ?? rest(3) }
-  if (words[0] === 'shuffle' && words.length > 1) return { kind: 'shuffle', what: rest(1) }
-  if (words[0] === 'play' && words.length > 1) {
-    const what = rest(1)
+  if (STATION_LINES.some((phrase) => line.startsWith(phrase))) return { kind: 'station', name: named(rest(3), stations) ?? rest(3) }
+  if ((first === 'shuffle' || first === 'zufällig') && words.length > 1) return { kind: 'shuffle', what: rest(1) }
+  if (['play', 'spiel', 'spiele'].includes(first) && words.length > 1) {
+    let what = rest(1)
+    // "spiele Radiohead ab"
+    if (first !== 'play' && what.endsWith(' ab')) what = what.slice(0, -3)
     const station = named(what, stations)
     if (station) return { kind: 'station', name: station }
     const crate = named(what, crates)
     if (crate) return { kind: 'playCrate', name: crate }
-    return { kind: 'play', what: what.startsWith('some ') ? what.slice(5) : what }
+    const filler = FILLERS.find((prefix) => what.startsWith(prefix) && what.length > prefix.length)
+    return { kind: 'play', what: filler ? what.slice(filler.length) : what }
   }
   return null
 }
@@ -187,34 +280,34 @@ const PLACE_LABEL: Record<CommandPlace, string> = {
 export function describeCommand(command: KultrCommand): string {
   switch (command.kind) {
     case 'play':
-      return `Play “${command.what}”`
+      return t('Play “%@”', command.what)
     case 'shuffle':
-      return `Shuffle “${command.what}”`
+      return t('Shuffle “%@”', command.what)
     case 'shuffleAll':
-      return 'Shuffle your whole library'
+      return t('Shuffle your whole library')
     case 'station':
-      return `Play the station ${command.name}`
+      return t('Play the station %@', command.name)
     case 'sleep':
-      return `Sleep timer: ${command.minutes} min`
+      return t('Sleep timer: %@ min', command.minutes)
     case 'sleepAfterTrack':
-      return 'Stop after this track'
+      return t('Stop after this track')
     case 'pause':
-      return 'Pause'
+      return t('Pause')
     case 'resume':
-      return 'Play'
+      return t('Play')
     case 'next':
-      return 'Next track'
+      return t('Next track')
     case 'previous':
-      return 'Previous track'
+      return t('Previous track')
     case 'mixNow':
-      return 'Mix into the next track'
+      return t('Mix into the next track')
     case 'plan':
-      return command.minutes ? `Plan a set of ${command.minutes} min` : 'Plan a set'
+      return command.minutes ? t('Plan a set of %@ min', command.minutes) : t('Plan a set')
     case 'open':
-      return `Open ${PLACE_LABEL[command.place]}`
+      return t('Open %@', t(PLACE_LABEL[command.place]))
     case 'crate':
-      return `Open the crate ${command.name}`
+      return t('Open the crate %@', command.name)
     case 'playCrate':
-      return `Play the crate ${command.name}`
+      return t('Play the crate %@', command.name)
   }
 }

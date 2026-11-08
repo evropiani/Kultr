@@ -17,6 +17,7 @@ import {
 import { settings } from './settings'
 import { useToast } from './ui'
 import { isLocalId } from '@/local/files'
+import { t } from '@/i18n'
 
 interface OfflineState {
   running: boolean
@@ -53,13 +54,13 @@ export const useOffline = create<OfflineState>((set, get) => ({
     // Music on this computer is already here; there is nothing to download.
     const remote = songs.filter((song) => !isLocalId(song.id))
     if (songs.length && !remote.length) {
-      useToast.getState().show('That music is already on this computer, so it plays offline as it is.', 'info')
+      useToast.getState().show(t("That music is already on this computer, so it plays offline as it is."), 'info')
       return
     }
     songs = remote
     if (!songs.length) return
     if (get().running) {
-      useToast.getState().show('A download is already running.', 'warning')
+      useToast.getState().show(t("A download is already running."), 'warning')
       return
     }
 
@@ -81,7 +82,7 @@ export const useOffline = create<OfflineState>((set, get) => ({
         if (!picked) {
           useToast
             .getState()
-            .show('No folder chosen, so nothing was downloaded. Pick one in Settings → Offline.', 'warning')
+            .show(t("No folder chosen, so nothing was downloaded. Pick one in Settings → Offline."), 'warning')
           return
         }
         config.merge({ offlineFolderName: picked.name })
@@ -102,12 +103,12 @@ export const useOffline = create<OfflineState>((set, get) => ({
       if (summary.cancelled) {
         useToast
           .getState()
-          .show(`Stopped after ${summary.downloaded} of ${summary.total} track(s).`, 'info')
+          .show(t("Stopped after %@ of %@ track(s).", summary.downloaded, summary.total), 'info')
       } else if (summary.downloaded === 0 && summary.failed === 0) {
         useToast
           .getState()
           .show(
-            label ? `${label} is already fully downloaded.` : 'Everything was already downloaded.',
+            label ? t("%@ is already fully downloaded.", label) : t("Everything was already downloaded."),
             'success',
           )
       } else {
@@ -121,7 +122,7 @@ export const useOffline = create<OfflineState>((set, get) => ({
       if (err instanceof NoFolderChosenError) {
         useToast
           .getState()
-          .show('Choose a download folder in Settings → Offline first.', 'warning')
+          .show(t("Choose a download folder in Settings → Offline first."), 'warning')
       } else {
         useToast
           .getState()
@@ -138,7 +139,7 @@ export const useOffline = create<OfflineState>((set, get) => ({
     await get().refresh()
     useToast
       .getState()
-      .show(removed ? `Removed ${removed} track(s) from offline storage.` : 'Nothing to remove.', 'info')
+      .show(removed ? t("Removed %@ track(s) from offline storage.", removed) : t("Nothing to remove."), 'info')
   },
 
   cancel() {

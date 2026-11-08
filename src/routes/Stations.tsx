@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Pencil, Play, Plus, RotateCcw, Square, Trash2 } from 'lucide-react'
-import { needsAnalysis, readStation, STATION_PRESETS, summary, type Station } from '@/audio/stations'
+import { needsAnalysis, readStation, STATION_PRESETS, stationName, summary, type Station } from '@/audio/stations'
 import { allGenres, analysisCount, counts as libraryCounts } from '@/db'
 import { useAsync } from '@/lib/hooks'
 import { libraryDecades, stationCounts, stationPool } from '@/lib/stationLibrary'
@@ -12,6 +12,7 @@ import { useSync } from '@/store/sync'
 import { useToast } from '@/store/ui'
 import { STATION_ICONS, StationIcon } from '@/components/StationIcon'
 import { Modal, Spinner, Switch } from '@/components/ui'
+import { t } from '@/i18n'
 
 /**
  * Stations: endless mixes from your own library, by tempo, energy, key,
@@ -54,20 +55,17 @@ export function Stations() {
   const analysisNote =
     data.songs > 0 && data.analysed < data.songs * 0.5 ? (
       <p className="row__hint" style={{ marginTop: 6 }}>
-        Rules about energy and key use InjeKt’s analysis, and {data.analysed.toLocaleString()} of{' '}
-        {data.songs.toLocaleString()} tracks are analysed so far. <Link to="/sync">Analyse the rest on the Sync page</Link>{' '}
-        and those stations fill up.
-      </p>
+        {t("Rules about energy and key use InjeKt’s analysis, and %@ of %@ tracks are analysed so far.", data.analysed.toLocaleString(), data.songs.toLocaleString())}{' '}<Link to="/sync">{t("Analyse the rest on the Sync page")}</Link>{' '}
+        {t("and those stations fill up.")}</p>
     ) : null
 
   return (
     <>
       <div className="page-head">
         <div className="page-head__title">
-          <h1>Stations</h1>
+          <h1>{t("Stations")}</h1>
           <p className="page-head__sub">
-            Endless mixes from your own library. Kultr picks what fits and InjeKt mixes one track into the next.
-          </p>
+            {t("Endless mixes from your own library. Kultr picks what fits and InjeKt mixes one track into the next.")}</p>
           {analysisNote}
         </div>
         <div className="page-actions">
@@ -76,8 +74,7 @@ export function Stations() {
             onClick={() => setEditing({ id: newId('s'), name: 'New station', icon: 'dot.radiowaves.left.and.right' })}
           >
             <Plus size={14} />
-            New station
-          </button>
+            {t("New station")}</button>
         </div>
       </div>
 
@@ -89,38 +86,38 @@ export function Stations() {
           const active = playing?.id === station.id
           return (
             <div key={station.id} className="station-card glass" data-active={active || undefined}>
-              <button className="station-card__main" onClick={() => play(station)} title={`Play ${station.name}`}>
+              <button className="station-card__main" onClick={() => play(station)} title={t("Play %@", stationName(station))}>
                 <span className="station-card__icon">
                   <StationIcon symbol={station.icon} size={20} />
                 </span>
                 <span className="station-card__text">
-                  <strong>{station.name}</strong>
+                  <strong>{stationName(station)}</strong>
                   <span>{summary(station)}</span>
                   <small>
-                    {count === undefined ? '…' : count === 1 ? '1 track' : `${count.toLocaleString()} tracks`}
-                    {active ? ' · playing' : ''}
+                    {count === undefined ? '…' : count === 1 ? t("1 track") : t("%@ tracks", count.toLocaleString())}
+                    {active ? t(" · playing") : ''}
                   </small>
                 </span>
               </button>
               <div className="station-card__actions">
                 {active ? (
-                  <button className="pill pill-icon" aria-label="End the station" title="End the station" onClick={() => usePlayer.getState().endStation()}>
+                  <button className="pill pill-icon" aria-label={t("End the station")} title={t("End the station")} onClick={() => usePlayer.getState().endStation()}>
                     <Square size={13} />
                   </button>
                 ) : (
-                  <button className="pill pill-icon" aria-label={`Play ${station.name}`} title="Play" onClick={() => play(station)}>
+                  <button className="pill pill-icon" aria-label={t("Play %@", stationName(station))} title={t("Play")} onClick={() => play(station)}>
                     <Play size={14} />
                   </button>
                 )}
                 {isMine(station) ? (
-                  <button className="pill pill-icon" aria-label={`Edit ${station.name}`} title="Edit" onClick={() => setEditing(station)}>
+                  <button className="pill pill-icon" aria-label={t("Edit %@", stationName(station))} title={t("Edit")} onClick={() => setEditing(station)}>
                     <Pencil size={14} />
                   </button>
                 ) : (
                   <button
                     className="pill pill-icon"
-                    aria-label={`Make a station like ${station.name}`}
-                    title="Make your own from this"
+                    aria-label={t("Make a station like %@", stationName(station))}
+                    title={t("Make your own from this")}
                     onClick={() => setEditing({ ...station, id: newId('s'), icon: station.icon })}
                   >
                     <Plus size={14} />
@@ -136,12 +133,11 @@ export function Stations() {
         <button
           className="pill"
           onClick={() => {
-            if (window.confirm('Put back the stations Kultr starts with? Stations you made or changed go.')) setSetting('stations', STATION_PRESETS)
+            if (window.confirm(t("Put back the stations Kultr starts with? Stations you made or changed go."))) setSetting('stations', STATION_PRESETS)
           }}
         >
           <RotateCcw size={14} />
-          Reset to the starting stations
-        </button>
+          {t("Reset to the starting stations")}</button>
       </div>
 
       <StationEditor
@@ -199,11 +195,11 @@ function Dial({ stations, playing, onPlay }: { stations: Station[]; playing: Sta
         ref={knob}
         role="slider"
         tabIndex={0}
-        aria-label="Station dial"
+        aria-label={t("Station dial")}
         aria-valuemin={0}
         aria-valuemax={stations.length - 1}
         aria-valuenow={index}
-        aria-valuetext={current?.name}
+        aria-valuetext={current ? stationName(current) : undefined}
         onKeyDown={(event) => {
           if (event.key === 'ArrowRight' || event.key === 'ArrowUp') turnTo(index + 1)
           else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') turnTo(index - 1)
@@ -241,19 +237,18 @@ function Dial({ stations, playing, onPlay }: { stations: Station[]; playing: Sta
         </div>
       </div>
       <div className="dial__label">
-        <span className="dial__eyebrow">{playing ? (playing.id === current?.id ? 'Playing' : 'Turn to mix in') : 'Turn to choose'}</span>
-        <strong>{current?.name}</strong>
+        <span className="dial__eyebrow">{playing ? (playing.id === current?.id ? t("Playing") : t("Turn to mix in")) : t("Turn to choose")}</span>
+        <strong>{current ? stationName(current) : null}</strong>
         <span>{current ? summary(current) : ''}</span>
         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
           <button className="pill pill-accent" onClick={() => current && onPlay(current)}>
             <Play size={14} />
-            {playing && playing.id !== current?.id ? 'Mix into it' : 'Play'}
+            {playing && playing.id !== current?.id ? t("Mix into it") : t("Play")}
           </button>
           {playing ? (
             <button className="pill" onClick={() => usePlayer.getState().endStation()}>
               <Square size={13} />
-              End station
-            </button>
+              {t("End station")}</button>
           ) : null}
         </div>
       </div>
@@ -299,7 +294,7 @@ function StationEditor({
     }
   }, [draft])
 
-  if (!draft) return <Modal open={false} onClose={onClose} title="Station">{null}</Modal>
+  if (!draft) return <Modal open={false} onClose={onClose} title={t("Station")}>{null}</Modal>
 
   const patch = (change: Partial<Station>) => setDraft((current) => (current ? { ...current, ...change } : current))
   const num = (value: string) => (value.trim() === '' || !Number.isFinite(Number(value)) ? null : Number(value))
@@ -313,39 +308,36 @@ function StationEditor({
     <Modal
       open={Boolean(station)}
       onClose={onClose}
-      title={isNew ? 'New station' : `Edit ${station?.name ?? 'station'}`}
+      title={isNew ? t("New station") : t("Edit %@", station?.name ?? 'station')}
       footer={
         <>
           {!isNew ? (
             <button className="pill" style={{ color: 'var(--danger)', marginRight: 'auto' }} onClick={() => onDelete(draft)}>
               <Trash2 size={14} />
-              Delete
-            </button>
+              {t("Delete")}</button>
           ) : null}
           <button className="pill" onClick={onClose}>
-            Cancel
-          </button>
+            {t("Cancel")}</button>
           <button
             className="pill pill-accent"
             onClick={() => {
               const clean = readStation(draft)
               if (!clean) return
               onSave(clean)
-              toast.show(`Saved ${clean.name}.`, 'success')
+              toast.show(t("Saved %@.", clean.name), 'success')
             }}
           >
-            Save
-          </button>
+            {t("Save")}</button>
         </>
       }
     >
       <div className="station-editor">
         <label className="station-editor__field">
-          <span>Name</span>
+          <span>{t("Name")}</span>
           <input className="field-input" value={draft.name} maxLength={80} onChange={(event) => patch({ name: event.target.value })} />
         </label>
         <div className="station-editor__field">
-          <span>Icon</span>
+          <span>{t("Icon")}</span>
           <div className="icon-picker">
             {STATION_ICONS.filter((entry) => entry.symbol !== 'shippingbox.fill').map((entry) => (
               <button
@@ -353,8 +345,8 @@ function StationEditor({
                 type="button"
                 className="icon-picker__item"
                 data-on={draft.icon === entry.symbol || undefined}
-                aria-label={entry.label}
-                title={entry.label}
+                aria-label={t(entry.label)}
+                title={t(entry.label)}
                 onClick={() => patch({ icon: entry.symbol })}
               >
                 <entry.icon size={16} />
@@ -364,22 +356,22 @@ function StationEditor({
         </div>
         <div className="station-editor__pair">
           <label className="station-editor__field">
-            <span>Tempo from (BPM)</span>
-            <input className="field-input" inputMode="numeric" value={draft.bpm?.min ?? ''} placeholder="any" onChange={(event) => patch({ bpm: bounds(num(event.target.value), draft.bpm?.max ?? null) })} />
+            <span>{t("Tempo from (BPM)")}</span>
+            <input className="field-input" inputMode="numeric" value={draft.bpm?.min ?? ''} placeholder={t("any")} onChange={(event) => patch({ bpm: bounds(num(event.target.value), draft.bpm?.max ?? null) })} />
           </label>
           <label className="station-editor__field">
-            <span>to</span>
-            <input className="field-input" inputMode="numeric" value={draft.bpm?.max ?? ''} placeholder="any" onChange={(event) => patch({ bpm: bounds(draft.bpm?.min ?? null, num(event.target.value)) })} />
+            <span>{t("to")}</span>
+            <input className="field-input" inputMode="numeric" value={draft.bpm?.max ?? ''} placeholder={t("any")} onChange={(event) => patch({ bpm: bounds(draft.bpm?.min ?? null, num(event.target.value)) })} />
           </label>
         </div>
         <div className="station-editor__pair">
           <label className="station-editor__field">
-            <span>Energy from (1–10)</span>
+            <span>{t("Energy from (1–10)")}</span>
             <input
               className="field-input"
               inputMode="numeric"
               value={draft.energy?.min !== undefined && draft.energy?.min !== null ? Math.round(draft.energy.min * 10) : ''}
-              placeholder="any"
+              placeholder={t("any")}
               onChange={(event) => {
                 const value = num(event.target.value)
                 patch({ energy: bounds(value === null ? null : Math.min(10, Math.max(0, value)) / 10, draft.energy?.max ?? null) })
@@ -387,12 +379,12 @@ function StationEditor({
             />
           </label>
           <label className="station-editor__field">
-            <span>to</span>
+            <span>{t("to")}</span>
             <input
               className="field-input"
               inputMode="numeric"
               value={draft.energy?.max !== undefined && draft.energy?.max !== null ? Math.round(draft.energy.max * 10) : ''}
-              placeholder="any"
+              placeholder={t("any")}
               onChange={(event) => {
                 const value = num(event.target.value)
                 patch({ energy: bounds(draft.energy?.min ?? null, value === null ? null : Math.min(10, Math.max(0, value)) / 10) })
@@ -402,16 +394,16 @@ function StationEditor({
         </div>
         <div className="station-editor__pair">
           <label className="station-editor__field">
-            <span>Years from</span>
-            <input className="field-input" inputMode="numeric" value={draft.years?.min ?? ''} placeholder="any" onChange={(event) => patch({ years: bounds(num(event.target.value), draft.years?.max ?? null) })} />
+            <span>{t("Years from")}</span>
+            <input className="field-input" inputMode="numeric" value={draft.years?.min ?? ''} placeholder={t("any")} onChange={(event) => patch({ years: bounds(num(event.target.value), draft.years?.max ?? null) })} />
           </label>
           <label className="station-editor__field">
-            <span>to</span>
-            <input className="field-input" inputMode="numeric" value={draft.years?.max ?? ''} placeholder="any" onChange={(event) => patch({ years: bounds(draft.years?.min ?? null, num(event.target.value)) })} />
+            <span>{t("to")}</span>
+            <input className="field-input" inputMode="numeric" value={draft.years?.max ?? ''} placeholder={t("any")} onChange={(event) => patch({ years: bounds(draft.years?.min ?? null, num(event.target.value)) })} />
           </label>
         </div>
         <div className="station-editor__field">
-          <span>Keys {draft.keys?.length ? `· ${draft.keys.length} chosen` : '· any'}</span>
+          <span>{t("Keys %@", draft.keys?.length ? t("· %@ chosen", draft.keys.length) : t("· any"))}</span>
           <div className="chip-row">
             {KEYS.map((key) => (
               <button key={key} type="button" className="chip" data-on={draft.keys?.includes(key) || undefined} onClick={() => patch({ keys: toggle(draft.keys, key) })}>
@@ -422,7 +414,7 @@ function StationEditor({
         </div>
         {genres.length ? (
           <div className="station-editor__field">
-            <span>Genres {draft.genres?.length ? `· ${draft.genres.length} chosen` : '· any'}</span>
+            <span>{t("Genres %@", draft.genres?.length ? t("· %@ chosen", draft.genres.length) : t("· any"))}</span>
             <div className="chip-row chip-row--scroll">
               {genres.map((genre) => (
                 <button key={genre} type="button" className="chip" data-on={draft.genres?.includes(genre) || undefined} onClick={() => patch({ genres: toggle(draft.genres, genre) })}>
@@ -434,7 +426,7 @@ function StationEditor({
         ) : null}
         {tags.length ? (
           <div className="station-editor__field">
-            <span>Tagged {draft.tags?.length ? '' : '· any'}</span>
+            <span>{t("Tagged %@", draft.tags?.length ? '' : t("· any"))}</span>
             <div className="chip-row">
               {tags.map((tag) => (
                 <button key={tag} type="button" className="chip" data-on={draft.tags?.includes(tag) || undefined} onClick={() => patch({ tags: toggle(draft.tags, tag) })}>
@@ -446,40 +438,37 @@ function StationEditor({
         ) : null}
         <div className="station-editor__pair">
           <label className="station-editor__field">
-            <span>Rating</span>
+            <span>{t("Rating")}</span>
             <select className="field-input" value={draft.minRating ?? 0} onChange={(event) => patch({ minRating: Number(event.target.value) || null })}>
-              <option value={0}>Any</option>
+              <option value={0}>{t("Any")}</option>
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
-                  {n}★ and up
-                </option>
+                  {t("%@★ and up", n)}</option>
               ))}
             </select>
           </label>
           <label className="station-editor__field">
-            <span>Added</span>
+            <span>{t("Added")}</span>
             <select className="field-input" value={draft.addedDays ?? 0} onChange={(event) => patch({ addedDays: Number(event.target.value) || null })}>
-              <option value={0}>Any time</option>
-              <option value={30}>In the last 30 days</option>
-              <option value={90}>In the last 90 days</option>
-              <option value={365}>This year</option>
+              <option value={0}>{t("Any time")}</option>
+              <option value={30}>{t("In the last 30 days")}</option>
+              <option value={90}>{t("In the last 90 days")}</option>
+              <option value={365}>{t("This year")}</option>
             </select>
           </label>
         </div>
         <div className="station-editor__toggles">
           <label>
-            <Switch checked={Boolean(draft.unplayed)} onChange={(value) => patch({ unplayed: value })} label="Never played" />
-            Never played
-          </label>
+            <Switch checked={Boolean(draft.unplayed)} onChange={(value) => patch({ unplayed: value })} label={t("Never played")} />
+            {t("Never played")}</label>
           <label>
-            <Switch checked={Boolean(draft.favourites)} onChange={(value) => patch({ favourites: value })} label="Favourites only" />
-            Favourites only
-          </label>
+            <Switch checked={Boolean(draft.favourites)} onChange={(value) => patch({ favourites: value })} label={t("Favourites only")} />
+            {t("Favourites only")}</label>
         </div>
         <p className="row__hint">
-          {count === null ? <Spinner /> : count === 1 ? '1 track fits.' : `${count.toLocaleString()} tracks fit.`}{' '}
+          {count === null ? <Spinner /> : count === 1 ? t("1 track fits.") : t("%@ tracks fit.", count.toLocaleString())}{' '}
           {summary(draft)}
-          {needsAnalysis(draft) ? ' Energy and key need InjeKt’s analysis, so only analysed tracks count.' : ''}
+          {needsAnalysis(draft) ? t(" Energy and key need InjeKt’s analysis, so only analysed tracks count.") : ''}
         </p>
       </div>
     </Modal>

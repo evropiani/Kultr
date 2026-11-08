@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { summary, type Station } from '@/audio/stations'
+import { stationName, summary, type Station } from '@/audio/stations'
 import { useAsync } from '@/lib/hooks'
 import { libraryDecades } from '@/lib/stationLibrary'
 import { usePlayer } from '@/store/player'
@@ -30,7 +30,7 @@ export function StationShelf() {
           <span className="station-card__icon">
             <StationIcon symbol={station.icon} size={18} />
           </span>
-          <span className="station-chip__name">{station.name}</span>
+          <span className="station-chip__name">{stationName(station)}</span>
         </button>
       ))}
     </div>

@@ -1,13 +1,15 @@
-import { StrictMode } from 'react'
+import { StrictMode, useMemo } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import { App } from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useToast } from './store/ui'
+import { useSettings } from './store/settings'
 import './styles/tokens.css'
 import './styles/glass.css'
 import './styles/app.css'
+import { setLanguage, t } from '@/i18n'
 
 /**
  * Serve Kultr from a sub-path (GitHub Pages project sites, for example) and
@@ -18,11 +20,23 @@ const basename = import.meta.env.BASE_URL.replace(/\/$/, '')
 const container = document.getElementById('root')
 if (!container) throw new Error('Missing #root element')
 
+/**
+ * The app in the chosen language. Changing it draws everything again from
+ * the top, so every line — lists made once included — comes out in it.
+ */
+function InLanguage() {
+  const setting = useSettings((state) => state.language)
+  const code = useMemo(() => setLanguage(setting), [setting])
+  return <App key={code} />
+}
+
+setLanguage(useSettings.getState().language)
+
 createRoot(container).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter basename={basename || undefined}>
-        <App />
+        <InLanguage />
       </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,
@@ -41,11 +55,11 @@ const updateSW = desktopApp
       onNeedRefresh() {
         useToast
           .getState()
-          .show('A new version of Kultr is ready. Reload when you are between tracks.', 'info', 15000)
+          .show(t("A new version of Kultr is ready. Reload when you are between tracks."), 'info', 15000)
         // Apply on the next full page load.
         void updateSW(false)
       },
       onOfflineReady() {
-        useToast.getState().show('Kultr is ready to work offline.', 'success')
+        useToast.getState().show(t("Kultr is ready to work offline."), 'success')
       },
     })

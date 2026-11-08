@@ -117,12 +117,16 @@ function useThemeEffects(): void {
   }, [customCss])
 }
 
+const startedOnce = { current: false }
+
 /** Reconnect on load, restore the queue, and run the automatic sync checks. */
 function useBootstrap(): void {
   const auth = useAuth()
   const autoSyncOnStart = useSettings((state) => state.autoSyncOnStart)
   const autoSyncMinutes = useSettings((state) => state.autoSyncMinutes)
-  const started = useRef(false)
+  // Module-level, not a ref: changing the language draws the app again from
+  // the top, and that must not reconnect or restore the queue a second time.
+  const started = startedOnce
 
   // Each library keeps its own mirror: connecting to a different one than the
   // mirror holds clears it and reads the new one from the start.

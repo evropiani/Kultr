@@ -26,6 +26,7 @@ import { CastButton } from './Cast'
 import { RepeatButton, ShuffleButton } from './ModeButtons'
 import { NextButton } from './NextButton'
 import { useBeatGrid } from '@/lib/beatGrid'
+import { t } from '@/i18n'
 
 /** Read straight from the engine so the scrubber needs no React state. */
 const getEngineTime = () => engine.currentTime
@@ -51,8 +52,8 @@ export function PlayerBar() {
             <ListMusic size={20} opacity={0.4} />
           </div>
           <div className="player__text">
-            <span className="player__title">Nothing playing</span>
-            <span className="player__artist">Pick something from your library</span>
+            <span className="player__title">{t("Nothing playing")}</span>
+            <span className="player__artist">{t("Pick something from your library")}</span>
           </div>
         </div>
         <div className="player__center">
@@ -86,7 +87,7 @@ export function PlayerBar() {
   return (
     <footer className="player glass glass-strong">
       <div className="player__meta">
-        <div className="player__art" onClick={() => setNowPlaying(true)} title="Open the full player">
+        <div className="player__art" onClick={() => setNowPlaying(true)} title={t("Open the full player")}>
           <Art src={artUrl(song, 160)} alt={song.album ?? song.title} />
         </div>
         <div className="player__text">
@@ -99,7 +100,7 @@ export function PlayerBar() {
         <button
           className="iconbtn"
           data-active={starred}
-          aria-label={starred ? 'Remove from favourites' : 'Add to favourites'}
+          aria-label={starred ? t("Remove from favourites") : t("Add to favourites")}
           onClick={async () => setStarred(await toggleStarSong(song, starred))}
         >
           <Heart size={16} fill={starred ? 'currentColor' : 'none'} />
@@ -107,20 +108,19 @@ export function PlayerBar() {
         {player.transition ? (
           <span className="badge" data-tone="accent" title={player.transition.plan.reason}>
             <Sparkles size={11} />
-            Mixing
-          </span>
+            {t("Mixing")}</span>
         ) : null}
       </div>
 
       <div className="player__center">
         <div className="player__buttons">
           <ShuffleButton size={16} />
-          <button className="iconbtn" aria-label="Previous track" onClick={() => void player.previous()}>
+          <button className="iconbtn" aria-label={t("Previous track")} onClick={() => void player.previous()}>
             <SkipBack size={18} fill="currentColor" />
           </button>
           <button
             className="player__play"
-            aria-label={playing ? 'Pause' : 'Play'}
+            aria-label={playing ? t("Pause") : t("Play")}
             onClick={() => void player.toggle()}
           >
             {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: 2 }} />}
@@ -142,12 +142,12 @@ export function PlayerBar() {
         <button
           className="iconbtn"
           data-active={injektEnabled}
-          aria-label={injektEnabled ? 'Turn InjeKt off' : 'Turn InjeKt on'}
+          aria-label={injektEnabled ? t("Turn InjeKt off") : t("Turn InjeKt on")}
           aria-pressed={injektEnabled}
           title={
             injektEnabled
-              ? 'InjeKt is on — transitions are beat-matched and key-aware'
-              : 'InjeKt is off — plain crossfade between tracks'
+              ? t("InjeKt is on — transitions are beat-matched and key-aware")
+              : t("InjeKt is off — plain crossfade between tracks")
           }
           onClick={() => setSetting('injektEnabled', !injektEnabled)}
         >
@@ -160,7 +160,7 @@ export function PlayerBar() {
         <button
           className="iconbtn"
           data-active={queueOpen}
-          aria-label="Queue"
+          aria-label={t("Queue")}
           onClick={() => setQueue(!queueOpen)}
         >
           <ListMusic size={17} />
@@ -168,7 +168,7 @@ export function PlayerBar() {
         <div className="player__volume">
           <button
             className="iconbtn"
-            aria-label={muted ? 'Unmute' : 'Mute'}
+            aria-label={muted ? t("Unmute") : t("Mute")}
             onClick={player.toggleMute}
           >
             {muted || volume === 0 ? (
@@ -186,15 +186,15 @@ export function PlayerBar() {
             max={1}
             step={0.01}
             value={muted ? 0 : volume}
-            aria-label="Volume"
+            aria-label={t("Volume")}
             style={{ ['--fill' as string]: `${(muted ? 0 : volume) * 100}%` }}
             onChange={(event) => player.setVolume(Number(event.target.value))}
           />
         </div>
         <button
           className="iconbtn"
-          aria-label="Open the full player"
-          title="Open the full player"
+          aria-label={t("Open the full player")}
+          title={t("Open the full player")}
           onClick={() => setNowPlaying(true)}
         >
           <Maximize2 size={16} />

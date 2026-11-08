@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Logo } from './Logo'
+import { t } from '@/i18n'
 
 /**
  * Last line of defence.
@@ -33,11 +34,9 @@ export class ErrorBoundary extends Component<
           <div className="login__brand">
             <Logo size={64} />
           </div>
-          <h2 style={{ textAlign: 'center' }}>Something broke</h2>
+          <h2 style={{ textAlign: 'center' }}>{t("Something broke")}</h2>
           <p className="login__tagline">
-            Kultr hit an error it could not recover from. Reloading usually sorts it out — your
-            library and settings are stored locally and will still be there.
-          </p>
+            {t("Kultr hit an error it could not recover from. Reloading usually sorts it out — your library and settings are stored locally and will still be there.")}</p>
 
           <div className="login__error" style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>
             {error.message || String(error)}
@@ -45,8 +44,7 @@ export class ErrorBoundary extends Component<
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="pill pill-accent pill-lg" onClick={() => location.reload()}>
-              Reload
-            </button>
+              {t("Reload")}</button>
             <button
               className="pill pill-lg"
               onClick={() => {
@@ -58,12 +56,11 @@ export class ErrorBoundary extends Component<
                   .finally(() => location.reload())
               }}
             >
-              Clear cache and reload
-            </button>
+              {t("Clear cache and reload")}</button>
           </div>
 
           <details style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
-            <summary style={{ cursor: 'pointer' }}>Technical details</summary>
+            <summary style={{ cursor: 'pointer' }}>{t("Technical details")}</summary>
             <pre
               style={{
                 whiteSpace: 'pre-wrap',
@@ -79,10 +76,9 @@ export class ErrorBoundary extends Component<
           </details>
 
           <p className="login__hint">
-            If it keeps happening, please report it with these details at{' '}
+            {t("If it keeps happening, please report it with these details at")}{' '}
             <a href="https://github.com/evropiani/Kultr/issues" target="_blank" rel="noreferrer">
-              github.com/evropiani/Kultr/issues
-            </a>
+              {t("github.com/evropiani/Kultr/issues")}</a>
             .
           </p>
         </div>
