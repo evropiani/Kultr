@@ -1,4 +1,5 @@
 import { getClient } from '@/api/subsonic'
+import { isLocalClient } from '@/local/client'
 import type { Album, Song } from '@/api/types'
 import {
   allAlbums,
@@ -18,6 +19,7 @@ import {
 export type SyncPhase =
   | 'idle'
   | 'connecting'
+  | 'scanning'
   | 'artists'
   | 'albums'
   | 'songs'
@@ -58,6 +60,8 @@ export interface SyncOptions {
   mode: 'full' | 'check'
   includePlaylistContents?: boolean
   concurrency?: number
+  /** The profile this library belongs to; recorded with the sync state. */
+  owner?: string
   signal?: AbortSignal
   onProgress?: (progress: SyncProgress) => void
 }
@@ -133,8 +137,12 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
   const startedAt = Date.now()
   const errors: string[] = []
 
-  // Rough weights so one progress bar moves smoothly across phases.
-  const weights = { artists: 0.05, albums: 0.15, songs: 0.65, playlists: 0.1, genres: 0.05 }
+  const local = isLocalClient(client)
+  // Rough weights so one progress bar moves smoothly across phases. Music on
+  // this computer spends its time reading files; the rest is instant.
+  const weights = local
+    ? { scan: 0.8, artists: 0.02, albums: 0.04, songs: 0.1, playlists: 0.02, genres: 0.02 }
+    : { scan: 0, artists: 0.05, albums: 0.15, songs: 0.65, playlists: 0.1, genres: 0.05 }
   let base = 0
   const emit = (phase: SyncPhase, message: string, current: number, total: number, weight: number) => {
     const fraction = total > 0 ? Math.min(1, current / total) : 0
@@ -148,8 +156,23 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
   }
 
   try {
-    emit('connecting', 'Contacting your server…', 0, 1, 0)
+    emit('connecting', local ? 'Opening your music folders…' : 'Contacting your server…', 0, 1, 0)
     const info = await client.ping()
+
+    // ---------------------------------------------------------- scanning --
+    if (local) {
+      emit('scanning', 'Looking for music…', 0, 1, weights.scan)
+      const scan = await client.scan((progress) => {
+        emit('scanning', progress.message, progress.current, progress.total || 1, weights.scan)
+      }, signal)
+      if (scan.unavailable.length) {
+        errors.push(
+          `Could not read ${scan.unavailable.map((folder) => folder.name).join(', ')} this time; ` +
+            'its music stays in the library until it can be read again.',
+        )
+      }
+      base += weights.scan
+    }
 
     // ---------------------------------------------------------- artists --
     emit('artists', 'Reading artists…', 0, 1, weights.artists)
@@ -305,6 +328,7 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
       serverVersion: info.serverVersion ?? info.version,
       serverType: info.type,
       newestAlbumCreated: newest,
+      owner: options.owner ?? previous.owner,
     }
     await setSyncState(state)
 
@@ -343,6 +367,8 @@ export async function syncLibrary(options: SyncOptions): Promise<SyncSummary> {
  */
 export async function quickCheck(): Promise<{ changed: boolean; reason: string }> {
   const client = getClient()
+  // Files on this computer are only found by looking, which is what a sync does.
+  if (isLocalClient(client)) return { changed: false, reason: 'Music on this computer is read when you sync.' }
   const state = await getSyncState()
   const newest = await client.getAlbumList2({ type: 'newest', size: 1 })
   const newestCreated = newest[0]?.created

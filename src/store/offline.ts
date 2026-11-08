@@ -16,6 +16,7 @@ import {
 } from '@/sync/offline'
 import { settings } from './settings'
 import { useToast } from './ui'
+import { isLocalId } from '@/local/files'
 
 interface OfflineState {
   running: boolean
@@ -49,6 +50,13 @@ export const useOffline = create<OfflineState>((set, get) => ({
   },
 
   async download(songs, label) {
+    // Music on this computer is already here; there is nothing to download.
+    const remote = songs.filter((song) => !isLocalId(song.id))
+    if (songs.length && !remote.length) {
+      useToast.getState().show('That music is already on this computer, so it plays offline as it is.', 'info')
+      return
+    }
+    songs = remote
     if (!songs.length) return
     if (get().running) {
       useToast.getState().show('A download is already running.', 'warning')

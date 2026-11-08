@@ -3,6 +3,7 @@ import type { Album, Artist, Song } from '@/api/types'
 import { patchAlbum, patchArtist, patchSong } from '@/db'
 import { usePlayer } from '@/store/player'
 import { useToast } from '@/store/ui'
+import { isLocalId, localBlob } from '@/local/files'
 
 /**
  * Keep the in-memory queue in step with a write.
@@ -76,15 +77,30 @@ export async function toggleStarArtist(artist: Artist, isStarred = Boolean(artis
 
 /** Save the original file to the user's disk. */
 export function saveToDisk(song: Song): void {
+  const name = `${song.artist ?? 'Unknown'} - ${song.title}`
+  const click = (href: string, fileName: string) => {
+    const anchor = document.createElement('a')
+    anchor.href = href
+    anchor.download = fileName
+    anchor.rel = 'noopener'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+  }
+  // A song on this computer is saved as a copy of its own file.
+  if (isLocalId(song.id)) {
+    void localBlob(song)
+      .then((blob) => {
+        const url = URL.createObjectURL(blob)
+        click(url, song.suffix ? `${name}.${song.suffix}` : name)
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      })
+      .catch((err) => useToast.getState().show(describeError(err), 'error'))
+    return
+  }
   const client = maybeClient()
   if (!client) return
-  const anchor = document.createElement('a')
-  anchor.href = client.downloadUrl(song.id)
-  anchor.download = `${song.artist ?? 'Unknown'} - ${song.title}`
-  anchor.rel = 'noopener'
-  document.body.appendChild(anchor)
-  anchor.click()
-  anchor.remove()
+  click(client.downloadUrl(song.id), name)
 }
 
 export async function addToPlaylist(playlistId: string, songIds: string[]): Promise<boolean> {

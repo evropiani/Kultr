@@ -1,10 +1,12 @@
 import { create } from 'zustand'
-import { counts, getSyncState, clearLibrary, type SyncState } from '@/db'
+import { counts, getSyncState, clearLibrary, setSyncState, type SyncState } from '@/db'
 import { EMPTY_SYNC_STATE } from '@/db'
 import { quickCheck, syncLibrary, type SyncProgress, type SyncSummary } from '@/sync/engine'
 import { settings } from './settings'
 import { maybeClient } from '@/api/subsonic'
 import { syncListening } from '@/sync/listening'
+import { useAuth } from './auth'
+import { LOCAL_PROFILE_ID } from '@/local/client'
 
 interface SyncStoreState {
   running: boolean
@@ -24,6 +26,11 @@ interface SyncStoreState {
   cancel: () => void
   probe: () => Promise<void>
   wipe: () => Promise<void>
+  /**
+   * Called when a library is connected: if the mirror holds another library's
+   * music, clear it and read this one from the start. True if it did.
+   */
+  adopt: (owner: string) => Promise<boolean>
 }
 
 const IDLE: SyncProgress = { phase: 'idle', message: '', current: 0, total: 0, percent: 0 }
@@ -56,6 +63,7 @@ export const useSync = create<SyncStoreState>((set, get) => ({
         mode,
         signal: controller.signal,
         includePlaylistContents: settings().syncPlaylistContents,
+        owner: useAuth.getState().activeId ?? undefined,
         onProgress: (progress) => set({ progress }),
       })
       set({ lastSummary: summary, running: false, controller: null })
@@ -96,6 +104,25 @@ export const useSync = create<SyncStoreState>((set, get) => ({
     } catch {
       /* offline; stay quiet */
     }
+  },
+
+  async adopt(owner) {
+    const state = await getSyncState()
+    if (state.owner === owner) return false
+    const hasLibrary = state.lastFullSync !== null || state.counts.songs > 0
+    // Libraries synced before the owner was recorded came from a server (there
+    // was nothing else), so a server keeps them; the music on this computer
+    // never does.
+    if (!hasLibrary || (state.owner === undefined && owner !== LOCAL_PROFILE_ID)) {
+      await setSyncState({ ...state, owner })
+      return false
+    }
+    get().cancel()
+    await clearLibrary()
+    await setSyncState({ ...EMPTY_SYNC_STATE, owner })
+    set({ lastSummary: null, progress: IDLE, hint: null, listeningAt: Date.now() })
+    await get().refreshState()
+    return true
   },
 
   async wipe() {

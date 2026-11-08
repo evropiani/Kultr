@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, Info, Server, ShieldCheck, Tag, User } from 'lucide-react'
+import { Eye, EyeOff, HardDrive, Info, Server, ShieldCheck, Tag, User } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { useAuth } from '@/store/auth'
 import { hostLabel } from '@/store/auth'
 import { Spinner, Switch } from '@/components/ui'
+import { LocalMusicChooser } from '@/components/LocalMusic'
+import { isLocalProfile } from '@/store/auth'
 
 /**
  * Connection screen.
@@ -59,16 +61,18 @@ export function Login() {
           <div>
             <h1 style={{ textAlign: 'center', fontSize: 26 }}>Kultr</h1>
             <p className="login__tagline">
-              {adding ? 'Add another Navidrome server.' : 'A modern, minimalist client for your Navidrome server.'}
+              {adding
+                ? 'Add another Navidrome server, or the music on this computer.'
+                : 'A modern, minimalist player for your Navidrome server, or for the music on this computer.'}
               <br />
-              Crossfade, InjeKt, and your whole library mirrored locally.
+              Crossfade, InjeKt, Karousel, and your whole library at hand.
             </p>
           </div>
         </div>
 
         {auth.profiles.length > 0 ? (
           <div className="login__profiles">
-            <span className="login__hint">Saved servers</span>
+            <span className="login__hint">Saved libraries</span>
             {auth.profiles.map((profile) => (
               <button
                 key={profile.id}
@@ -83,10 +87,10 @@ export function Login() {
                   }
                 }}
               >
-                <Server size={16} />
+                {isLocalProfile(profile) ? <HardDrive size={16} /> : <Server size={16} />}
                 <span style={{ flex: 1, minWidth: 0 }}>
                   {profile.label}
-                  <small>{profile.username}</small>
+                  <small>{isLocalProfile(profile) ? 'Music on this computer' : profile.username}</small>
                 </span>
               </button>
             ))}
@@ -229,6 +233,21 @@ export function Login() {
           </span>
         </p>
       </form>
+
+      {lockedServer ? null : (
+        <section className="login__card login__local glass glass-strong" aria-labelledby="local-heading">
+          <div className="login__local-head">
+            <HardDrive size={18} />
+            <h2 id="local-heading">No server? Play the music on this computer</h2>
+          </div>
+          <p className="login__hint">
+            Kultr works without Navidrome too. Point it at the folder your music is in and it builds the
+            library from the files: albums, artists, covers, lyrics, favourites, playlists and play counts,
+            all kept on this computer.
+          </p>
+          <LocalMusicChooser onReady={() => navigate('/', { replace: true })} />
+        </section>
+      )}
     </div>
   )
 }

@@ -51,6 +51,12 @@ export interface SyncState {
   serverType?: string
   /** Newest album `created` timestamp seen, used for cheap delta checks. */
   newestAlbumCreated?: string
+  /**
+   * The profile whose library this is: a server's id, or `local` for the
+   * music on this computer. Switching to another one starts the mirror afresh,
+   * so songs from one library never turn up in another.
+   */
+  owner?: string
 }
 
 interface KultrDB extends DBSchema {

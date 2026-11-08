@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { SubsonicClient, describeError, setClient } from '@/api/subsonic'
 import type { Credentials, ServerInfo } from '@/api/types'
+import { LOCAL_LABEL, LOCAL_PROFILE_ID, LocalClient } from '@/local/client'
 
 export interface ServerProfile extends Credentials {
   id: string
@@ -13,6 +14,26 @@ export interface ServerProfile extends Credentials {
    * are treated as enabled.
    */
   enabled?: boolean
+  /**
+   * `local`: music on this computer, read from folders rather than from a
+   * server. It has no address and no password; Kultr itself plays the server.
+   */
+  kind?: 'server' | 'local'
+}
+
+/** Whether a profile is the music on this computer rather than a server. */
+export const isLocalProfile = (profile: Pick<ServerProfile, 'id' | 'kind'> | null | undefined): boolean =>
+  profile?.kind === 'local' || profile?.id === LOCAL_PROFILE_ID
+
+const LOCAL_PROFILE: ServerProfile = {
+  id: LOCAL_PROFILE_ID,
+  label: LOCAL_LABEL,
+  kind: 'local',
+  serverUrl: '',
+  username: '',
+  password: '',
+  authMode: 'plain',
+  enabled: true,
 }
 
 const SESSION_KEY = 'kultr.session'
@@ -62,6 +83,8 @@ export interface AuthState {
 
   login: (input: Credentials & { label?: string; remember?: boolean }) => Promise<boolean>
   reconnect: () => Promise<boolean>
+  /** Use the music on this computer, adding it to the profiles the first time. */
+  connectLocal: () => Promise<boolean>
   switchProfile: (id: string) => Promise<boolean>
   removeProfile: (id: string) => void
   setProfileEnabled: (id: string, enabled: boolean) => void
@@ -150,6 +173,13 @@ export const useAuth = create<AuthState>()(
           set({ status: 'idle' })
           return false
         }
+        if (isLocalProfile(profile)) {
+          const client = new LocalClient()
+          const info = await client.ping()
+          setClient(client)
+          set({ status: 'connected', error: null, serverInfo: info })
+          return true
+        }
         const password = profile.password || readSessionSecrets()[profile.id] || ''
         if (!password) {
           set({ status: 'idle', error: null })
@@ -167,6 +197,17 @@ export const useAuth = create<AuthState>()(
           set({ status: 'error', error: describeError(err) })
           return false
         }
+      },
+
+      async connectLocal() {
+        set((state) => ({
+          profiles: state.profiles.some(isLocalProfile)
+            ? state.profiles.map((profile) => (isLocalProfile(profile) ? { ...profile, enabled: true } : profile))
+            : [...state.profiles, LOCAL_PROFILE],
+          activeId: LOCAL_PROFILE_ID,
+          error: null,
+        }))
+        return get().reconnect()
       },
 
       async switchProfile(id) {
@@ -204,6 +245,10 @@ export const useAuth = create<AuthState>()(
       async updateProfile(id, patch) {
         const existing = get().profiles.find((entry) => entry.id === id)
         if (!existing) return false
+        if (isLocalProfile(existing)) {
+          if (patch.label !== undefined) get().renameProfile(id, patch.label)
+          return true
+        }
 
         const password = patch.password?.length ? patch.password : existing.password
         const creds: Credentials = {

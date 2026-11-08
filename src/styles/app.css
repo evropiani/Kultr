@@ -2023,6 +2023,8 @@
   min-height: 100%;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 18px;
   padding: 28px;
 }
 .login__card {
@@ -2097,6 +2099,61 @@
   display: block;
   color: var(--ink-3);
   font-size: 11.5px;
+}
+
+/* Music on this computer, beside a server. */
+.login__local {
+  gap: 12px;
+}
+.login__local-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+}
+.login__local-head h2 {
+  font-size: 15px;
+  color: var(--ink);
+}
+.local-chooser {
+  display: grid;
+  gap: 10px;
+}
+.local-chooser__main {
+  justify-content: center;
+}
+.local-chooser__more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.local-chooser__more .pill {
+  flex: 1 1 160px;
+  justify-content: center;
+}
+
+/* Asking again for a music folder the browser stopped letting Kultr read. */
+.folder-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.folder-banner > svg {
+  flex: none;
+  color: var(--accent);
+}
+.folder-banner > span {
+  flex: 1;
+  min-width: 0;
+}
+.folder-banner .pill {
+  flex: none;
 }
 
 /* ------------------------------------------------------------------ mobile */

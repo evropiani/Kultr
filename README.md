@@ -4,7 +4,7 @@
 
 # Kultr
 
-**A modern, minimalist web client for [Navidrome](https://www.navidrome.org/).**
+**A modern, minimalist music player for [Navidrome](https://www.navidrome.org/), or for the music on your computer.**
 
 Mirrors your whole library locally, crossfades properly, and mixes tracks like a DJ.
 
@@ -19,8 +19,9 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 ---
 
 > **The web version is the full app.** It runs entirely in your browser and connects to
-> *your* Navidrome server. It stores nothing, ships no music, and has no backend
-> — if you would rather not trust a page on the internet with your password,
+> *your* Navidrome server — or, with no server at all, plays the music in a folder on
+> your computer ([how](#without-a-server)). It stores nothing, ships no music, and has
+> no backend — if you would rather not trust a page on the internet with your password,
 > [run it yourself](#install); it takes about a minute.
 
 ## A look at it
@@ -60,6 +61,7 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Select and act in bulk** | Tick boxes on tracks and cards (shift-click for a range), then download, delete, queue, favourite or add to a playlist in one go. |
 | **Drag and drop** | Drag any track, album or artist onto a target: play next, add to queue, favourite, sync offline, or delete downloads. |
 | **Listening, kept on your server** | Every play is sent to Navidrome with the time it happened, so *recently played*, *most played* and the Listening page are the same on every device and come back after clearing the browser. Plays made offline are queued and sent when the connection returns; plays made on other devices show up when you come back to the tab. |
+| **No server needed** | Point Kultr at the folder your music is in and it builds the library from the files themselves: tags from MP3, FLAC, AAC/M4A, Ogg Vorbis, Opus, WAV and AIFF, covers from the pictures beside them or inside them, lyrics from the tags. Favourites, ratings, playlists and play counts are kept on your computer. Everything else — crossfade, InjeKt, Karousel, the equaliser — works the same. [More →](#without-a-server) |
 | **Many servers** | Add as many Navidrome servers as you like, give each one a name, switch between them, and turn one off without deleting it. |
 | **A home page you choose** | Fifteen shelves — most played, random, favourite and recently added, across tracks, albums, artists, playlists and radio — switched on, off and reordered to taste. A shelf with nothing to show is skipped rather than left empty. |
 | **Cast** | Send playback to a Chromecast or an AirPlay device, where the browser supports it. |
@@ -382,6 +384,33 @@ paste CSS you are willing to run.
 
 ---
 
+## Without a server
+
+Kultr plays the music on your computer too, with no Navidrome anywhere. On the
+sign-in screen choose **Choose a music folder** (or, later, **Settings → Music
+on this computer → Add a folder**), pick the folder your music is in, and Kultr
+reads it: every folder inside it, the tags in each file, and the pictures
+beside them for covers. A file with no tags is named after itself, its album
+after its folder.
+
+- **Chrome and Edge** read the folder where it is; nothing is copied or
+  uploaded. After the browser restarts it asks once before Kultr may read the
+  folder again — Kultr shows a banner with an **Allow** button.
+- **Firefox and Safari** cannot keep a folder open, so **Import a folder**
+  copies the music into Kultr's own storage in the browser instead. It stays
+  there until you remove it.
+- **The desktop app** for Windows and Linux reads folders on disk directly,
+  with no prompts.
+
+Press **Check for updates** (or **Rescan** in Settings) after adding music;
+only new and changed files are read, so it is quick after the first time.
+Favourites, ratings, play counts and playlists are kept by Kultr in the
+browser, since the files cannot hold them. Server-only things — share links,
+internet radio, downloading for offline (the music is already here) — are not
+offered. Switching between your music and a server swaps the library over.
+
+---
+
 ## Your data
 
 - Your password is kept in this browser, because Subsonic authentication needs
@@ -398,8 +427,13 @@ paste CSS you are willing to run.
   folder you picked. A page can only write where you have explicitly pointed
   it, so "choose a download path" means picking that folder once — there is no
   way for a website to be handed an arbitrary path, by design.
-- Kultr talks to exactly one host: your Navidrome. No analytics, no telemetry,
-  no third-party requests, no fonts loaded from anyone's CDN.
+- With music on this computer, its play counts, favourites, ratings and
+  playlists live in this browser (IndexedDB `kultr-local`), beside the list of
+  files and the covers. Removing a folder in Settings forgets it; the files
+  themselves are never changed.
+- Kultr talks to exactly one host: your Navidrome (or none, with music on this
+  computer). No analytics, no telemetry, no third-party requests, no fonts
+  loaded from anyone's CDN.
 
 ---
 

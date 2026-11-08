@@ -25,6 +25,7 @@ import { useSelection } from '@/store/selection'
 import { analyseTrack } from '@/audio/analysis'
 import { useToast } from '@/store/ui'
 import { Art, Menu, useMenu, type MenuItem } from './ui'
+import { isLocalId } from '@/local/files'
 import { usePlaylistPicker } from './AddToPlaylist'
 import { draggableProps } from './DropZone'
 
@@ -272,7 +273,9 @@ function TrackRow({
           .show(
             result
               ? `${song.title}: ${result.bpm.toFixed(0)} BPM, key ${result.keyName} (${result.camelot})`
-              : 'Analysis failed — check the connection to your server.',
+              : isLocalId(song.id)
+                ? 'Analysis failed — the file could not be read.'
+                : 'Analysis failed — check the connection to your server.',
             result ? 'success' : 'error',
           )
       },
@@ -295,7 +298,11 @@ function TrackRow({
       separatorBefore: true,
     },
     { label: 'Copy share link', icon: <Share2 size={15} />, onSelect: () => void shareSong(song) },
-  ]
+  ].filter((item) => {
+    // A file on this computer is already offline, and has no server to share it from.
+    if (!isLocalId(song.id)) return true
+    return item.label !== 'Sync offline' && item.label !== 'Remove download' && item.label !== 'Copy share link'
+  })
 
   if (onRemove) {
     items.push({

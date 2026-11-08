@@ -16,6 +16,8 @@ import { AlbumCard, ArtistCard, Grid, PlaylistCard } from '@/components/Cards'
 import { Empty, SkeletonGrid } from '@/components/ui'
 import { TrackList } from '@/components/TrackList'
 import { RadioGrid, radioSongs } from '@/components/Radio'
+import { LocalMusicChooser, useMusicFolders } from '@/components/LocalMusic'
+import { isLocalProfile, useAuth } from '@/store/auth'
 
 function greeting(): string {
   const hour = new Date().getHours()
@@ -42,6 +44,9 @@ export function Home() {
   const running = useSync((state) => state.running)
   const run = useSync((state) => state.run)
   const listeningAt = useSync((state) => state.listeningAt)
+  const progress = useSync((state) => state.progress)
+  const local = useAuth((state) => isLocalProfile(state.activeProfile()))
+  const folders = useMusicFolders()
   const tileIds = useSettings((state) => state.homeTiles)
   const favouriteRadios = useSettings((state) => state.favouriteRadios)
   const gridSize = useSettings((state) => state.gridSize)
@@ -91,6 +96,29 @@ export function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tiles, data, stations, favouriteRadios, cardLimit, randomKey],
   )
+
+  if (!loading && data.albums.length === 0 && local) {
+    if (running) {
+      return (
+        <Empty icon={<Disc3 size={26} className="spin" />} title="Reading your music…">
+          {progress.message || 'Looking through your folders.'} The first time takes a while for a big
+          library; after that only new and changed files are read.
+        </Empty>
+      )
+    }
+    const none = !folders.loading && folders.rows.length === 0
+    return (
+      <Empty
+        icon={<Disc3 size={26} />}
+        title={none ? 'Add the music on this computer' : 'No music found yet'}
+        action={<div style={{ width: 'min(420px, 100%)' }}><LocalMusicChooser /></div>}
+      >
+        {none
+          ? 'Choose the folder your music is in. Kultr reads the tags in the files to build albums and artists, and keeps favourites, ratings, playlists and play counts here.'
+          : 'Kultr found no music it can play in your folders. MP3, FLAC, AAC/M4A, Ogg Vorbis, Opus, WAV and AIFF are read; add another folder, or check Settings → Music on this computer.'}
+      </Empty>
+    )
+  }
 
   if (!loading && data.albums.length === 0) {
     return (

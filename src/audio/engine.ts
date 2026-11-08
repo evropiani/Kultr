@@ -1,6 +1,7 @@
 import type { Song } from '@/api/types'
 import { getClient } from '@/api/subsonic'
 import { getOffline } from '@/db'
+import { isLocalId, localPlayable } from '@/local/files'
 import { getStoredFolder, readFromFolder } from '@/lib/filesystem'
 import { EQ_BANDS, settings, type CrossfadeCurve } from '@/store/settings'
 import { getAudioContext, isWebAudioSupported, unlockAudio } from './context'
@@ -352,6 +353,8 @@ export class AudioEngine {
   private async sourceFor(song: Song): Promise<{ url: string; objectUrl: string | null }> {
     // Internet radio and anything else that is not a library track.
     if (song.kultrStreamUrl) return { url: song.kultrStreamUrl, objectUrl: null }
+    // Music on this computer: the file itself.
+    if (isLocalId(song.id)) return localPlayable(song)
 
     if (settings().offlineFirst) {
       try {

@@ -77,7 +77,7 @@ function normalizeServerUrl(raw: string): string {
 }
 
 type ParamValue = string | number | boolean | undefined | null
-type Params = Record<string, ParamValue | ParamValue[]>
+export type Params = Record<string, ParamValue | ParamValue[]>
 
 export class SubsonicClient {
   private creds: Credentials
@@ -164,7 +164,8 @@ export class SubsonicClient {
     return url.toString()
   }
 
-  private async request<T = Record<string, unknown>>(
+  // Protected so the client for music on this computer can answer the same calls from its own files.
+  protected async request<T = Record<string, unknown>>(
     endpoint: string,
     params: Params = {},
     init: { signal?: AbortSignal; timeoutMs?: number } = {},

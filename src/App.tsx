@@ -27,6 +27,9 @@ import { useSync } from '@/store/sync'
 import { useOffline } from '@/store/offline'
 import { useSelection } from '@/store/selection'
 import { prefersReducedMotion } from '@/lib/motion'
+import { FolderAccessBanner } from '@/components/LocalMusic'
+import { LOCAL_PROFILE_ID } from '@/local/client'
+import { getSyncState } from '@/db'
 
 /** Keep the document's data-* attributes in step with the settings store. */
 function useThemeEffects(): void {
@@ -113,6 +116,26 @@ function useBootstrap(): void {
   const autoSyncOnStart = useSettings((state) => state.autoSyncOnStart)
   const autoSyncMinutes = useSettings((state) => state.autoSyncMinutes)
   const started = useRef(false)
+
+  // Each library keeps its own mirror: connecting to a different one than the
+  // mirror holds clears it and reads the new one from the start. Music on this
+  // computer is read straight away the first time, since there is no server
+  // to wait for.
+  useEffect(
+    () =>
+      useAuth.subscribe((state, previous) => {
+        if (state.status !== 'connected' || !state.activeId) return
+        if (previous.status === 'connected' && previous.activeId === state.activeId) return
+        const owner = state.activeId
+        void (async () => {
+          const sync = useSync.getState()
+          const fresh = await sync.adopt(owner)
+          const neverRead = owner === LOCAL_PROFILE_ID && (await getSyncState()).lastFullSync === null
+          if (fresh || neverRead) void useSync.getState().run('full')
+        })()
+      }),
+    [],
+  )
 
   useEffect(() => {
     if (started.current) return
@@ -242,6 +265,7 @@ function Shell() {
         <TopBar />
         <div className={flush ? 'content content--flush' : 'content'} ref={contentRef}>
           <div className="page" ref={pageRef}>
+            <FolderAccessBanner />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<Search />} />

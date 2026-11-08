@@ -4,6 +4,7 @@ import { getAnalysis, putAnalysis } from '@/db'
 import { decodeToMono } from './context'
 import { analysePcm, type PcmAnalysis } from './dsp'
 import type { AnalysisRequest, AnalysisResponse } from './analysis.worker'
+import { isLocalId, localBlob } from '@/local/files'
 
 /**
  * Bump this whenever the DSP changes in a way that invalidates cached numbers.
@@ -93,11 +94,17 @@ export async function analyseTrack(
 
   const task = (async (): Promise<TrackAnalysis | null> => {
     try {
-      const client = getClient()
-      const url = client.streamUrl(song.id, { maxBitRate: ANALYSIS_BITRATE, format: 'mp3' })
-      const response = await fetch(url, { signal: options.signal, credentials: 'omit' })
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const data = await response.arrayBuffer()
+      let data: ArrayBuffer
+      if (isLocalId(song.id)) {
+        // Music on this computer: the file itself, nothing to download.
+        data = await (await localBlob(song)).arrayBuffer()
+      } else {
+        const client = getClient()
+        const url = client.streamUrl(song.id, { maxBitRate: ANALYSIS_BITRATE, format: 'mp3' })
+        const response = await fetch(url, { signal: options.signal, credentials: 'omit' })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        data = await response.arrayBuffer()
+      }
       const { pcm, sampleRate } = await decodeToMono(data)
       const result = await runInWorker(pcm, sampleRate)
 

@@ -6,6 +6,7 @@ import { useOffline } from '@/store/offline'
 import { usePlayer } from '@/store/player'
 import { useSelection } from '@/store/selection'
 import { usePlaylistPicker } from './AddToPlaylist'
+import { isLocalId } from '@/local/files'
 
 /**
  * Floating bar that appears whenever anything is ticked. Everything it offers
@@ -71,10 +72,12 @@ export function SelectionBar() {
           <Heart size={14} />
           Favourite
         </button>
-        <button className="pill pill-accent" onClick={() => void download(songs, 'Selection')}>
-          <FolderDown size={14} />
-          Sync offline
-        </button>
+        {songs.every((song) => isLocalId(song.id)) ? null : (
+          <button className="pill pill-accent" onClick={() => void download(songs, 'Selection')}>
+            <FolderDown size={14} />
+            Sync offline
+          </button>
+        )}
         {storedCount > 0 ? (
           <button
             className="pill"

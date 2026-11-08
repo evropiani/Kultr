@@ -5,6 +5,7 @@ import { formatBytes } from '@/lib/format'
 import { supportsFolderDownloads } from '@/lib/filesystem'
 import { countPending, useOffline } from '@/store/offline'
 import { Modal } from './ui'
+import { isLocalId } from '@/local/files'
 
 /**
  * "Sync offline" button.
@@ -44,6 +45,8 @@ export function OfflineButton({
   }, [songs, ids])
 
   const complete = pending === 0 && songs.length > 0
+  // Music on this computer needs no downloading.
+  if (songs.length && songs.every((song) => isLocalId(song.id))) return null
   const title = complete
     ? 'Every track here is already downloaded'
     : pending === null

@@ -7,6 +7,7 @@ import {
   Code2,
   Download,
   FolderDown,
+  HardDrive,
   Pencil,
   Info,
   Keyboard,
@@ -40,7 +41,8 @@ import {
 } from '@/lib/settingsFile'
 import { useOffline } from '@/store/offline'
 import { engine } from '@/audio/engine'
-import { useAuth } from '@/store/auth'
+import { isLocalProfile, useAuth } from '@/store/auth'
+import { MusicFoldersRows } from '@/components/LocalMusic'
 import {
   DEFAULT_SETTINGS,
   EQ_BANDS,
@@ -94,6 +96,8 @@ const ACCENTS = ['#ff7a3d', '#ffa733', '#f2613f', '#ff6b9a', '#ffd166', '#45d67a
 export function Settings() {
   const settings = useSettings()
   const auth = useAuth()
+  // The music on this computer has its own panel, and is never exported.
+  const servers = auth.profiles.filter((profile) => !isLocalProfile(profile))
   const navigate = useNavigate()
   const setShortcuts = useUi((state) => state.setShortcuts)
   const offline = useOffline()
@@ -870,6 +874,19 @@ export function Settings() {
         </Row>
       </Panel>
 
+      {/* ------------------------------------------------ music on this computer */}
+      <Panel
+        title="Music on this computer"
+        icon={<HardDrive size={16} />}
+        description={
+          isLocalProfile(auth.activeProfile())
+            ? 'The folders Kultr builds your library from. Albums come from the tags in the files, covers from the pictures beside them or inside them. Favourites, ratings, playlists and play counts are kept by Kultr on this computer.'
+            : 'Use Kultr without a server: add the folders your music is in. Using them switches Kultr from your server to this music; your server stays saved below.'
+        }
+      >
+        <MusicFoldersRows />
+      </Panel>
+
       {/* ---------------------------------------------------------- servers */}
       <Panel
         title="Servers"
@@ -885,11 +902,11 @@ export function Settings() {
           </button>
         }
       >
-        {auth.profiles.length === 0 ? (
+        {servers.length === 0 ? (
           <p className="row__hint">No servers saved yet.</p>
         ) : null}
 
-        {auth.profiles.map((profile) => {
+        {servers.map((profile) => {
           const active = profile.id === auth.activeId
           const enabled = profile.enabled !== false
           // Servers restored from an export have no username yet.
@@ -1015,9 +1032,9 @@ export function Settings() {
           </button>
           <button
             className="pill"
-            disabled={auth.profiles.length === 0}
+            disabled={servers.length === 0}
             title={
-              auth.profiles.length === 0
+              servers.length === 0
                 ? 'No servers saved yet'
                 : 'Include the list of servers as well'
             }
@@ -1127,7 +1144,7 @@ export function Settings() {
               className="pill pill-accent"
               onClick={() => {
                 const name = downloadSettingsFile(
-                  buildSettingsFile(settings, __KULTR_VERSION__, auth.profiles),
+                  buildSettingsFile(settings, __KULTR_VERSION__, servers),
                 )
                 setConfirmServerExport(false)
                 toast.show(`Saved ${name}.`, 'success')
@@ -1142,7 +1159,7 @@ export function Settings() {
         <p className="row__hint" style={{ fontSize: 13 }}>
           The file will list the name and address of each of your
           {' '}
-          {auth.profiles.length === 1 ? 'server' : `${auth.profiles.length} servers`}. Usernames and
+          {servers.length === 1 ? 'server' : `${servers.length} servers`}. Usernames and
           passwords are <strong>never</strong> included, so nobody could sign in with it — but the
           addresses say where your music lives, and for a server reachable from the internet that is
           worth keeping to yourself.

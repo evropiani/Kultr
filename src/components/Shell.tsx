@@ -30,7 +30,7 @@ import {
 } from 'lucide-react'
 import { artUrl, dominantColor, hexToRgb, onAccent, readableOnLight } from '@/lib/artwork'
 import { usePlayer } from '@/store/player'
-import { useAuth } from '@/store/auth'
+import { isLocalProfile, useAuth } from '@/store/auth'
 import { useSettings } from '@/store/settings'
 import { useSync } from '@/store/sync'
 import { useToast, useUi } from '@/store/ui'
@@ -155,6 +155,7 @@ export function Sidebar() {
   const markRef = useRef<HTMLDivElement>(null)
   const slideTo = useSlidingIndicator(navRef, markRef, '.navitem.is-active', [location.pathname])
 
+  const local = useAuth((state) => isLocalProfile(state.activeProfile()))
   const library = [
     { to: '/albums', label: 'Albums', icon: Disc3, count: counts.albums },
     { to: '/artists', label: 'Artists', icon: Users, count: counts.artists },
@@ -162,7 +163,8 @@ export function Sidebar() {
     { to: '/genres', label: 'Genres', icon: Tags, count: counts.genres },
     { to: '/playlists', label: 'Playlists', icon: ListMusic, count: counts.playlists },
     { to: '/favourites', label: 'Favourites', icon: Heart },
-    { to: '/downloads', label: 'Offline', icon: HardDrive },
+    // Music on this computer is offline already.
+    ...(local ? [] : [{ to: '/downloads', label: 'Offline', icon: HardDrive }]),
   ]
 
   return (
@@ -194,7 +196,7 @@ export function Sidebar() {
           <NavItem key={item.to} {...item} onPick={slideTo} />
         ))}
 
-        <div className="sidebar__section">Server</div>
+        <div className="sidebar__section">{local ? 'This computer' : 'Server'}</div>
         <NavItem to="/sync" label="Sync" icon={RefreshCw} onPick={slideTo} />
         <NavItem to="/stats" label="Listening" icon={BarChart3} onPick={slideTo} />
         <NavItem to="/settings" label="Settings" icon={SettingsIcon} onPick={slideTo} />

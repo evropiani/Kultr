@@ -7,6 +7,43 @@ only fixed.
 
 ---
 
+## 1.9.0 — 2026-11-08
+
+### 2026-11-08 16:40 — Music on this computer, without Navidrome
+
+Kultr no longer needs a server. Point it at the folder your music is in and it
+builds the library from the files, the way Kultr for iOS and Android do.
+
+- **Getting started.** The sign-in screen has a second card, *No server? Play
+  the music on this computer*: **Choose a music folder** reads a folder where
+  it is (Chrome, Edge); **Import a folder** and **Import files** copy music
+  into Kultr's own storage in the browser for Firefox and Safari, which cannot
+  keep a folder open. Settings has a new **Music on this computer** panel to
+  add, rescan and remove folders.
+- **Tags.** MP3 (ID3v1, ID3v2.2–2.4, with lengths from Xing/VBRI), FLAC,
+  AAC/M4A, Ogg Vorbis, Opus, WAV and AIFF: title, artist, album artist, album,
+  track, disc, year, genre, length, lyrics and the embedded picture. Ported
+  from Kultr for iOS, with its tests, so the apps read files the same way.
+- **Albums.** Built as on iOS: same-named albums by different artists stay
+  apart, a two-disc album stays together, an album with several artists and
+  no album artist is by *Various artists*, an untagged file takes its name
+  from itself and its album from its folder. Covers come from a `cover.jpg` or
+  `folder.jpg` beside the files (or the only picture there), otherwise from
+  the first file with a picture inside it, shrunk to 600 pixels.
+- **Everything else works.** Favourites, ratings, play counts, recently
+  played and playlists are kept by Kultr on this computer; crossfade, InjeKt,
+  Karousel, the equaliser, lyrics and search work as with a server.
+- **Quick rescans.** Only new and changed files are opened, so checking for
+  new music after the first scan takes seconds. A folder that cannot be read
+  right now (a drive unplugged, permission not given again yet) keeps its
+  music in the library; a banner offers **Allow** when Chrome wants to be
+  asked again.
+- **Each library its own.** Switching between a server and the music on this
+  computer — or between two servers — now clears the library mirror and reads
+  the new one, so songs from one never turn up in another.
+- **Not offered for local music:** *Sync offline* (it is offline already),
+  share links and internet radio. *Save file to disk* saves a copy of the file.
+
 ## 1.8.0 — 2026-11-06
 
 ### 2026-11-06 09:17 — Cream, the look of Kultr for iOS
