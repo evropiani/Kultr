@@ -34,10 +34,10 @@ export function Crates() {
             {t("Folders of albums, artists and tracks, filled by hand or by rules. Put something in one from its ••• menu or its page.")}</span>
         </div>
         <div className="page-actions">
-          <button className="pill" onClick={() => setEditing({ id: newId('c'), name: 'New crate', icon: 'shippingbox.fill', albums: [], artists: [], songs: [], rules: { id: 'rules', name: 'rules', icon: '', minRating: 4 } })}>
+          <button className="pill" onClick={() => setEditing({ id: newId('c'), name: t('New crate'), icon: 'shippingbox.fill', albums: [], artists: [], songs: [], rules: { id: 'rules', name: 'rules', icon: '', minRating: 4 } })}>
             <Plus size={14} />
             {t("Crate by rules")}</button>
-          <button className="pill pill-accent" onClick={() => setEditing({ id: newId('c'), name: 'New crate', icon: 'shippingbox.fill', albums: [], artists: [], songs: [] })}>
+          <button className="pill pill-accent" onClick={() => setEditing({ id: newId('c'), name: t('New crate'), icon: 'shippingbox.fill', albums: [], artists: [], songs: [] })}>
             <Plus size={14} />
             {t("New crate")}</button>
         </div>
@@ -207,7 +207,7 @@ function CrateEditor({ crate, onClose, onSaved }: { crate: Crate | null; onClose
     <Modal
       open={Boolean(crate)}
       onClose={onClose}
-      title={isNew ? t("New crate") : t("Edit %@", crate?.name ?? 'crate')}
+      title={isNew ? t("New crate") : t("Edit %@", crate?.name ?? t('New crate'))}
       footer={
         <>
           <button className="pill" onClick={onClose}>

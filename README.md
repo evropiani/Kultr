@@ -36,6 +36,10 @@ Questions or ideas? Join [r/Kultr](https://www.reddit.com/r/Kultr/) on Reddit, o
 | **Choose your home page.** Fifteen shelves, switched on and off and put in the order you want. | **And here it is.** Empty shelves are skipped, so it never looks half-finished. |
 | ![The dark theme](docs/screenshots/albums-dark.png) | ![Signing in](docs/screenshots/login.png) |
 | **Dark theme.** Warm charcoal rather than blue-black, with the same orange, a little brighter. | **One screen to connect.** Name the server, or let it use its address. |
+| ![Stations](docs/screenshots/stations.png) | ![The energy planner](docs/screenshots/planner.png) |
+| **Stations.** Endless mixes from your own library; turn the dial to choose, or to mix into the next one while one plays. | **The energy planner.** Draw how the set should feel and Kultr picks tracks whose energy follows the line. |
+| ![A crate](docs/screenshots/crate.png) | ![Kultr Studio](docs/screenshots/studio.png) |
+| **Crates.** Albums, artists and tracks you put together, by hand or by rules, kept as a playlist if you like. | **Kultr Studio.** The whole look in one place, shared as a link or a file that opens on the iPhone and Android too. |
 
 <div align="center">
 

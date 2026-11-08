@@ -71,7 +71,7 @@ export function Stations() {
         <div className="page-actions">
           <button
             className="pill pill-accent"
-            onClick={() => setEditing({ id: newId('s'), name: 'New station', icon: 'dot.radiowaves.left.and.right' })}
+            onClick={() => setEditing({ id: newId('s'), name: t('New station'), icon: 'dot.radiowaves.left.and.right' })}
           >
             <Plus size={14} />
             {t("New station")}</button>

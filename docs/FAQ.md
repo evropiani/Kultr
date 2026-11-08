@@ -6,6 +6,37 @@ No. Navidrome holds your music, scans it, and serves it. Kultr is a different
 front end for it. Navidrome's own interface keeps working exactly as before,
 and you can use both.
 
+### Do I need Navidrome at all?
+
+No. Kultr plays the music in a folder on your computer by itself: choose
+**Choose a music folder** on the sign-in screen and it builds albums, artists,
+covers and lyrics from the files. Crossfade, InjeKt, Karousel, stations, the
+planner and the equaliser all work the same. What needs a server is anything
+that lives on one: share links, internet radio, and favourites and playlists
+that follow you to your phone. Those stay on the computer instead, so export
+your settings (or keep Navidrome) if you want them elsewhere.
+[Without a server](../README.md#without-a-server) has the details for each
+browser.
+
+### Is there a desktop app?
+
+Yes, for Windows (an installer, or a portable `.exe` that runs from a USB
+stick) and Linux (AppImage and `.deb`), on the
+[releases page](https://github.com/evropiani/Kultr/releases/latest). It is the
+same app with everything inside it, so it opens with no internet connection,
+reads music folders straight from disk without browser prompts, and connects
+to Navidrome whenever you sign in to one. [INSTALL.md](INSTALL.md#desktop-app-windows-and-linux)
+walks through it. On a Mac, or anywhere else, use the web version — install it
+as an app from the browser's menu and it works offline too.
+
+### Is Kultr available in other languages?
+
+English and German. It follows your browser's language (the desktop app, your
+system's); **Settings → Appearance → Language** picks one for this device.
+The German uses the same words as Kultr for iOS and Android, and the command
+bar understands German too: “spiele Nachtfahrt”, “schlaf in 30 Minuten”,
+“öffne Einstellungen”. The release notes stay in English.
+
 ### Do I have to install it? What is web.kultr.cc?
 
 The web version at <https://web.kultr.cc/> is the same app, served from
@@ -33,6 +64,11 @@ It is never sent anywhere except your own server.
 No. Kultr makes requests to exactly one host: your Navidrome. No analytics, no
 error reporting, no fonts from a CDN, no external APIs. The whole thing is
 static files.
+
+The one exception is the desktop app, which asks GitHub once a day whether a
+newer release exists (the same public page anyone can open) and offers to
+open it if so. It sends nothing about you or your library, never downloads
+anything by itself, and quietly does nothing when there is no internet.
 
 ### Why does it download my whole library?
 

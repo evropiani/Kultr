@@ -7,6 +7,21 @@ only fixed.
 
 ---
 
+## 1.14.1 — 2026-11-08
+
+### 2026-11-08 22:10 — The desktop app in German, and new screenshots
+
+- The desktop app's own menu and dialogs (**Check for updates…**, the update
+  notice, the folder picker) follow the system language, English or German.
+- A new crate or station starts with its name in the app's language
+  ("Neue Kiste", "Neue Station") instead of always in English.
+- The README shows the new pages: stations, the energy planner, a crate and
+  Kultr Studio. The FAQ answers whether you need Navidrome at all, what the
+  desktop app is and which languages Kultr speaks, and Troubleshooting has
+  sections on music on this computer (no music found, folder permission,
+  split albums, covers) and the desktop app (SmartScreen, the AppImage,
+  ports, where it keeps its data).
+
 ## 1.14.0 — 2026-11-08
 
 ### 2026-11-08 21:45 — Kultr in German

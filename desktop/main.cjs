@@ -27,6 +27,9 @@ const TOKEN = crypto.randomBytes(24).toString('hex')
 let port = PORTS[0]
 let mainWindow = null
 
+/** The app's own menus and dialogs follow the system language: English or German. */
+const say = (english, german) => (app.getLocale().toLowerCase().startsWith('de') ? german : english)
+
 // ------------------------------------------------------------ one instance --
 
 if (!app.requestSingleInstanceLock()) {
@@ -232,7 +235,7 @@ ipcMain.on('kultr:info', (event) => {
 
 ipcMain.handle('kultr:pick-folder', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
-    title: 'Choose your music folder',
+    title: say('Choose your music folder', 'Wähle deinen Musikordner'),
     properties: ['openDirectory'],
   })
   if (result.canceled || !result.filePaths[0]) return null
@@ -316,20 +319,23 @@ async function checkForUpdate(manual = false) {
       const { response: choice } = await dialog.showMessageBox(mainWindow, {
         type: 'info',
         title: 'Kultr',
-        message: `Kultr ${latest} is available`,
-        detail: `You have ${app.getVersion()}. Download the new version from GitHub and install it over this one; your library and settings stay.`,
-        buttons: ['Download', 'Later', 'Skip this version'],
+        message: say(`Kultr ${latest} is available`, `Kultr ${latest} ist verfügbar`),
+        detail: say(
+          `You have ${app.getVersion()}. Download the new version from GitHub and install it over this one; your library and settings stay.`,
+          `Du hast ${app.getVersion()}. Lade die neue Version von GitHub und installiere sie über diese; Mediathek und Einstellungen bleiben.`,
+        ),
+        buttons: [say('Download', 'Herunterladen'), say('Later', 'Später'), say('Skip this version', 'Diese Version überspringen')],
         defaultId: 0,
         cancelId: 1,
       })
       if (choice === 0) void shell.openExternal(release.html_url || RELEASE_PAGE)
       if (choice === 2) fs.writeFileSync(stamp, JSON.stringify({ checked: Date.now(), latest, skipped: latest }))
     } else if (manual) {
-      void dialog.showMessageBox(mainWindow, { type: 'info', title: 'Kultr', message: 'Kultr is up to date', detail: `You have ${app.getVersion()}, the newest version.` })
+      void dialog.showMessageBox(mainWindow, { type: 'info', title: 'Kultr', message: say('Kultr is up to date', 'Kultr ist aktuell'), detail: say(`You have ${app.getVersion()}, the newest version.`, `Du hast ${app.getVersion()}, die neueste Version.`) })
     }
   } catch (err) {
     if (manual) {
-      void dialog.showMessageBox(mainWindow, { type: 'warning', title: 'Kultr', message: 'Could not check for updates', detail: String(err?.message ?? err) })
+      void dialog.showMessageBox(mainWindow, { type: 'warning', title: 'Kultr', message: say('Could not check for updates', 'Die Suche nach Updates ist fehlgeschlagen'), detail: String(err?.message ?? err) })
     }
   }
 }
@@ -386,25 +392,42 @@ function buildMenu() {
     {
       label: 'Kultr',
       submenu: [
-        { label: 'Check for updates…', click: () => void checkForUpdate(true) },
+        { label: say('Check for updates…', 'Nach Updates suchen…'), click: () => void checkForUpdate(true) },
         { type: 'separator' },
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        { role: 'reload', label: say('Reload', 'Neu laden') },
+        { role: 'forceReload', label: say('Force Reload', 'Neu laden erzwingen') },
+        { role: 'toggleDevTools', label: say('Developer Tools', 'Entwicklerwerkzeuge') },
         { type: 'separator' },
-        { role: 'quit' },
+        { role: 'quit', label: say('Quit', 'Beenden') },
       ],
     },
-    { role: 'editMenu' },
     {
-      label: 'View',
-      submenu: [{ role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }],
+      label: say('Edit', 'Bearbeiten'),
+      submenu: [
+        { role: 'undo', label: say('Undo', 'Rückgängig') },
+        { role: 'redo', label: say('Redo', 'Wiederholen') },
+        { type: 'separator' },
+        { role: 'cut', label: say('Cut', 'Ausschneiden') },
+        { role: 'copy', label: say('Copy', 'Kopieren') },
+        { role: 'paste', label: say('Paste', 'Einfügen') },
+        { role: 'selectAll', label: say('Select All', 'Alles auswählen') },
+      ],
     },
     {
-      label: 'Help',
+      label: say('View', 'Ansicht'),
       submenu: [
-        { label: 'Kultr on GitHub', click: () => void shell.openExternal('https://github.com/evropiani/Kultr') },
-        { label: 'Troubleshooting', click: () => void shell.openExternal('https://github.com/evropiani/Kultr/blob/main/docs/TROUBLESHOOTING.md') },
+        { role: 'resetZoom', label: say('Actual Size', 'Originalgröße') },
+        { role: 'zoomIn', label: say('Zoom In', 'Vergrößern') },
+        { role: 'zoomOut', label: say('Zoom Out', 'Verkleinern') },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: say('Full Screen', 'Vollbild') },
+      ],
+    },
+    {
+      label: say('Help', 'Hilfe'),
+      submenu: [
+        { label: say('Kultr on GitHub', 'Kultr auf GitHub'), click: () => void shell.openExternal('https://github.com/evropiani/Kultr') },
+        { label: say('Troubleshooting', 'Fehlerbehebung'), click: () => void shell.openExternal('https://github.com/evropiani/Kultr/blob/main/docs/TROUBLESHOOTING.md') },
         { label: 'r/Kultr', click: () => void shell.openExternal('https://www.reddit.com/r/Kultr/') },
       ],
     },
@@ -418,7 +441,7 @@ app.whenReady().then(async () => {
   try {
     await startServer()
   } catch (err) {
-    dialog.showErrorBox('Kultr could not start', String(err?.message ?? err))
+    dialog.showErrorBox(say('Kultr could not start', 'Kultr konnte nicht starten'), String(err?.message ?? err))
     app.quit()
     return
   }

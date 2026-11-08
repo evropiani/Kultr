@@ -193,6 +193,99 @@ time-stretching is clean; above that you hear it.
 
 ---
 
+## Music on this computer
+
+### "Kultr found no music it can play"
+
+Kultr reads MP3, FLAC, AAC/M4A (not Apple's DRM-protected `.m4p`), Ogg Vorbis,
+Opus, WAV and AIFF, in the folder you chose and every folder inside it. Check
+that you picked the folder that *holds* the music rather than one beside it,
+then press **Rescan** under **Settings → Music on this computer**. Hidden
+folders (names starting with a dot) are skipped.
+
+### A banner says Kultr needs permission to read a folder again
+
+Chrome and Edge forget a folder's permission when the browser restarts, and
+only let a page ask again after you click something. Press **Allow** on the
+banner (or beside the folder in Settings) and confirm in the browser's prompt.
+To stop the prompts, install Kultr as an app from the address bar, where
+Chrome can remember the choice, or use the desktop app, which never asks.
+
+### An album is split in two, or two albums are merged
+
+Albums are grouped like most players do it: by album name and **album
+artist** when the files name one, otherwise by album name within one folder.
+So:
+
+- An album split by featured artists needs the same *album artist* tag on
+  every track (a compilation: *Various Artists*).
+- Two different albums with the same name merge when they share an album
+  artist; give them distinct album names, or remove the album artist from one
+  and keep them in separate folders.
+
+Fix the tags in a tagger such as Mp3tag, MusicBrainz Picard or Kid3, then
+**Rescan**: only the files you changed are read again.
+
+### Covers are missing
+
+Kultr uses an image beside the files named `cover`, `folder`, `front` or
+`album` (`.jpg`, `.jpeg`, `.png` or `.webp`), or the only picture in that
+folder if there is just one; failing that, the picture inside the files. Add
+one of those and **Rescan**.
+
+### Imported music disappeared (Firefox, Safari)
+
+Music you **import** is copied into the browser's own storage, and a browser
+can clear that when the disk runs low or when you clear site data. Install
+Kultr as an app so its storage is marked persistent, keep the originals, and
+re-import if it happens. Chrome, Edge and the desktop app read the folder
+where it is and have nothing to lose.
+
+### Favourites and play counts are not on my phone
+
+They are kept on this computer, because music files cannot hold them and
+there is no server to send them to. For favourites everywhere, put the music
+in Navidrome.
+
+---
+
+## The desktop app
+
+### Windows says it protected your PC
+
+The app is not signed with a paid certificate, so SmartScreen does not know
+it yet. Choose **More info → Run anyway**. Downloads come only from the
+[releases page](https://github.com/evropiani/Kultr/releases/latest), built by
+GitHub Actions from the source in this repository.
+
+### The AppImage does not start
+
+Make it executable (`chmod +x Kultr-*.AppImage`). If it complains about FUSE,
+install `libfuse2` (`sudo apt install libfuse2` on Ubuntu 22.04 and later), or
+run it with `--appimage-extract-and-run`. The `.deb` needs neither.
+
+### "Kultr could not start: No free port for Kultr"
+
+The app serves itself on `127.0.0.1`, ports 41814 to 41817, and all four were
+taken — usually by copies of Kultr that did not close. Quit them (or restart),
+then open it again.
+
+### It cannot connect to my server
+
+The desktop app talks to Navidrome the same way the browser does, from
+`http://127.0.0.1:41814`, so an `http://` server works there even though the
+HTTPS web version cannot reach it. If it still fails, see
+[I cannot log in](#i-cannot-log-in): a proxy or login gateway in front of
+Navidrome is the usual cause.
+
+### Where does it keep its data?
+
+In the app's profile folder: `%APPDATA%\Kultr` on Windows, `~/.config/Kultr`
+on Linux. Deleting that folder starts it afresh; your music files are never
+touched.
+
+---
+
 ## Offline and installing
 
 ### No "install" option
