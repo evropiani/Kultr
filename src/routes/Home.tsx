@@ -19,6 +19,7 @@ import { RadioGrid, radioSongs } from '@/components/Radio'
 import { LocalMusicChooser, useMusicFolders } from '@/components/LocalMusic'
 import { isLocalProfile, useAuth } from '@/store/auth'
 import { StationShelf } from '@/components/StationShelf'
+import { HomeWidgets } from '@/components/HomeWidgets'
 
 function greeting(): string {
   const hour = new Date().getHours()
@@ -174,6 +175,8 @@ export function Home() {
           </button>
         </div>
       </div>
+
+      <HomeWidgets />
 
       {loading ? (
         <SkeletonGrid count={8} />

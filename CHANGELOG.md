@@ -7,6 +7,36 @@ only fixed.
 
 ---
 
+## 1.13.0 — 2026-11-08
+
+### 2026-11-08 17:53 — Crates, notes and tags, Kultr Studio, widgets on Home
+
+The last of the big features from Kultr for iOS and Android, in the same
+shapes so they travel between the apps in a settings file.
+
+- **Crates.** Folders of albums, artists and tracks, under Library → Crates.
+  Fill one by hand — **Crate** on an album or artist page, *Add to a crate…*
+  in a track's ••• menu, or **Crate** for a selection — or by rules: rating,
+  years, genres, tags, favourites, never played, when it was added. Play or
+  shuffle it, and keep it as a playlist on your server (or on this computer)
+  that follows it whenever it changes. "open gym" and "play gym" work in the
+  command bar.
+- **Notes and tags** on any album or artist: what you think of it, which
+  pressing it is, and tags like *gym* or *vinyl*. Only you see them. A
+  station or a crate can play everything with a tag.
+- **Kultr Studio**, in the sidebar and Settings → Appearance: start from
+  Cream, Night, Ember, Paper or Console, change the colours, corners, covers
+  and playhead, and write the full player's info line yourself, like
+  `{year}{?genre: · {genre}}{?bpm: · {bpm} BPM}`. Share a style as a
+  `kultr://style/…` link or a `.kultrstyle` file; one made on the iPhone or
+  Android opens here, and the other way round.
+- **Widgets on Home**: now playing (with play and skip), your listening this
+  week against your usual, the next mix, a station, a crate, or a shortcut
+  for anything you would type in search, small or across the width. Change
+  them in Settings → Home page.
+- Winding down before sleep puts the calmest picks first exactly as the
+  other apps do: by energy and a little by tempo, unknown ones in between.
+
 ## 1.12.0 — 2026-11-08
 
 ### 2026-11-08 17:36 — The monthly recap, What's new and Rediscover

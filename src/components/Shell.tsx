@@ -19,6 +19,8 @@ import {
   Moon,
   Music2,
   Radio,
+  Package,
+  Palette,
   RadioTower,
   RefreshCw,
   Search,
@@ -160,12 +162,14 @@ export function Sidebar() {
   const slideTo = useSlidingIndicator(navRef, markRef, '.navitem.is-active', [location.pathname])
 
   const local = useAuth((state) => isLocalProfile(state.activeProfile()))
+  const crateCount = useSettings((state) => state.crates.length)
   const library = [
     { to: '/albums', label: 'Albums', icon: Disc3, count: counts.albums },
     { to: '/artists', label: 'Artists', icon: Users, count: counts.artists },
     { to: '/songs', label: 'Songs', icon: Music2, count: counts.songs },
     { to: '/genres', label: 'Genres', icon: Tags, count: counts.genres },
     { to: '/playlists', label: 'Playlists', icon: ListMusic, count: counts.playlists },
+    { to: '/crates', label: 'Crates', icon: Package, count: crateCount || undefined },
     { to: '/favourites', label: 'Favourites', icon: Heart },
     // Music on this computer is offline already.
     ...(local ? [] : [{ to: '/downloads', label: 'Offline', icon: HardDrive }]),
@@ -203,6 +207,7 @@ export function Sidebar() {
         <div className="sidebar__section">{local ? 'This computer' : 'Server'}</div>
         <NavItem to="/sync" label="Sync" icon={RefreshCw} onPick={slideTo} />
         <NavItem to="/stats" label="Listening" icon={BarChart3} onPick={slideTo} />
+        <NavItem to="/studio" label="Studio" icon={Palette} onPick={slideTo} />
         <NavItem to="/settings" label="Settings" icon={SettingsIcon} onPick={slideTo} />
 
         <div className="sidebar__footer">

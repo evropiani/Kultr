@@ -5,6 +5,10 @@ import { decade, decadeStations, matches, readStation, STATION_PRESETS, stationP
 import { parseCommand } from '@/lib/commands'
 import { monthRecap, recapMonths, UTC } from '@/lib/recap'
 import { isNewer, parseChangelog, releasesSince } from '@/lib/changelog'
+import { addTag, albumKey, artistKey, crateContents, readCrates, removeTag, tagCounts, toggleIn, type Annotation, type Crate } from '@/lib/collection'
+import { addedSinceDay, calmestFirst, calmness } from '@/audio/stations'
+import { readStyle, renderTemplate, styleFrom, styleLink, styleMatches, stylePatch, studioPresets } from '@/lib/studio'
+import { widgetRows, type HomeWidget } from '@/lib/widgets'
 
 // Kultr for iOS's tests for stations, the energy planner and the command
 // bar (CoreTests.swift), ported, so the apps agree.
@@ -176,6 +180,51 @@ assert('entry title and time', log[0].entries[0].title === 'Stations, and more' 
 assert('entry body', log[0].entries[0].body.startsWith('Body **one**.') && log[0].entries[0].body.includes('wrapped'))
 assert('newer', isNewer('1.11.0', '1.9.9') && !isNewer('1.9.9', '1.11.0') && !isNewer('1.10.0', '1.10.0'))
 assert('since the last seen', eq(releasesSince(log, '1.10.0', '1.11.0').map((r) => r.version), ['1.11.0']))
+
+console.log('\n== Tags, crates and their rules ==')
+let note: Annotation = { note: '', tags: [] }
+note = addTag(note, 'Gym')
+note = addTag(note, ' gym ')
+note = addTag(note, 'Road trip')
+assert('tags without duplicates', eq(note.tags, ['Gym', 'Road trip']))
+note = removeTag(note, 'GYM')
+assert('removing ignores case', eq(note.tags, ['Road trip']))
+const notes: Record<string, Annotation> = { [albumKey('al1')]: { note: '', tags: ['Gym'] }, [artistKey('ar2')]: { note: 'Loud', tags: ['gym', 'Night'] } }
+assert('tag counts', tagCounts(notes)[0].tag.toLowerCase() === 'gym' && tagCounts(notes)[0].count === 2)
+assert('added since', addedSinceDay(30, Date.parse('2026-11-02T00:00:00Z')) === '2026-10-03')
+assert('rules summary', summary({ id: 'y', name: 'Year', icon: '', minRating: 4, addedDays: 365 }) === '4★ and up · added this year')
+let crate: Crate = { id: 'c', name: 'Gym', icon: '', albums: [], artists: [], songs: [] }
+crate = { ...crate, albums: toggleIn(crate.albums, 'al1') }
+crate = { ...crate, songs: toggleIn(toggleIn(toggleIn(crate.songs, 's1'), 's2'), 's1') }
+assert('crate contents', crateContents(crate) === '1 album · 1 track' && crate.songs.includes('s2'))
+const oldCrate = readCrates([{ id: 'c', name: 'Old' }])![0]
+assert('a crate from another app', eq(oldCrate.albums, []) && !oldCrate.rules)
+
+console.log('\n== Calmest first, for winding down ==')
+const loud = analysis('loud', 128, { energy: 0.9 })
+const quiet = analysis('quiet', 80, { energy: 0.2 })
+assert('quiet is calmer', calmness(quiet) < calmness(loud) && calmness(null) === 0.5)
+const table: Record<string, TrackAnalysis> = { loud, quiet }
+assert('unknown in the middle', eq(calmestFirst([song('loud'), song('unknown'), song('quiet')], (s) => table[s.id]).map((s) => s.id), ['quiet', 'unknown', 'loud']))
+
+console.log('\n== Studio templates, styles and widgets ==')
+const values = { year: '2019', genre: '', format: 'FLAC', bitrate: '1024' }
+assert('a template with a condition', renderTemplate('{year}{?genre: · {genre}} · {format}{?bitrate: · {bitrate} kbps}', values) === '2019 · FLAC · 1024 kbps')
+assert('an empty condition', renderTemplate('{?genre:only {genre}}', values) === '')
+assert('unknown names are empty', renderTemplate('plain {unknown}text', values) === 'plain text')
+assert('an open brace stays', renderTemplate('open {brace', values) === 'open {brace')
+const defaults = { theme: 'system', nightMode: false, accentMode: 'fixed', accent: '#ff7a3d', corners: 'soft', gridSize: 'medium', compactRows: false, playhead: 'minimal', backdropArtwork: false, clearGlass: false, playerBlocks: ['artwork', 'title', 'facts', 'progress', 'transport'], factsTemplate: '' } as const
+const presets = studioPresets(defaults as never)
+const consoleStyle = presets.find((p) => p.name === 'Console')!
+const applied = { ...defaults, ...stylePatch(consoleStyle) }
+assert('Console applied', applied.corners === 'sharp' && applied.playerBlocks![0] === 'title')
+assert('it matches once applied', styleMatches(consoleStyle, applied as never) && !styleMatches(consoleStyle, defaults as never))
+assert('a link round trip', eq(readStyle(styleLink(consoleStyle), styleFrom(defaults as never)), consoleStyle))
+const fromFile = readStyle('{"name":"Mine","corners":"round"}', styleFrom(defaults as never))
+assert('a file fills in the rest', fromFile?.corners === 'round' && eq(fromFile?.playerBlocks, defaults.playerBlocks))
+assert('not a style', readStyle('kultr://style/not-base64!', styleFrom(defaults as never)) === null)
+const w = (kind: HomeWidget['kind'], size: HomeWidget['size']): HomeWidget => ({ id: kind, kind, size })
+assert('widget rows', eq(widgetRows([w('listening', 'small'), w('nowPlaying', 'medium'), w('nextMix', 'small'), w('station', 'small'), w('crate', 'small')]), [[0], [1], [2, 3], [4]]))
 
 if (failures) {
   console.log(`\n${failures} failure(s)`)

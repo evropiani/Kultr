@@ -248,3 +248,18 @@ export function stationPicks(
   if (!fresh.length) fresh = pool.filter(([song]) => !queued.has(song.id))
   return rankAutoQueue(seed, fresh, count, random)
 }
+
+/** How calm a track is, 0 to 1: mostly its energy, a little its tempo; unknown is middling. As on iOS. */
+export function calmness(analysis: Pick<TrackAnalysis, 'bpm' | 'energy'> | null | undefined): number {
+  if (!analysis) return 0.5
+  const tempo = analysis.bpm > 0 ? Math.min(1, analysis.bpm / 180) : 0.5
+  return Math.min(1, Math.max(0, analysis.energy)) * 0.7 + tempo * 0.3
+}
+
+/** Songs calmest first; equally calm ones keep their order. */
+export function calmestFirst<T extends { id: string }>(songs: T[], analysis: (song: T) => Pick<TrackAnalysis, 'bpm' | 'energy'> | null | undefined): T[] {
+  return songs
+    .map((song, offset) => ({ song, offset, score: calmness(analysis(song)) }))
+    .sort((a, b) => (a.score !== b.score ? a.score - b.score : a.offset - b.offset))
+    .map((entry) => entry.song)
+}

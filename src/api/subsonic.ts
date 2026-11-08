@@ -417,11 +417,15 @@ export class SubsonicClient {
     return res.playlist
   }
 
-  async createPlaylist(name: string, songIds: string[] = []): Promise<Playlist | undefined> {
-    const res = await this.request<{ playlist?: Playlist }>('createPlaylist', {
-      name,
-      songId: songIds,
-    })
+  /**
+   * Make a playlist, or, given `playlistId`, replace the songs of one that
+   * exists (the Subsonic way to set a playlist's contents in one call).
+   */
+  async createPlaylist(name: string, songIds: string[] = [], playlistId?: string): Promise<Playlist | undefined> {
+    const res = await this.request<{ playlist?: Playlist }>(
+      'createPlaylist',
+      playlistId ? { playlistId, songId: songIds } : { name, songId: songIds },
+    )
     return res.playlist
   }
 

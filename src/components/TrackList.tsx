@@ -28,6 +28,8 @@ import { Art, Menu, useMenu, type MenuItem } from './ui'
 import { isLocalId } from '@/local/files'
 import { usePlaylistPicker } from './AddToPlaylist'
 import { draggableProps } from './DropZone'
+import { useCratePicker } from './Crates'
+import { Package } from 'lucide-react'
 
 export type SortField = 'none' | 'title' | 'artist' | 'album' | 'duration' | 'year' | 'added' | 'plays'
 
@@ -297,6 +299,7 @@ function TrackRow({
       onSelect: () => saveToDisk(song),
       separatorBefore: true,
     },
+    { label: 'Add to a crate…', icon: <Package size={15} />, onSelect: () => useCratePicker.getState().show({ kind: 'songs', songs: [song] }) },
     { label: 'Copy share link', icon: <Share2 size={15} />, onSelect: () => void shareSong(song) },
   ].filter((item) => {
     // A file on this computer is already offline, and has no server to share it from.

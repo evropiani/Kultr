@@ -7,6 +7,8 @@ import { usePlayer } from '@/store/player'
 import { useSelection } from '@/store/selection'
 import { usePlaylistPicker } from './AddToPlaylist'
 import { isLocalId } from '@/local/files'
+import { useCratePicker } from './Crates'
+import { Package } from 'lucide-react'
 
 /**
  * Floating bar that appears whenever anything is ticked. Everything it offers
@@ -71,6 +73,10 @@ export function SelectionBar() {
         >
           <Heart size={14} />
           Favourite
+        </button>
+        <button className="pill" onClick={() => useCratePicker.getState().show({ kind: 'songs', songs })}>
+          <Package size={14} />
+          Crate
         </button>
         {songs.every((song) => isLocalId(song.id)) ? null : (
           <button className="pill pill-accent" onClick={() => void download(songs, 'Selection')}>

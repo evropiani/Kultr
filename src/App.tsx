@@ -24,6 +24,9 @@ import { Planner } from '@/routes/Planner'
 import { Recap } from '@/routes/Recap'
 import { UpdateLog, WhatsNew } from '@/components/WhatsNew'
 import { Welcome } from '@/components/Welcome'
+import { CratePickerModal } from '@/components/Crates'
+import { CratePage, Crates } from '@/routes/Crates'
+import { Studio } from '@/routes/Studio'
 import { useAuth } from '@/store/auth'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
@@ -289,6 +292,9 @@ function Shell() {
               <Route path="/planner" element={<Planner />} />
               <Route path="/recap" element={<Recap />} />
               <Route path="/updates" element={<UpdateLog />} />
+              <Route path="/crates" element={<Crates />} />
+              <Route path="/crate/:id" element={<CratePage />} />
+              <Route path="/studio" element={<Studio />} />
               <Route path="/sync" element={<SyncPage />} />
               <Route path="/stats" element={<Stats />} />
               <Route path="/settings" element={<Settings />} />
@@ -327,6 +333,7 @@ export function App() {
       </Routes>
       <NowPlaying />
       <AddToPlaylistModal />
+      <CratePickerModal />
       <OfflineDestinationPrompt />
       <ShortcutsModal />
       <DropZone />

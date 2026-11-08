@@ -15,6 +15,8 @@ import { TrackList } from '@/components/TrackList'
 import { Art, Empty, Spinner } from '@/components/ui'
 import { usePlaylistPicker } from '@/components/AddToPlaylist'
 import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
+import { NotesAndTags, useCratePicker } from '@/components/Crates'
+import { Package } from 'lucide-react'
 
 /* ------------------------------------------------------------------- album -- */
 
@@ -119,6 +121,10 @@ export function AlbumPage() {
               <ListPlus size={15} />
               Add to playlist
             </button>
+            <button className="pill pill-lg" onClick={() => useCratePicker.getState().show({ kind: 'album', id: album.id, name: album.name })}>
+              <Package size={15} />
+              Crate
+            </button>
             <OfflineButton songs={data.songs} label={album.name} className="pill pill-lg" />
             <RemoveOfflineButton songs={data.songs} />
           </div>
@@ -126,6 +132,7 @@ export function AlbumPage() {
       </header>
 
       <div style={{ padding: '22px 26px 0' }}>
+        <NotesAndTags key={album.id} kind="album" id={album.id} />
         {discs.length > 1
           ? discs.map(([disc, songs]) => (
               <section key={disc} style={{ marginBottom: 26 }}>
@@ -263,6 +270,10 @@ export function ArtistPage() {
               <Heart size={15} fill={starred ? 'currentColor' : 'none'} />
               {starred ? 'Following' : 'Follow'}
             </button>
+            <button className="pill pill-lg" onClick={() => useCratePicker.getState().show({ kind: 'artist', id: artist.id, name: artist.name })}>
+              <Package size={15} />
+              Crate
+            </button>
             <OfflineButton songs={data.songs} label={artist.name} className="pill pill-lg" />
             <RemoveOfflineButton songs={data.songs} />
           </div>
@@ -270,6 +281,7 @@ export function ArtistPage() {
       </header>
 
       <div style={{ padding: '22px 26px 0' }}>
+        <NotesAndTags key={artist.id} kind="artist" id={artist.id} />
         {bio ? (
           <section style={{ marginBottom: 28, maxWidth: 780 }}>
             <p

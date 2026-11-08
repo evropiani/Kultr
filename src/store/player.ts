@@ -7,7 +7,7 @@ import { engine, type EngineMode, type PlaybackState } from '@/audio/engine'
 import { analyseTrack, type TrackAnalysis } from '@/audio/analysis'
 import { planTransition, type TransitionPlan } from '@/audio/injekt'
 import { karouselNext } from '@/audio/karouselMusic'
-import { needsAnalysis, stationPicks, type Station } from '@/audio/stations'
+import { calmestFirst as orderCalmestFirst, needsAnalysis, stationPicks, type Station } from '@/audio/stations'
 import { stationPool } from '@/lib/stationLibrary'
 import { settings, useSettings } from './settings'
 import { useToast } from './ui'
@@ -735,13 +735,12 @@ function windingDown(): boolean {
 }
 
 async function calmestFirst(songs: Song[]): Promise<Song[]> {
-  const energy = new Map<string, number>()
+  const known = new Map<string, TrackAnalysis>()
   for (const song of songs) {
     const analysis = await getAnalysis(song.id)
-    if (analysis) energy.set(song.id, analysis.energy)
+    if (analysis) known.set(song.id, analysis)
   }
-  // Unmeasured songs keep their place after the measured ones.
-  return [...songs].sort((a, b) => (energy.get(a.id) ?? 2) - (energy.get(b.id) ?? 2))
+  return orderCalmestFirst(songs, (song) => known.get(song.id))
 }
 
 /**

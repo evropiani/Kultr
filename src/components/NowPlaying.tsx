@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ChevronDown,
@@ -28,7 +28,8 @@ import { CastButton } from './Cast'
 import { RepeatButton, ShuffleButton } from './ModeButtons'
 import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
 import { NextButton } from './NextButton'
-import { useBeatGrid } from '@/lib/beatGrid'
+import { useTrackAnalysis } from '@/lib/beatGrid'
+import { renderTemplate } from '@/lib/studio'
 
 type Tab = 'queue' | 'lyrics' | 'injekt'
 
@@ -51,7 +52,12 @@ export function NowPlaying() {
   const [starred, setStarred] = useState(Boolean(song?.starred))
   // The full player stays open across tracks; the heart has to follow them.
   useEffect(() => setStarred(Boolean(song?.starred)), [song?.id, song?.starred])
-  const beats = useBeatGrid(song?.id)
+  const analysis = useTrackAnalysis(song?.id)
+  const beats = useMemo(
+    () => (analysis && analysis.bpm > 0 && analysis.bpmConfidence >= 0.25 ? { bpm: analysis.bpm, offset: analysis.downbeatOffset || analysis.beatOffset || 0 } : null),
+    [analysis],
+  )
+  const factsTemplate = useSettings((state) => state.factsTemplate)
   // Stays mounted for the slide back down, rather than vanishing on close.
   const { present, leaving } = usePresence(open && Boolean(song), 300)
   const tabsRef = useRef<HTMLDivElement>(null)
@@ -147,9 +153,22 @@ export function NowPlaying() {
             </p>
             {/* One quiet line rather than a row of pills, as in Kultr for iOS. */}
             <p className="npv__facts">
-              {[song.year, song.genre, song.suffix?.toUpperCase(), song.bitRate ? `${song.bitRate} kbps` : null]
-                .filter(Boolean)
-                .join(' · ')}
+              {factsTemplate
+                ? renderTemplate(factsTemplate, {
+                    year: song.year ? String(song.year) : '',
+                    genre: song.genre ?? '',
+                    format: song.suffix?.toUpperCase() ?? '',
+                    bitrate: song.bitRate ? String(song.bitRate) : '',
+                    bpm: analysis?.bpm ? String(Math.round(analysis.bpm)) : song.bpm ? String(song.bpm) : '',
+                    key: analysis?.camelot ?? '',
+                    energy: analysis ? String(Math.round(analysis.energy * 10)) : '',
+                    rating: song.userRating ? String(song.userRating) : '',
+                    plays: song.playCount ? String(song.playCount) : '',
+                    album: song.album ?? '',
+                  })
+                : [song.year, song.genre, song.suffix?.toUpperCase(), song.bitRate ? `${song.bitRate} kbps` : null]
+                    .filter(Boolean)
+                    .join(' · ')}
             </p>
           </div>
 

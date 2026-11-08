@@ -2,8 +2,10 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { STATION_PRESETS, type Station } from '@/audio/stations'
 import type { Annotation, Crate } from '@/lib/collection'
+import { DEFAULT_HOME_WIDGETS, type HomeWidget } from '@/lib/widgets'
 
 export type ThemeMode = 'dark' | 'light' | 'system'
+export type AccentMode = 'artwork' | 'fixed'
 export type GlassLevel = 'liquid' | 'frosted' | 'solid'
 export type CrossfadeCurve = 'equalPower' | 'linear' | 'smooth' | 'sharp'
 export type ReplayGainMode = 'off' | 'track' | 'album'
@@ -159,6 +161,16 @@ export interface SettingsState {
   annotations: Record<string, Annotation>
   /** Your crates, in the order Library shows them. */
   crates: Crate[]
+  /** Kultr Studio: clear glass instead of frosted, as the iPhone app calls it. */
+  clearGlass: boolean
+  /** Kultr Studio: the iPhone player's parts, kept so a style travels whole. */
+  playerBlocks: string[]
+  /** Kultr Studio: the player's info line as a template; empty for Kultr's own. */
+  factsTemplate: string
+  /** The widgets at the top of Home, in order. */
+  homeWidgets: HomeWidget[]
+  /** Whether Home shows them at all. */
+  showHomeWidgets: boolean
 
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void
   merge: (patch: Partial<SettingsState>) => void
@@ -242,6 +254,11 @@ export const DEFAULT_SETTINGS = {
   stations: STATION_PRESETS,
   annotations: {} as Record<string, Annotation>,
   crates: [] as Crate[],
+  clearGlass: false,
+  playerBlocks: ['artwork', 'title', 'facts', 'progress', 'transport'] as string[],
+  factsTemplate: '',
+  homeWidgets: DEFAULT_HOME_WIDGETS,
+  showHomeWidgets: true,
 }
 
 /** Brings settings saved by an older version up to date. */

@@ -43,6 +43,7 @@ import { useOffline } from '@/store/offline'
 import { engine } from '@/audio/engine'
 import { isLocalProfile, useAuth } from '@/store/auth'
 import { MusicFoldersRows } from '@/components/LocalMusic'
+import { WidgetEditor } from '@/components/WidgetEditor'
 import { forgetLocalLibrary } from '@/local/db'
 import {
   DEFAULT_SETTINGS,
@@ -141,6 +142,12 @@ export function Settings() {
 
       {/* ------------------------------------------------------ appearance */}
       <Panel title="Appearance" icon={<Palette size={16} />}>
+        <Row label="Kultr Studio" hint="The whole look in one place: styles to start from, the player's info line, and sharing a style as a link or a file.">
+          <button className="pill pill-accent" onClick={() => navigate('/studio')}>
+            <Palette size={14} />
+            Open Studio
+          </button>
+        </Row>
         <Row label="Theme">
           <Segmented<ThemeMode>
             value={settings.theme}
@@ -380,6 +387,8 @@ export function Settings() {
           </button>
         }
       >
+        <WidgetEditor />
+        <div className="hairline" style={{ margin: '14px 0' }} />
         <HomeTileEditor
           value={settings.homeTiles}
           onChange={(value) => settings.set('homeTiles', value)}

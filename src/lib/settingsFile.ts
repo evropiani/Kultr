@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS, type SettingsState } from '@/store/settings'
 import { readAnnotations, readCrates, readStations } from './collection'
+import { readWidgets } from './widgets'
 
 /**
  * Settings backup — moving your setup to another browser or machine.
@@ -104,6 +105,7 @@ const RECORD_READERS: Record<string, (value: unknown) => unknown> = {
   stations: readStations,
   crates: readCrates,
   annotations: readAnnotations,
+  homeWidgets: readWidgets,
 }
 
 /**
