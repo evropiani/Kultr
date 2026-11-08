@@ -618,6 +618,25 @@ export class AudioEngine {
     }
   }
 
+  /**
+   * Mix into the planned next track now, the way InjeKt would at the end of
+   * this one (hold Next). A plan that would only cut or butt the tracks
+   * together becomes a short crossfade. False when nothing is planned yet.
+   */
+  mixNow(): boolean {
+    const pending = this.pending
+    if (!pending || this.transitioning || !this.active.song || this.state !== 'playing') return false
+    const plan: TransitionPlan = { ...pending.plan, startAt: this.currentTime }
+    if (plan.type === 'gapless' || plan.type === 'cut' || plan.duration < 1) {
+      plan.type = 'crossfade'
+      plan.duration = 6
+      plan.curve = 'equalPower'
+    }
+    plan.duration = Math.min(plan.duration, 12)
+    this.executeTransition(pending.song, plan)
+    return true
+  }
+
   /** Manual skip with a short fade, used by next/previous. */
   async skipTo(song: Song, options: { fade?: number; startAt?: number } = {}): Promise<void> {
     const fadeSeconds = options.fade ?? 0

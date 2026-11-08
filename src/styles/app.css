@@ -2667,3 +2667,440 @@
 .tracks[data-secondary='none'] .tracks__header {
   grid-template-columns: 24px 34px minmax(0, 1fr) 84px auto;
 }
+
+/* ------------------------------------------------------------------ stations */
+
+.dial-wrap {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 22px 26px;
+  border-radius: var(--r-lg);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.dial {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  flex: none;
+  cursor: grab;
+  touch-action: none;
+  background: var(--sand);
+  outline-offset: 4px;
+}
+.dial:active {
+  cursor: grabbing;
+}
+.dial__ring {
+  position: absolute;
+  inset: 0;
+  transition: transform 260ms var(--ease-out);
+}
+.dial__tick {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 3px;
+  height: 12px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: rgb(var(--ink-rgb) / 0.25);
+  transform-origin: 1.5px 76px;
+}
+.dial__tick[data-on] {
+  background: var(--accent);
+  height: 16px;
+}
+.dial__face {
+  position: absolute;
+  inset: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--glass-tint);
+  color: var(--accent);
+  box-shadow: 0 1px 0 rgb(var(--ink-rgb) / 0.06), 0 6px 18px rgb(0 0 0 / 0.08);
+}
+.dial::after {
+  /* The pointer: where the chosen station sits. */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top: 7px solid var(--accent);
+}
+.dial__label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+.dial__label strong {
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+.dial__label > span:not(.dial__eyebrow) {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+.dial__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.station-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.station-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--r-md);
+}
+.station-card[data-active] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.station-card__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.station-card__icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--sand);
+  color: var(--accent);
+}
+.station-card__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.station-card__text strong {
+  font-size: 14px;
+}
+.station-card__text span,
+.station-card__text small {
+  color: var(--ink-3);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.station-card__actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.station-editor {
+  display: grid;
+  gap: 14px;
+  max-height: min(64vh, 640px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.station-editor__field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.station-editor__field > span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.station-editor__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.station-editor__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.station-editor__toggles label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.field-input {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r-sm);
+  background: rgb(var(--ink-rgb) / 0.05);
+  border: 1px solid var(--glass-edge);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  width: 100%;
+  min-width: 0;
+}
+.field-input:focus {
+  outline: none;
+  border-color: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.6);
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-row--scroll {
+  max-height: 132px;
+  overflow-y: auto;
+}
+.chip {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.chip:hover {
+  background: var(--sand-hover);
+}
+.chip[data-on] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.icon-picker__item {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--sand);
+  color: var(--ink-2);
+}
+.icon-picker__item[data-on] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@media (max-width: 560px) {
+  .dial-wrap {
+    justify-content: center;
+    text-align: center;
+  }
+  .dial__label > div {
+    justify-content: center;
+  }
+}
+
+/* ------------------------------------------------------------ energy planner */
+
+.planner {
+  display: grid;
+  gap: 14px;
+}
+.planner__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.curve {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 600 / 180;
+  touch-action: none;
+  cursor: crosshair;
+  border-radius: var(--r-md);
+  background: rgb(var(--ink-rgb) / 0.04);
+}
+.curve__grid {
+  stroke: rgb(var(--ink-rgb) / 0.1);
+  stroke-dasharray: 3 5;
+}
+.curve__label {
+  fill: var(--ink-3);
+  font-size: 11px;
+  font-weight: 600;
+}
+.curve__fill {
+  fill: rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.12);
+}
+.curve__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.curve__handle {
+  fill: var(--glass-tint);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.curve__track {
+  fill: var(--ink);
+  opacity: 0.75;
+}
+.planned {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.planned__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border-top: 1px solid var(--glass-edge);
+}
+.planned__row:first-child {
+  border-top: 0;
+}
+.planned__time {
+  width: 52px;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.planned__art {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 8px;
+}
+.planned__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.planned__text strong,
+.planned__text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.planned__text span {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.planned__energy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.planned__bar {
+  position: relative;
+  width: 90px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--sand);
+}
+.planned__bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.planned__bar > i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  background: var(--ink);
+  opacity: 0.6;
+}
+@media (max-width: 560px) {
+  .planned__bar {
+    width: 48px;
+  }
+}
+
+/* --------------------------------------------------------------- command bar */
+
+.command-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border-radius: var(--r-md);
+  text-align: left;
+  box-shadow: inset 0 0 0 1.5px rgb(var(--accent-r) var(--accent-g) var(--accent-b) / 0.5);
+}
+.command-row:hover {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.command-row__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--on-accent);
+  flex: none;
+}
+.command-row__text {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+}
+.command-row__key {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.station-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.station-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 8px 14px 8px 8px;
+  border-radius: var(--r-md);
+}
+.station-chip[data-active] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.station-chip__name {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}

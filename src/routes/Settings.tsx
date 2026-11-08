@@ -456,6 +456,16 @@ export function Settings() {
             label="Karousel"
           />
         </Row>
+        <Row
+          label="Wind down before sleep"
+          hint="In a sleep timer's last 15 minutes, Karousel and stations play their calmest picks first, so the music settles before it stops."
+        >
+          <Switch
+            checked={settings.sleepWindDown}
+            onChange={(value) => settings.set('sleepWindDown', value)}
+            label="Wind down before sleep"
+          />
+        </Row>
         <Row label="Resume where you left off" hint="Restores the queue and position when Kultr reopens.">
           <Switch
             checked={settings.resumeOnStart}

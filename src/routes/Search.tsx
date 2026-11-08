@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search as SearchIcon, Server } from 'lucide-react'
 import type { Album, Artist, Song } from '@/api/types'
 import { maybeClient } from '@/api/subsonic'
@@ -9,6 +9,8 @@ import { formatCount, sortKey } from '@/lib/format'
 import { AlbumCard, ArtistCard, Grid } from '@/components/Cards'
 import { TrackList } from '@/components/TrackList'
 import { Empty, Spinner } from '@/components/ui'
+import { commandFor, describeCommand, refreshCommandNames, runCommand } from '@/lib/commandRunner'
+import { CornerDownLeft, Wand2 } from 'lucide-react'
 
 /** Rank a match: exact beats prefix beats "contains". */
 function score(haystack: string | undefined, needle: string): number {
@@ -29,6 +31,24 @@ export function Search() {
   const [params] = useSearchParams()
   const query = params.get('q') ?? ''
   const search = useDebounced(query.trim().toLowerCase(), 180)
+  const navigate = useNavigate()
+  useEffect(() => refreshCommandNames(), [])
+  const command = useMemo(() => commandFor(query), [query])
+  const commandRow = command ? (
+    <button
+      className="command-row glass"
+      onClick={() => void runCommand(command, (to) => navigate(to))}
+      title="Press Enter in the search field to do this"
+    >
+      <span className="command-row__icon">
+        <Wand2 size={16} />
+      </span>
+      <span className="command-row__text">{describeCommand(command)}</span>
+      <span className="command-row__key">
+        <CornerDownLeft size={13} /> Enter
+      </span>
+    </button>
+  ) : null
   const [serverResults, setServerResults] = useState<{
     artist: Artist[]
     album: Album[]
@@ -115,13 +135,16 @@ export function Search() {
         </div>
       </div>
 
+      {commandRow}
+
       {loading ? (
         <Spinner />
       ) : !search ? (
         <Empty icon={<SearchIcon size={24} />} title="Type in the search bar above">
           Results appear here as you type. Everything comes from the copy of your library stored in
           this browser, so it is instant even over a slow connection. Press <strong>/</strong> from
-          anywhere to jump to it.
+          anywhere to jump to it. It takes commands too: “play Night Drive”, “shuffle” and an artist,
+          “sleep in 30 minutes”, “next”, “mix now”, “plan an hour”, “open settings”.
         </Empty>
       ) : (
         <>

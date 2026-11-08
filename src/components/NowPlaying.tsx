@@ -7,7 +7,6 @@ import {
   Pause,
   Play,
   SkipBack,
-  SkipForward,
   PanelRightClose,
   PanelRightOpen,
   Sparkles,
@@ -28,6 +27,7 @@ import { InjektPanel } from './InjektPanel'
 import { CastButton } from './Cast'
 import { RepeatButton, ShuffleButton } from './ModeButtons'
 import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
+import { NextButton } from './NextButton'
 
 type Tab = 'queue' | 'lyrics' | 'injekt'
 
@@ -189,9 +189,7 @@ export function NowPlaying() {
                 )}
               </button>
               <div className="npv__side">
-                <button className="iconbtn" aria-label="Next" onClick={() => void player.next(true)}>
-                  <SkipForward size={24} fill="currentColor" />
-                </button>
+                <NextButton size={24} label="Next" />
                 <RepeatButton size={18} />
                 <CastButton size={18} />
               </div>

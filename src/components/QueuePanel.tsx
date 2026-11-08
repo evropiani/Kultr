@@ -23,6 +23,7 @@ export function QueuePanel() {
   if (!present) return null
 
   const upcoming = player.queue.slice(player.index + 1)
+  const station = usePlayer((state) => state.station)
   // What Karousel added goes under its own heading.
   const firstKarousel = upcoming.findIndex((song) => song.kultrKarousel)
   // Waiting to top the queue up; a repeating queue never runs out, so not then.
@@ -66,7 +67,13 @@ export function QueuePanel() {
             const index = player.index + 1 + offset
             return (
               <Fragment key={`${player.queue[index]?.id}-${index}`}>
-                {offset === firstKarousel ? <KarouselHeading text={KAROUSEL_ADDED} /> : null}
+                {offset === firstKarousel ? (
+                  station ? (
+                    <KarouselHeading title={station.name} text="The station: music that fits, mixed one into the next." />
+                  ) : (
+                    <KarouselHeading text={KAROUSEL_ADDED} />
+                  )
+                ) : null}
                 <QueueItem
                   index={index}
                   draggable

@@ -19,6 +19,8 @@ import { Search } from '@/routes/Search'
 import { Settings } from '@/routes/Settings'
 import { Stats } from '@/routes/Stats'
 import { SyncPage } from '@/routes/Sync'
+import { Stations } from '@/routes/Stations'
+import { Planner } from '@/routes/Planner'
 import { useAuth } from '@/store/auth'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
@@ -281,6 +283,8 @@ function Shell() {
               <Route path="/favourites" element={<Favourites />} />
               <Route path="/downloads" element={<Downloads />} />
               <Route path="/radio" element={<Radio />} />
+              <Route path="/stations" element={<Stations />} />
+              <Route path="/planner" element={<Planner />} />
               <Route path="/sync" element={<SyncPage />} />
               <Route path="/stats" element={<Stats />} />
               <Route path="/settings" element={<Settings />} />

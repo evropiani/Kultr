@@ -6,7 +6,7 @@
  * one place that knows which ids are valid.
  */
 
-export type TileKind = 'songs' | 'albums' | 'artists' | 'playlists' | 'radios'
+export type TileKind = 'songs' | 'albums' | 'artists' | 'playlists' | 'radios' | 'stations'
 
 export interface HomeTile {
   id: string
@@ -20,6 +20,13 @@ export interface HomeTile {
 }
 
 export const HOME_TILES: HomeTile[] = [
+  {
+    id: 'stations',
+    title: 'Stations',
+    note: 'Endless mixes from your own library, by tempo, energy, genre or decade.',
+    kind: 'stations',
+    seeAll: '/stations',
+  },
   {
     id: 'recentlyPlayed',
     title: 'Jump back in',

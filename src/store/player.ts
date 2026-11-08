@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 import type { Song } from '@/api/types'
 import { maybeClient } from '@/api/subsonic'
-import { addHistory, getAlbum, patchAlbum, patchSong } from '@/db'
+import { addHistory, getAlbum, getAnalysis, patchAlbum, patchSong, songIdsPlayedSince } from '@/db'
 import { flushPendingScrobbles, sendPlay } from '@/sync/listening'
 import { engine, type EngineMode, type PlaybackState } from '@/audio/engine'
-import { analyseTrack } from '@/audio/analysis'
+import { analyseTrack, type TrackAnalysis } from '@/audio/analysis'
 import { planTransition, type TransitionPlan } from '@/audio/injekt'
 import { karouselNext } from '@/audio/karouselMusic'
+import { needsAnalysis, stationPicks, type Station } from '@/audio/stations'
+import { stationPool } from '@/lib/stationLibrary'
 import { settings, useSettings } from './settings'
 import { useToast } from './ui'
 
@@ -53,6 +55,8 @@ export interface PlayerState {
   sleepTimerEndsAt: number | null
   sleepTimerAfterTrack: boolean
   ready: boolean
+  /** The station playing: Karousel keeps to its rules instead of looking for similar music. */
+  station: Station | null
 
   current: () => Song | null
   peekNext: () => Song | null
@@ -77,6 +81,14 @@ export interface PlayerState {
   clearQueue: () => void
 
   setSleepTimer: (minutes: number | null, afterTrack?: boolean) => void
+  /** Start a station: a track that fits, then a mix that keeps to its rules. False when nothing fits yet. */
+  playStation: (station: Station) => Promise<boolean>
+  /** Turn to another station while one plays: what the old one lined up goes, and the new one mixes in. */
+  switchStation: (station: Station) => Promise<void>
+  /** End the station; the music plays on to the end of the queue as usual. */
+  endStation: () => void
+  /** Mix into the next track now, as InjeKt would at the end of this one. False when there is none. */
+  mixNow: () => Promise<boolean>
   restoreSession: () => Promise<void>
   init: () => void
 }
@@ -155,6 +167,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   sleepTimerEndsAt: null,
   sleepTimerAfterTrack: false,
   ready: false,
+  station: null,
 
   currentPlan() {
     const { lastPlan } = get()
@@ -270,6 +283,8 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   async playNow(songs, startIndex = 0, source = '') {
     if (!songs.length) return
     get().init()
+    // Other music: whatever station was playing ends.
+    if (!startingStation && get().station) set({ station: null })
     const shuffle = get().shuffle
     let queue = [...songs]
     let index = Math.max(0, Math.min(startIndex, songs.length - 1))
@@ -304,7 +319,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     else if (state.index + 1 < state.queue.length) nextIdx = state.index + 1
     else if (state.repeat === 'all') nextIdx = 0
 
-    if (nextIdx === null && state.repeat === 'off' && settings().injektAutoQueue) {
+    if (nextIdx === null && state.repeat === 'off' && keepsGoing()) {
       // Karousel: the queue ran out, so add music like it and play on.
       if (await extendQueue()) nextIdx = get().index + 1 < get().queue.length ? get().index + 1 : null
     }
@@ -492,6 +507,73 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     })
   },
 
+  async playStation(station) {
+    const pool = await stationPool(station)
+    if (!pool.length) {
+      useToast.getState().show(emptyStation(station), 'warning')
+      return false
+    }
+    stationPoolCache = { id: station.id, pool }
+    const first = pool[Math.floor(Math.random() * pool.length)]
+    const rest = stationPicks(pool, first[1], await recentlyPlayed(), new Set([first[0].id]), 4)
+    const songs = [first[0], ...rest.map((song) => ({ ...song, kultrKarousel: true }))]
+    startingStation = true
+    try {
+      set({ station })
+      await get().playNow(songs, 0, `Station: ${station.name}`)
+    } finally {
+      startingStation = false
+    }
+    useToast.getState().show(`Station: ${station.name}`, 'info')
+    return true
+  },
+
+  async switchStation(station) {
+    const state = get()
+    const current = state.current()
+    if (!state.station || !current || state.playback !== 'playing') {
+      await get().playStation(station)
+      return
+    }
+    const pool = await stationPool(station)
+    if (!pool.length) {
+      useToast.getState().show(emptyStation(station), 'warning')
+      return
+    }
+    stationPoolCache = { id: station.id, pool }
+    set({ station, source: `Station: ${station.name}` })
+    const picks = await stationNext(current, [current], 6)
+    const fresh = get()
+    if (!picks.length || fresh.station?.id !== station.id) return
+    // The old station's lined-up songs go; what you queued yourself stays.
+    const kept = fresh.queue.filter((song, i) => i <= fresh.index || !song.kultrKarousel)
+    const added = picks.map((song) => ({ ...song, kultrKarousel: true }))
+    const mine = kept.slice(fresh.index + 1)
+    set({ queue: [...kept.slice(0, fresh.index + 1), ...added.slice(0, 1), ...mine, ...added.slice(1)], unshuffled: null })
+    engine.clearPendingTransition()
+    useToast.getState().show(`Station: ${station.name}`, 'info')
+    // Mix straight into the new station rather than waiting for the end of the track.
+    window.setTimeout(() => void get().mixNow(), 1200)
+  },
+
+  endStation() {
+    if (!get().station) return
+    set({ station: null })
+    if (!settings().injektAutoQueue) onKarouselChanged(false)
+  },
+
+  async mixNow() {
+    const state = get()
+    if (!state.peekNext()) return false
+    if (engine.mixNow()) return true
+    // Not planned yet: a short crossfade instead of a cut.
+    const nextIdx = state.index + 1
+    set({ index: nextIdx, transition: null })
+    await engine.skipTo(state.queue[nextIdx], { fade: Math.max(3, Math.min(8, settings().crossfadeSeconds || 6)) })
+    onTrackStarted(get())
+    return true
+  },
+
   async restoreSession() {
     if (!settings().resumeOnStart) return
     try {
@@ -616,6 +698,52 @@ function onTrackStarted(state: PlayerState): void {
 
 let extending: { seed: string | undefined; done: Promise<boolean> } | null = null
 
+/** Set while a station starts, so playNow does not end it. */
+let startingStation = false
+let stationPoolCache: { id: string; pool: [Song, TrackAnalysis | undefined][] } | null = null
+
+/** Whether the queue keeps going when it runs out: Karousel, or a station. */
+function keepsGoing(): boolean {
+  return settings().injektAutoQueue || usePlayer.getState().station !== null
+}
+
+const RECENT_MS = 3 * 60 * 60 * 1000
+
+async function recentlyPlayed(): Promise<Set<string>> {
+  return new Set(await songIdsPlayedSince(Date.now() - RECENT_MS).catch(() => [] as string[]))
+}
+
+/** The station's next `count` songs, mixing well out of `seed`. */
+async function stationNext(seed: Song | null, queued: Song[], count: number): Promise<Song[]> {
+  const station = usePlayer.getState().station
+  if (!station) return []
+  if (stationPoolCache?.id !== station.id) stationPoolCache = { id: station.id, pool: await stationPool(station) }
+  const seedAnalysis = seed ? await getAnalysis(seed.id) : undefined
+  return stationPicks(stationPoolCache.pool, seedAnalysis, await recentlyPlayed(), new Set(queued.map((song) => song.id)), count)
+}
+
+function emptyStation(station: Station): string {
+  return needsAnalysis(station)
+    ? `Nothing fits “${station.name}” yet. It needs InjeKt’s analysis: open Sync and press Analyse missing.`
+    : `Nothing in your library fits “${station.name}”.`
+}
+
+/** In a timed sleep timer's last 15 minutes, Karousel's calmest picks go first. */
+function windingDown(): boolean {
+  const ends = usePlayer.getState().sleepTimerEndsAt
+  return Boolean(ends && settings().sleepWindDown && ends - Date.now() <= 15 * 60_000)
+}
+
+async function calmestFirst(songs: Song[]): Promise<Song[]> {
+  const energy = new Map<string, number>()
+  for (const song of songs) {
+    const analysis = await getAnalysis(song.id)
+    if (analysis) energy.set(song.id, analysis.energy)
+  }
+  // Unmeasured songs keep their place after the measured ones.
+  return [...songs].sort((a, b) => (energy.get(a.id) ?? 2) - (energy.get(b.id) ?? 2))
+}
+
 /**
  * Karousel: add music like what has been playing to the end of the queue.
  * One batch at a time: asking again for the same track waits for the batch
@@ -644,14 +772,16 @@ async function addKarouselSongs(): Promise<boolean> {
   const chosen = shuffled(queue.filter((song, i) => !song.kultrKarousel && i !== index && !before.includes(song))).slice(0, 2)
   let songs: Song[]
   try {
-    songs = await karouselNext([seed, ...before, ...chosen], queue)
+    const station = usePlayer.getState().station
+    songs = station ? await stationNext(seed, queue, 8) : await karouselNext([seed, ...before, ...chosen], queue)
+    if (windingDown() && songs.length > 1) songs = await calmestFirst(songs)
   } catch (err) {
     console.warn('[kultr] Karousel could not find anything to add', err)
     return false
   }
   // Switched off meanwhile, or something else started playing.
   const fresh = usePlayer.getState()
-  if (!songs.length || !settings().injektAutoQueue || fresh.current()?.id !== seed.id) return false
+  if (!songs.length || !keepsGoing() || fresh.current()?.id !== seed.id) return false
   const added = songs.map((song) => ({ ...song, kultrKarousel: true }))
   usePlayer.setState({
     queue: [...fresh.queue, ...added],
@@ -667,6 +797,8 @@ async function addKarouselSongs(): Promise<boolean> {
  */
 function onKarouselChanged(on: boolean): void {
   const state = usePlayer.getState()
+  // Switching Karousel off ends a station too.
+  if (!on && state.station) usePlayer.setState({ station: null })
   if (!on) {
     const gone = new Set(state.queue.slice(state.index + 1).filter((song) => song.kultrKarousel))
     if (!gone.size) return
@@ -706,7 +838,7 @@ async function prepareNextTransition(): Promise<void> {
     const state = usePlayer.getState()
     let next = state.peekNext()
 
-    if (!next && settings().injektAutoQueue) {
+    if (!next && keepsGoing()) {
       if (await extendQueue()) next = usePlayer.getState().peekNext()
     }
     if (!next) return

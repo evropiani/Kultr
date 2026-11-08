@@ -24,6 +24,7 @@ import { Scrubber, overlapRegion } from './Scrubber'
 import { SleepTimerMenu } from './SleepTimer'
 import { CastButton } from './Cast'
 import { RepeatButton, ShuffleButton } from './ModeButtons'
+import { NextButton } from './NextButton'
 
 /** Read straight from the engine so the scrubber needs no React state. */
 const getEngineTime = () => engine.currentTime
@@ -122,9 +123,7 @@ export function PlayerBar() {
           >
             {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: 2 }} />}
           </button>
-          <button className="iconbtn" aria-label="Next track" onClick={() => void player.next(true)}>
-            <SkipForward size={18} fill="currentColor" />
-          </button>
+          <NextButton size={18} />
           <RepeatButton size={16} />
         </div>
         <Scrubber

@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS, type SettingsState } from '@/store/settings'
+import { readAnnotations, readCrates, readStations } from './collection'
 
 /**
  * Settings backup — moving your setup to another browser or machine.
@@ -99,6 +100,12 @@ export interface ImportResult {
   servers: ExportedServer[]
 }
 
+const RECORD_READERS: Record<string, (value: unknown) => unknown> = {
+  stations: readStations,
+  crates: readCrates,
+  annotations: readAnnotations,
+}
+
 /**
  * Validate a parsed settings file against the defaults.
  *
@@ -135,6 +142,18 @@ export function readSettingsFile(input: unknown): ImportResult {
     }
     if ((DEVICE_LOCAL_KEYS as readonly string[]).includes(key)) {
       skipped.push({ key, why: 'specific to the device it was exported from' })
+      continue
+    }
+    // Stations, crates and notes are lists of records, read field by field
+    // the way the other Kultr apps read them.
+    const reader = RECORD_READERS[key]
+    if (reader) {
+      const read = reader(value)
+      if (read === null) skipped.push({ key, why: 'wrong shape' })
+      else {
+        patch[key] = read
+        applied.push(key)
+      }
       continue
     }
     const expected = defaults[key]

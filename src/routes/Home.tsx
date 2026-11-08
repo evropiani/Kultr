@@ -18,6 +18,7 @@ import { TrackList } from '@/components/TrackList'
 import { RadioGrid, radioSongs } from '@/components/Radio'
 import { LocalMusicChooser, useMusicFolders } from '@/components/LocalMusic'
 import { isLocalProfile, useAuth } from '@/store/auth'
+import { StationShelf } from '@/components/StationShelf'
 
 function greeting(): string {
   const hour = new Date().getHours()
@@ -396,6 +397,9 @@ function buildShelves(
         body = picks.length ? <RadioGrid stations={picks} songs={radioSongs(picks)} /> : null
         break
       }
+      case 'stations':
+        body = <StationShelf />
+        break
       case 'radios':
         body = stations.length ? (
           <RadioGrid stations={stations} songs={radioSongs(stations)} />

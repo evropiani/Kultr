@@ -19,6 +19,7 @@ import {
   Moon,
   Music2,
   Radio,
+  RadioTower,
   RefreshCw,
   Search,
   Server,
@@ -38,6 +39,7 @@ import { Menu, useMenu, type MenuItem } from './ui'
 import { OfflineProgressBar } from './Offline'
 import { afterNextPaint, usePresence, useSlidingIndicator } from '@/lib/motion'
 import { Logo } from './Logo'
+import { commandFor, runCommand } from '@/lib/commandRunner'
 
 /* ------------------------------------------------------------------ backdrop */
 
@@ -135,6 +137,8 @@ export function Backdrop() {
 // just a detour.
 const NAV_MAIN = [
   { to: '/', label: 'Home', icon: Home, end: true },
+  { to: '/stations', label: 'Stations', icon: RadioTower },
+  { to: '/planner', label: 'Energy planner', icon: Activity },
   { to: '/radio', label: 'Radio', icon: Radio },
 ]
 
@@ -350,6 +354,20 @@ export function TopBar() {
         role="search"
         onSubmit={(event) => {
           event.preventDefault()
+          // The command bar: words Kultr can do rather than look for.
+          const command = commandFor(query)
+          if (command) {
+            setQuery('')
+            let went = false
+            void runCommand(command, (to) => {
+              went = true
+              navigate(to, { replace: onSearchPage })
+            })
+            // A command that goes nowhere leaves an empty search behind it.
+            if (!went && onSearchPage) navigate('/search', { replace: true })
+            event.currentTarget.querySelector('input')?.blur()
+            return
+          }
           if (!onSearchPage) navigate(`/search?q=${encodeURIComponent(query)}`)
           // Dismiss the on-screen keyboard so the results are visible.
           event.currentTarget.querySelector('input')?.blur()
@@ -359,8 +377,8 @@ export function TopBar() {
         <input
           type="search"
           value={query}
-          placeholder="Search your library…  (press /)"
-          aria-label="Search your library"
+          placeholder="Search, or tell Kultr what to play…  (press /)"
+          aria-label="Search your library, or type a command"
           data-search-input="true"
           enterKeyHint="search"
           onChange={(event) => typeQuery(event.target.value)}

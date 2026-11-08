@@ -437,6 +437,11 @@ export async function analysisCount(): Promise<number> {
 export async function clearAnalysis(): Promise<void> {
   await (await db()).clear('analysis')
 }
+/** Every analysis, by song id. */
+export async function allAnalyses(): Promise<Map<string, TrackAnalysis>> {
+  const rows = await (await db()).getAll('analysis')
+  return new Map(rows.map((row) => [row.songId, row]))
+}
 export async function analysedIds(): Promise<Set<string>> {
   return new Set((await (await db()).getAllKeys('analysis')) as string[])
 }

@@ -7,6 +7,39 @@ only fixed.
 
 ---
 
+## 1.11.0 — 2026-11-08
+
+### 2026-11-08 17:12 — Stations, the energy planner and the command bar
+
+Three things from Kultr for iOS and Android, ported with their tests so the
+apps behave alike.
+
+- **Stations.** Endless mixes from your own library, on a new Stations page
+  and a shelf on Home: Warm Up, Night Drive, Peak Hour, Deep Focus, Wind Down,
+  Unplayed gems, Favourites, and one for each decade your library has enough
+  music from. Make your own from tempo, energy, key, genre, years, tags,
+  rating and when the music was added, with a live count of the tracks that
+  fit. Turn the dial (drag, scroll or the arrow keys) to choose; while one
+  plays, turning it mixes into the next. A station keeps going like Karousel,
+  picking what fits and mixes best, and its songs show under its name in Up
+  next. Stations travel in a settings export, in the same shape as on iOS
+  and Android.
+- **Energy planner.** Draw how a set should feel, calm to peak, for 30
+  minutes to two hours, or start from Warm up and peak, Steady, Build or Wind
+  down. Kultr picks the tracks whose energy follows the line, that mix out of
+  the one before (tempo and key) and are not by the same artist twice in a
+  row. Play the set, play from any track, or save it as a playlist.
+- **Command bar.** The search field also does things. "play Night Drive",
+  "shuffle" and an artist, "shuffle all", "sleep in 30 minutes", "stop after
+  this track", "pause", "next", "mix now", "plan an hour", "open settings":
+  what it will do shows above the results, and <kbd>Enter</kbd> does it.
+- **Hold Next to mix** into the next track instead of skipping, as InjeKt
+  would at the end of this one.
+- **Wind down before sleep.** In a sleep timer's last 15 minutes, Karousel
+  and stations play their calmest picks first (Settings → Playback).
+- Crates, notes and tags made in the other apps come across in a settings
+  file and are kept, ready for the web to show them.
+
 ## 1.10.0 — 2026-11-08
 
 ### 2026-11-08 16:50 — Kultr for Windows and Linux

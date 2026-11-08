@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { STATION_PRESETS, type Station } from '@/audio/stations'
+import type { Annotation, Crate } from '@/lib/collection'
 
 export type ThemeMode = 'dark' | 'light' | 'system'
 export type GlassLevel = 'liquid' | 'frosted' | 'solid'
@@ -149,6 +151,14 @@ export interface SettingsState {
   discordLikeRichPresence: boolean
   keyboardShortcuts: boolean
   hasSeenWelcome: boolean
+  /** In a sleep timer's last 15 minutes, Karousel picks calmer music. */
+  sleepWindDown: boolean
+  /** Your stations, in the order the dial shows them. Decades are added from the library. */
+  stations: Station[]
+  /** Your notes and tags, by album ("album:<id>") or artist ("artist:<id>"). */
+  annotations: Record<string, Annotation>
+  /** Your crates, in the order Library shows them. */
+  crates: Crate[]
 
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void
   merge: (patch: Partial<SettingsState>) => void
@@ -220,7 +230,7 @@ export const DEFAULT_SETTINGS = {
   offlineFirst: true,
 
   showLyrics: true,
-  homeTiles: ['mostPlayedSongs', 'mostPlayedAlbums', 'randomSongs', 'mostPlayedArtists'],
+  homeTiles: ['stations', 'mostPlayedSongs', 'mostPlayedAlbums', 'randomSongs', 'mostPlayedArtists'],
   favouriteRadios: [] as string[],
   customCss: '',
   openSettingsSections: [] as string[],
@@ -228,6 +238,10 @@ export const DEFAULT_SETTINGS = {
   discordLikeRichPresence: false,
   keyboardShortcuts: true,
   hasSeenWelcome: false,
+  sleepWindDown: true,
+  stations: STATION_PRESETS,
+  annotations: {} as Record<string, Annotation>,
+  crates: [] as Crate[],
 }
 
 /** Brings settings saved by an older version up to date. */
