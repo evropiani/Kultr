@@ -244,6 +244,26 @@ function sample<T>(items: T[], count: number): T[] {
   return out
 }
 
+/**
+ * Albums you hearted or played a lot (three plays or more) and have not
+ * played for a year, here or anywhere: as on iOS.
+ */
+function forgottenAlbums(albums: Album[], songs: Song[], history: { songId: string; playedAt: number }[], count: number): Album[] {
+  const yearAgo = Date.now() - 365 * 86_400_000
+  // Played in this browser lately, even if the server has not said so yet.
+  const albumOf = new Map(songs.map((song) => [song.id, song.albumId]))
+  const recent = new Set(history.filter((entry) => entry.playedAt >= yearAgo).map((entry) => albumOf.get(entry.songId)))
+  return albums
+    .filter((album) => !recent.has(album.id))
+    .filter((album) => album.starred || (album.playCount ?? 0) >= 3)
+    .filter((album) => {
+      const since = Date.parse(album.played ?? '') || Date.parse(album.starred ?? '')
+      return Number.isFinite(since) && since < yearAgo
+    })
+    .sort((a, b) => (b.playCount ?? 0) - (a.playCount ?? 0))
+    .slice(0, count)
+}
+
 function byPlayCount<T extends { playCount?: number }>(items: T[], count: number): T[] {
   return items
     .filter((item) => (item.playCount ?? 0) > 0)
@@ -327,6 +347,9 @@ function buildShelves(
         break
       case 'mostPlayedAlbums':
         body = albumGrid(byPlayCount(data.albums, cardLimit))
+        break
+      case 'rediscover':
+        body = albumGrid(forgottenAlbums(data.albums, data.songs, data.history, cardLimit))
         break
       case 'mostPlayedArtists': {
         // Artists carry no play count of their own, so it is summed from the

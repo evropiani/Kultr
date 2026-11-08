@@ -1,13 +1,15 @@
 import { Fragment, useState } from 'react'
-import { ListX, Trash2, X } from 'lucide-react'
+import { History, ListMusic, ListPlus, ListX, Trash2, X } from 'lucide-react'
+import type { Song } from '@/api/types'
+import { createPlaylistWith } from '@/lib/actions'
 import { artUrl } from '@/lib/artwork'
-import { formatTime } from '@/lib/format'
+import { formatCount, formatTime } from '@/lib/format'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
 import { useUi } from '@/store/ui'
 import { useDismiss } from '@/lib/hooks'
 import { usePresence } from '@/lib/motion'
-import { Art } from './ui'
+import { Art, Menu, useMenu } from './ui'
 import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
 
 export function QueuePanel() {
@@ -19,6 +21,7 @@ export function QueuePanel() {
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const ref = useDismiss<HTMLElement>(open, () => setQueue(false))
   const { present, leaving } = usePresence(open, 220)
+  const saveMenu = useMenu()
 
   if (!present) return null
 
@@ -34,6 +37,32 @@ export function QueuePanel() {
       <header className="queue__head">
         <h3>Queue</h3>
         <span className="badge">{player.queue.length}</span>
+        <button
+          className="iconbtn"
+          aria-label="Save as a playlist"
+          title="Save the session as a playlist"
+          disabled={!player.queue.length}
+          onClick={(event) => saveMenu.openFrom(event.currentTarget)}
+        >
+          <ListPlus size={16} />
+        </button>
+        <Menu
+          anchor={saveMenu.anchor}
+          onClose={saveMenu.close}
+          items={[
+            {
+              label: `What you've played, ${formatCount(player.index + 1, 'track')}`,
+              icon: <History size={15} />,
+              disabled: player.index < 0,
+              onSelect: () => void saveSession(player.queue.slice(0, player.index + 1)),
+            },
+            {
+              label: `The whole queue, ${formatCount(player.queue.length, 'track')}`,
+              icon: <ListMusic size={15} />,
+              onSelect: () => void saveSession(player.queue),
+            },
+          ]}
+        />
         <button
           className="iconbtn"
           aria-label="Clear everything except the current track"
@@ -167,4 +196,12 @@ function QueueItem({
       ) : null}
     </div>
   )
+}
+
+/** Keep the session as a playlist, named for when it was. */
+async function saveSession(songs: Song[]): Promise<void> {
+  const music = songs.filter((song) => !song.kultrStreamUrl)
+  if (!music.length) return
+  const when = new Date().toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  await createPlaylistWith(`Session · ${when}`, music.map((song) => song.id))
 }

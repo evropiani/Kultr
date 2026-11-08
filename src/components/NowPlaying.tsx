@@ -28,6 +28,7 @@ import { CastButton } from './Cast'
 import { RepeatButton, ShuffleButton } from './ModeButtons'
 import { KAROUSEL_ADDED, KAROUSEL_WAITING, KarouselHeading } from './KarouselHeading'
 import { NextButton } from './NextButton'
+import { useBeatGrid } from '@/lib/beatGrid'
 
 type Tab = 'queue' | 'lyrics' | 'injekt'
 
@@ -50,6 +51,7 @@ export function NowPlaying() {
   const [starred, setStarred] = useState(Boolean(song?.starred))
   // The full player stays open across tracks; the heart has to follow them.
   useEffect(() => setStarred(Boolean(song?.starred)), [song?.id, song?.starred])
+  const beats = useBeatGrid(song?.id)
   // Stays mounted for the slide back down, rather than vanishing on close.
   const { present, leaving } = usePresence(open && Boolean(song), 300)
   const tabsRef = useRef<HTMLDivElement>(null)
@@ -158,6 +160,7 @@ export function NowPlaying() {
               onSeek={player.seek}
               overlap={overlap}
               active={playing}
+              beats={beats}
             />
             {/* Three columns, not one flex row: the two side groups each take
                 an equal share, so the play button sits dead centre however

@@ -1,6 +1,6 @@
 import { getClient, maybeClient, describeError } from '@/api/subsonic'
 import type { Album, Artist, Song } from '@/api/types'
-import { patchAlbum, patchArtist, patchSong } from '@/db'
+import { patchAlbum, patchArtist, patchSong, putPlaylist } from '@/db'
 import { usePlayer } from '@/store/player'
 import { useToast } from '@/store/ui'
 import { isLocalId, localBlob } from '@/local/files'
@@ -121,7 +121,13 @@ export async function addToPlaylist(playlistId: string, songIds: string[]): Prom
 
 export async function createPlaylistWith(name: string, songIds: string[]): Promise<string | null> {
   try {
-    const playlist = await getClient().createPlaylist(name, songIds)
+    const client = getClient()
+    const playlist = await client.createPlaylist(name, songIds)
+    // Into the library straight away, rather than at the next sync.
+    if (playlist?.id) {
+      const full = await client.getPlaylist(playlist.id).catch(() => null)
+      if (full) await putPlaylist(full)
+    }
     useToast.getState().show(`Created “${name}”.`, 'success')
     return playlist?.id ?? null
   } catch (err) {

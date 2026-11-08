@@ -56,6 +56,7 @@ export function Scrubber({
   overlap,
   compact,
   active = true,
+  beats,
 }: {
   getTime: () => number
   duration: number
@@ -64,6 +65,8 @@ export function Scrubber({
   compact?: boolean
   /** While false the paint loop is not scheduled at all. */
   active?: boolean
+  /** The track's beats, from InjeKt's analysis, for the lens while scrubbing. */
+  beats?: { bpm: number; offset: number } | null
 }) {
   const playhead = useSettings((state) => state.playhead)
   const timeRemaining = useSettings((state) => state.timeRemaining)
@@ -72,6 +75,7 @@ export function Scrubber({
   const fillRef = useRef<HTMLDivElement>(null)
   const knobRef = useRef<HTMLDivElement>(null)
   const elapsedRef = useRef<HTMLButtonElement>(null)
+  const lensRef = useRef<HTMLDivElement>(null)
   const [dragging, setDragging] = useState(false)
   const previewRef = useRef(0)
 
@@ -127,11 +131,24 @@ export function Scrubber({
         elapsedRef.current.textContent = label
         lastLabel = label
       }
+
+      // The lens: the time where you are dragging, magnified, with the beats
+      // around it, as on iOS. Rebuilt only when the position moves enough to show.
+      const lens = lensRef.current
+      if (dragging && lens) {
+        const key = Math.round(seconds * 20)
+        if (key !== lastLens) {
+          lastLens = key
+          lens.style.left = `${percent}%`
+          lens.innerHTML = lensMarkup(seconds, beats)
+        }
+      }
     }
+    let lastLens = -1
 
     raf = requestAnimationFrame(paint)
     return () => cancelAnimationFrame(raf)
-  }, [getTime, duration, dragging, active, stamp])
+  }, [getTime, duration, dragging, active, stamp, beats])
 
   useEffect(() => {
     if (!dragging) return
@@ -220,8 +237,33 @@ export function Scrubber({
           <div ref={fillRef} className="scrub__fill" style={{ width: '0%' }} />
         </div>
         <div ref={knobRef} className="scrub__knob" style={{ left: '0%' }} />
+        {dragging ? <div ref={lensRef} className="scrub__lens" aria-hidden="true" /> : null}
       </div>
       {!compact ? <span>{formatTime(duration)}</span> : null}
     </div>
   )
+}
+
+const LENS_WINDOW = 6
+
+/**
+ * What the lens shows: the time, big, over a strip of the six seconds around
+ * it with a tick per beat (a taller one on each downbeat). Numbers only, so
+ * building it as markup is safe.
+ */
+function lensMarkup(seconds: number, beats: { bpm: number; offset: number } | null | undefined): string {
+  let ticks = ''
+  if (beats && beats.bpm > 0) {
+    const period = 60 / beats.bpm
+    const from = seconds - LENS_WINDOW / 2
+    const first = Math.ceil((from - beats.offset) / period)
+    for (let n = first; ; n++) {
+      const at = beats.offset + n * period
+      if (at > from + LENS_WINDOW) break
+      if (at < 0) continue
+      const left = ((at - from) / LENS_WINDOW) * 100
+      ticks += `<i style="left:${left.toFixed(2)}%"${n % 4 === 0 ? ' data-down' : ''}></i>`
+    }
+  }
+  return `<b>${formatTime(seconds)}</b><span class="scrub__beats">${ticks}<em></em></span>`
 }

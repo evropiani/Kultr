@@ -25,6 +25,7 @@ import { SleepTimerMenu } from './SleepTimer'
 import { CastButton } from './Cast'
 import { RepeatButton, ShuffleButton } from './ModeButtons'
 import { NextButton } from './NextButton'
+import { useBeatGrid } from '@/lib/beatGrid'
 
 /** Read straight from the engine so the scrubber needs no React state. */
 const getEngineTime = () => engine.currentTime
@@ -40,6 +41,7 @@ export function PlayerBar() {
   const [starred, setStarred] = useState(false)
 
   useEffect(() => setStarred(Boolean(song?.starred)), [song?.id, song?.starred])
+  const beats = useBeatGrid(song?.id)
 
   if (!song) {
     return (
@@ -132,6 +134,7 @@ export function PlayerBar() {
           onSeek={player.seek}
           overlap={overlap}
           active={playing}
+          beats={beats}
         />
       </div>
 

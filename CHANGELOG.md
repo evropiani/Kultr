@@ -7,9 +7,37 @@ only fixed.
 
 ---
 
+## 1.12.0 — 2026-11-08
+
+### 2026-11-08 17:36 — The monthly recap, What's new and Rediscover
+
+More from Kultr for iOS and Android.
+
+- **Monthly recap**, from Listening: what you played in this browser in a
+  month — the time and how it compares with the month before, the plays,
+  the artists, the tracks heard for the first time, the busiest day, and
+  your most played songs, artists and albums. Pick an earlier month, or play
+  the top songs.
+- **Save the session.** The new button at the top of Up next keeps what
+  you've played, or the whole queue, as a playlist.
+- **Rediscover**, a shelf on Home: albums you hearted or played a lot and
+  haven't played for a year. It and the Stations shelf are added to Home
+  once; either can be switched off in Settings → Home page.
+- **What's new.** After an update Kultr shows what changed in every version
+  since the one you last saw, once. The whole update log is in Settings →
+  About, beside the version.
+- **A welcome** on the first start: a short tour of the library, InjeKt,
+  Karousel, stations, the command bar and the look.
+- **The scrubber's lens.** Drag the playhead and a lens over it magnifies
+  the time and the beats around it, the downbeats in the accent.
+- A playlist you make (from the planner, Up next or a selection) is in the
+  library straight away instead of after the next sync.
+- A library that has never been read in full — a first sign-in, or a switch
+  cut short by closing the tab — is read as soon as you connect.
+
 ## 1.11.1 — 2026-11-08
 
-### 2026-11-08 17:25 — Up next opens again
+### 2026-11-08 17:18 — Up next opens again
 
 - Opening Up next in 1.11.0 stopped the app with an error (a station's
   heading was read in the wrong order). It opens again, and the songs a

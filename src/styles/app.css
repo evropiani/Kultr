@@ -3104,3 +3104,236 @@
   font-size: 13px;
   white-space: nowrap;
 }
+
+/* --------------------------------------------------------------------- recap */
+
+.recap-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.recap-tile {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--r-md);
+}
+.recap-tile strong {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+.recap-tile span {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+.recap-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+.recap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.recap-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+}
+.recap-list__rank {
+  width: 20px;
+  flex: none;
+  text-align: right;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.recap-list__art {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 7px;
+}
+.recap-list__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.recap-list__text strong,
+.recap-list__text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.recap-list__text span {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.recap-list__count {
+  flex: none;
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------- what's new and welcome */
+
+.whats-new {
+  max-height: min(62vh, 620px);
+  overflow-y: auto;
+  padding-right: 4px;
+  display: grid;
+  gap: 18px;
+}
+.release h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.release h2 small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+  margin-left: 6px;
+}
+.release h3 {
+  font-size: 14px;
+  margin: 12px 0 6px;
+}
+.update-log {
+  display: grid;
+  gap: 14px;
+}
+.markdown {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.markdown p {
+  margin: 0 0 8px;
+}
+.markdown ul {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+.markdown code,
+.markdown kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--sand);
+  color: var(--ink);
+}
+.markdown a {
+  color: var(--accent);
+}
+.welcome {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 8px 6px 4px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.welcome__icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: var(--sand);
+  color: var(--accent);
+}
+.welcome h2 {
+  font-size: 22px;
+}
+.welcome p {
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.welcome__link {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+.welcome__dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.welcome__dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--ink-rgb) / 0.2);
+  transition: width 200ms var(--ease-out);
+}
+.welcome__dots span[data-on] {
+  width: 20px;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+/* The lens over the playhead while scrubbing: the time, magnified, and the beats. */
+.scrub__lens {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  width: 132px;
+  margin-left: -66px;
+  padding: 8px 10px 9px;
+  border-radius: 16px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  pointer-events: none;
+  background: var(--float);
+  box-shadow: 0 0 0 1px var(--glass-edge), 0 10px 28px rgb(0 0 0 / 0.18);
+  z-index: 5;
+}
+.scrub__lens b {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.scrub__beats {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  border-radius: 4px;
+  background: rgb(var(--ink-rgb) / 0.06);
+  overflow: hidden;
+}
+.scrub__beats i {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  height: 7px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: rgb(var(--ink-rgb) / 0.35);
+}
+.scrub__beats i[data-down] {
+  height: 14px;
+  background: var(--accent);
+}
+.scrub__beats em {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ink);
+}

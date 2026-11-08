@@ -112,5 +112,27 @@ const later = migrateSettings({ ...DEFAULT_SETTINGS, accentMode: 'artwork', back
 assert('only once: choices made after the move stay', later.accentMode === 'artwork' && later.backdropArtwork === true)
 assert('new installs start on Cream', DEFAULT_SETTINGS.theme === 'system' && DEFAULT_SETTINGS.accent === '#ff7a3d' && DEFAULT_SETTINGS.accentMode === 'fixed')
 
+console.log('\n== Stations, crates and notes from the other apps ==')
+const fromIos = readSettingsFile({
+  kind: 'kultr.settings',
+  version: 1,
+  settings: {
+    stations: [{ id: 'gym', name: 'Gym', icon: 'figure.run', bpm: { min: 125 }, energy: { min: 0.7, max: 1 } }, 'junk'],
+    crates: [{ id: 'c1', name: 'Sunday', icon: 'shippingbox.fill', albums: ['al1'], rules: { id: 'r', name: 'r', icon: 'x', minRating: 4 } }],
+    annotations: { 'album:al1': { note: 'Vinyl rip', tags: ['vinyl'] }, 'nope': { note: 'x' } },
+  },
+})
+const st = (fromIos.patch as SettingsState).stations
+assert('a station comes across, junk does not', st.length === 1 && st[0].bpm?.min === 125 && st[0].energy?.max === 1)
+assert('a crate with rules', (fromIos.patch as SettingsState).crates[0].rules?.minRating === 4 && (fromIos.patch as SettingsState).crates[0].albums[0] === 'al1')
+assert('notes by album, nothing else', JSON.stringify(Object.keys((fromIos.patch as SettingsState).annotations)) === JSON.stringify(['album:al1']))
+
+console.log('\n== Stations and Rediscover come to Home once ==')
+const shelves = migrateSettings({ ...DEFAULT_SETTINGS, homeTiles: ['mostPlayedSongs', 'mostPlayedAlbums', 'randomSongs'] }, 5)
+assert('Stations first, Rediscover after the albums', JSON.stringify(shelves.homeTiles) === JSON.stringify(['stations', 'mostPlayedSongs', 'mostPlayedAlbums', 'rediscover', 'randomSongs']), JSON.stringify(shelves.homeTiles))
+const kept = migrateSettings({ ...DEFAULT_SETTINGS, homeTiles: ['randomSongs'] }, 6)
+assert('only once: a shelf switched off later stays off', JSON.stringify(kept.homeTiles) === JSON.stringify(['randomSongs']))
+assert('stations start with the presets', DEFAULT_SETTINGS.stations.length === 7 && DEFAULT_SETTINGS.stations[1].name === 'Night Drive')
+
 console.log(failures === 0 ? '\nALL SETTINGS-FILE CHECKS PASSED\n' : `\n${failures} SETTINGS-FILE CHECK(S) FAILED\n`)
 process.exit(failures === 0 ? 0 : 1)

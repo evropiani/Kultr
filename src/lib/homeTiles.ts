@@ -62,6 +62,12 @@ export const HOME_TILES: HomeTile[] = [
     seeAll: '/playlists',
   },
   {
+    id: 'rediscover',
+    title: 'Rediscover',
+    note: 'Albums you hearted or played a lot, and haven’t played for a year.',
+    kind: 'albums',
+  },
+  {
     id: 'randomSongs',
     title: 'Something else',
     note: 'A different handful of tracks every time you open the page.',

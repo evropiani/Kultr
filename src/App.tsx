@@ -21,6 +21,9 @@ import { Stats } from '@/routes/Stats'
 import { SyncPage } from '@/routes/Sync'
 import { Stations } from '@/routes/Stations'
 import { Planner } from '@/routes/Planner'
+import { Recap } from '@/routes/Recap'
+import { UpdateLog, WhatsNew } from '@/components/WhatsNew'
+import { Welcome } from '@/components/Welcome'
 import { useAuth } from '@/store/auth'
 import { usePlayer } from '@/store/player'
 import { useSettings } from '@/store/settings'
@@ -30,7 +33,6 @@ import { useOffline } from '@/store/offline'
 import { useSelection } from '@/store/selection'
 import { prefersReducedMotion } from '@/lib/motion'
 import { FolderAccessBanner } from '@/components/LocalMusic'
-import { LOCAL_PROFILE_ID } from '@/local/client'
 import { getSyncState } from '@/db'
 
 /** Keep the document's data-* attributes in step with the settings store. */
@@ -120,9 +122,7 @@ function useBootstrap(): void {
   const started = useRef(false)
 
   // Each library keeps its own mirror: connecting to a different one than the
-  // mirror holds clears it and reads the new one from the start. Music on this
-  // computer is read straight away the first time, since there is no server
-  // to wait for.
+  // mirror holds clears it and reads the new one from the start.
   useEffect(
     () =>
       useAuth.subscribe((state, previous) => {
@@ -132,7 +132,9 @@ function useBootstrap(): void {
         void (async () => {
           const sync = useSync.getState()
           const fresh = await sync.adopt(owner)
-          const neverRead = owner === LOCAL_PROFILE_ID && (await getSyncState()).lastFullSync === null
+          // A library never read in full (a first sign-in, or a switch cut
+          // short by a reload) is read now rather than waiting for a click.
+          const neverRead = (await getSyncState()).lastFullSync === null
           if (fresh || neverRead) void useSync.getState().run('full')
         })()
       }),
@@ -285,6 +287,8 @@ function Shell() {
               <Route path="/radio" element={<Radio />} />
               <Route path="/stations" element={<Stations />} />
               <Route path="/planner" element={<Planner />} />
+              <Route path="/recap" element={<Recap />} />
+              <Route path="/updates" element={<UpdateLog />} />
               <Route path="/sync" element={<SyncPage />} />
               <Route path="/stats" element={<Stats />} />
               <Route path="/settings" element={<Settings />} />
@@ -296,6 +300,8 @@ function Shell() {
       <PlayerBar />
       <QueuePanel />
       <SelectionBar />
+      <Welcome />
+      <WhatsNew />
     </div>
   )
 }

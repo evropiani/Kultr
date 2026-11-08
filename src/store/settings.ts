@@ -230,7 +230,7 @@ export const DEFAULT_SETTINGS = {
   offlineFirst: true,
 
   showLyrics: true,
-  homeTiles: ['stations', 'mostPlayedSongs', 'mostPlayedAlbums', 'randomSongs', 'mostPlayedArtists'],
+  homeTiles: ['stations', 'mostPlayedSongs', 'mostPlayedAlbums', 'rediscover', 'randomSongs', 'mostPlayedArtists'],
   favouriteRadios: [] as string[],
   customCss: '',
   openSettingsSections: [] as string[],
@@ -270,8 +270,33 @@ export function migrateSettings(persisted: unknown, version: number): SettingsSt
     old.backdropArtwork = DEFAULT_SETTINGS.backdropArtwork
     old.surfaceBorder = DEFAULT_SETTINGS.surfaceBorder
   }
+  // v5 → v6 brings two shelves from Kultr for iOS to Home, once, where
+  // they sit there: Stations first and Rediscover after the albums you play
+  // most. Either can be switched off again in Settings → Home page.
+  if (version < 6 && Array.isArray(old.homeTiles)) {
+    const tiles = [...(old.homeTiles as string[])]
+    if (!tiles.includes('stations')) tiles.unshift('stations')
+    if (!tiles.includes('rediscover')) {
+      const at = tiles.indexOf('mostPlayedAlbums')
+      tiles.splice(at >= 0 ? at + 1 : tiles.length, 0, 'rediscover')
+    }
+    old.homeTiles = tiles
+  }
   return { ...DEFAULT_SETTINGS, ...old } as SettingsState
 }
+
+/**
+ * Whether Kultr had been used in this browser before this page load: read
+ * before the store writes anything, so What's new can tell someone updating
+ * from a first start.
+ */
+export const WAS_INSTALLED: boolean = (() => {
+  try {
+    return localStorage.getItem('kultr.settings') !== null || localStorage.getItem('kultr.auth') !== null
+  } catch {
+    return false
+  }
+})()
 
 export const useSettings = create<SettingsState>()(
   persist(
@@ -285,7 +310,7 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: 'kultr.settings',
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
         const { set: _set, merge: _merge, applyEqPreset: _apply, reset: _reset, ...rest } = state

@@ -3,6 +3,8 @@ import type { TrackAnalysis } from '@/audio/analysis'
 import { CURVES, curve, planSet, valueAt } from '@/audio/energyPlan'
 import { decade, decadeStations, matches, readStation, STATION_PRESETS, stationPicks, summary, type Station } from '@/audio/stations'
 import { parseCommand } from '@/lib/commands'
+import { monthRecap, recapMonths, UTC } from '@/lib/recap'
+import { isNewer, parseChangelog, releasesSince } from '@/lib/changelog'
 
 // Kultr for iOS's tests for stations, the energy planner and the command
 // bar (CoreTests.swift), ported, so the apps agree.
@@ -116,6 +118,64 @@ assert('open a crate', eq(cmd('open gym', [], ['Gym']), { kind: 'crate', name: '
 assert('play a crate', eq(cmd('play gym', [], ['Gym']), { kind: 'playCrate', name: 'Gym' }))
 assert('a name alone is a search', cmd('radiohead') === null)
 assert('so is a word', cmd('love') === null)
+
+console.log('\n== A month recap counts one month ==')
+const play = (songId: string, at: string, seconds: number) => ({ songId, playedAt: Date.parse(at), seconds, completed: true, source: '' })
+const recapSongs = new Map<string, Song>([
+  ['a', song('a', { album: 'One', artist: 'Ann', albumId: 'al1', artistId: 'ar1' })],
+  ['b', song('b', { album: 'One', artist: 'Ann', albumId: 'al1', artistId: 'ar1' })],
+  ['c', song('c', { album: 'Two', artist: 'Bo', albumId: 'al2', artistId: 'ar2' })],
+])
+const history = [
+  play('a', '2026-09-20T10:00:00Z', 100),
+  play('a', '2026-10-01T09:00:00Z', 200),
+  play('a', '2026-10-03T09:00:00Z', 200),
+  play('b', '2026-10-03T12:00:00Z', 180),
+  play('c', '2026-10-15T12:00:00Z', 240),
+  play('gone', '2026-10-16T12:00:00Z', 60),
+  play('c', '2026-11-01T00:00:00Z', 240),
+]
+assert('months with listening, newest first', eq(recapMonths(history, UTC).map((ms) => new Date(ms).toISOString()), ['2026-11-01T00:00:00.000Z', '2026-10-01T00:00:00.000Z', '2026-09-01T00:00:00.000Z']))
+const october = monthRecap(history, recapSongs, Date.parse('2026-10-20T00:00:00Z'), UTC)
+assert('plays', october.plays === 5)
+assert('time', october.seconds === 880)
+assert('tracks', october.tracks === 4)
+assert('artists', october.artists === 2)
+assert('top songs', eq(october.topSongs.map((e) => e.item.id), ['a', 'c', 'b']) && october.topSongs[0].plays === 2)
+assert('top artists', eq(october.topArtists.map((e) => e.item.name), ['Ann', 'Bo']))
+assert('top albums', eq(october.topAlbums.map((e) => e.item.id), ['al1', 'al2']))
+assert('busiest day', october.busiestDay?.seconds === 380)
+assert('first listens', october.firstListens === 3)
+assert('the month before', october.previousSeconds === 100)
+assert('an empty month', monthRecap(history, recapSongs, 0, UTC).plays === 0)
+
+console.log('\n== The changelog, for What’s new ==')
+const log = parseChangelog(`# Changelog
+
+Intro.
+
+---
+
+## 1.11.0 — 2026-11-08
+
+### 2026-11-08 17:12 — Stations, and more
+
+Body **one**.
+
+- a
+  wrapped
+
+## 1.10.0 — 2026-11-08
+
+### 2026-11-08 16:50 — Kultr for Windows and Linux
+
+Body two.
+`)
+assert('versions', eq(log.map((r) => r.version), ['1.11.0', '1.10.0']))
+assert('entry title and time', log[0].entries[0].title === 'Stations, and more' && log[0].entries[0].when === '2026-11-08 17:12', JSON.stringify(log[0].entries[0]))
+assert('entry body', log[0].entries[0].body.startsWith('Body **one**.') && log[0].entries[0].body.includes('wrapped'))
+assert('newer', isNewer('1.11.0', '1.9.9') && !isNewer('1.9.9', '1.11.0') && !isNewer('1.10.0', '1.10.0'))
+assert('since the last seen', eq(releasesSince(log, '1.10.0', '1.11.0').map((r) => r.version), ['1.11.0']))
 
 if (failures) {
   console.log(`\n${failures} failure(s)`)

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BarChart3, Clock, RefreshCw, Trash2, Users } from 'lucide-react'
+import { BarChart3, CalendarDays, Clock, RefreshCw, Trash2, Users } from 'lucide-react'
 import type { Song } from '@/api/types'
 import { allSongs, clearHistory, recentHistory, type PlayHistoryEntry } from '@/db'
 import { formatCount, formatDuration, formatRelative } from '@/lib/format'
@@ -104,6 +104,10 @@ export function Stats() {
           </span>
         </div>
         <div className="page-actions">
+          <Link className="pill pill-accent" to="/recap">
+            <CalendarDays size={14} />
+            Monthly recap
+          </Link>
           <button className="pill" disabled={refreshing} onClick={() => void refresh()}>
             <RefreshCw size={14} className={refreshing ? 'spin' : undefined} />
             Refresh from server

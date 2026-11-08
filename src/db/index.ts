@@ -207,6 +207,11 @@ export async function putPlaylists(playlists: Playlist[]): Promise<void> {
   await tx.done
 }
 
+/** Add or replace one playlist, leaving the rest. */
+export async function putPlaylist(playlist: Playlist): Promise<void> {
+  await (await db()).put('playlists', playlist)
+}
+
 export async function putGenres(genres: Genre[]): Promise<void> {
   const database = await db()
   const tx = database.transaction('genres', 'readwrite')

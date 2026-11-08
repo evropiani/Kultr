@@ -1108,8 +1108,11 @@ export function Settings() {
             View
           </button>
         </Row>
-        <Row label="Version">
-          <span className="value" style={{ minWidth: 120 }}>{__KULTR_VERSION__}</span>
+        <Row label="Version" hint="What changed in every version, newest first.">
+          <span className="value" style={{ minWidth: 60 }}>{__KULTR_VERSION__}</span>
+          <button className="pill" onClick={() => navigate('/updates')}>
+            Update log
+          </button>
         </Row>
         <Row label="Built">
           <span className="value" style={{ minWidth: 160 }}>
