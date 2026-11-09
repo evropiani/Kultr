@@ -2138,13 +2138,32 @@
 
 /* ---------------------------------------------------------------- login page */
 
+/* The body never scrolls (the app is one fixed screen), so the sign-in page
+   scrolls itself: centred while it fits, from the top once it is taller than
+   the screen, as on a phone. Room at the bottom keeps the last button clear
+   of a browser's floating toolbar. */
 .login {
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  align-content: center;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 18px;
-  padding: 28px;
+  padding: calc(28px + env(safe-area-inset-top, 0px)) 28px calc(28px + env(safe-area-inset-bottom, 0px));
+}
+.login > :first-child {
+  margin-top: auto;
+}
+.login > :last-child {
+  margin-bottom: auto;
+}
+@media (max-width: 560px) {
+  .login {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
 }
 .login__card {
   width: min(440px, 100%);

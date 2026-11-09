@@ -7,6 +7,16 @@ only fixed.
 
 ---
 
+## 1.15.1 — 2026-11-09
+
+### 2026-11-09 17:44 — The sign-in page scrolls on phones
+
+- **Fixed:** on a phone (and in any short window) the sign-in page was cut
+  off below **Stay signed in**, and it could not be scrolled, so **Connect**
+  and the rest of the page were out of reach. The page now scrolls on its
+  own: it starts at the top when it is taller than the screen, keeps the
+  last button clear of the browser's toolbar, and stays centred when it fits.
+
 ## 1.15.0 — 2026-11-09
 
 ### 2026-11-09 13:05 — Suggested songs under a playlist
