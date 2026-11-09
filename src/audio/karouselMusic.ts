@@ -120,6 +120,11 @@ class KarouselMusic implements KarouselSources {
   }
 }
 
+/** Karousel's music sources, for anything else that wants songs like some others: playlist suggestions. */
+export function karouselSources(): Promise<KarouselSources> {
+  return KarouselMusic.create()
+}
+
 /**
  * Songs like `seeds` (the track playing first) to follow `queued`, leaving
  * out anything queued already or played in the last few hours.

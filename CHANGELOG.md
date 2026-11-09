@@ -7,6 +7,20 @@ only fixed.
 
 ---
 
+## 1.15.0 — 2026-11-09
+
+### 2026-11-09 13:05 — Suggested songs under a playlist
+
+- **Recommended songs.** At the bottom of a playlist you can change, a few
+  songs that would fit, each with a **+**. Add one and it goes to the end
+  of the playlist, and the suggestions turn to songs like the one you just
+  added ("More like …"). **Refresh** offers different ones. An empty
+  playlist starts from what you play most. Suggestions come from the same
+  picker as Karousel: your server's similar songs and artists when it has
+  them, then your own library's artists, genres and favourites, never a
+  song already in the playlist. It works with music on this computer too,
+  and in German. Playlists someone else owns show none.
+
 ## 1.14.1 — 2026-11-08
 
 ### 2026-11-08 22:10 — The desktop app in German, and new screenshots

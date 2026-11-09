@@ -22,7 +22,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '..')
 const out = mkdtempSync(join(tmpdir(), 'kultr-tests-'))
 
-const SUITES = ['dsp.test.ts', 'injekt.test.ts', 'settings.test.ts', 'karousel.test.ts', 'local.test.ts', 'parity.test.ts']
+const SUITES = ['dsp.test.ts', 'injekt.test.ts', 'settings.test.ts', 'karousel.test.ts', 'local.test.ts', 'parity.test.ts', 'suggestions.test.ts']
 
 const alias = {
   '@/db': join(here, 'stubs/stub-db.ts'),

@@ -19,6 +19,7 @@ import {
   getSongs,
   offlineIds,
   offlineUsage,
+  putPlaylist,
   putPlaylists,
 } from '@/db'
 import { artUrl } from '@/lib/artwork'
@@ -35,6 +36,8 @@ import { TrackList } from '@/components/TrackList'
 import { Art, Empty, Modal, SkeletonGrid, Spinner } from '@/components/ui'
 import { OfflineButton, RemoveOfflineButton } from '@/components/Offline'
 import { RadioGrid, radioSongs } from '@/components/Radio'
+import { PlaylistSuggestions } from '@/components/PlaylistSuggestions'
+import { isLocalProfile, useAuth } from '@/store/auth'
 import { t } from '@/i18n'
 
 /* --------------------------------------------------------------- playlists -- */
@@ -145,7 +148,35 @@ export function PlaylistPage() {
     null as Playlist | null,
   )
 
-  const songs = data?.entry ?? []
+  // Songs added from the suggestions since the playlist was loaded.
+  const [added, setAdded] = useState<Song[]>([])
+  useEffect(() => setAdded([]), [data])
+  const songs = useMemo(() => [...(data?.entry ?? []), ...added], [data, added])
+  const addedDuration = added.reduce((sum, song) => sum + (song.duration ?? 0), 0)
+
+  // Only the owner can change a playlist; anyone's own, and every playlist of the music on this computer.
+  const profile = useAuth((state) => state.activeProfile())
+  const canEdit = Boolean(data) && (!data?.owner || isLocalProfile(profile) || data.owner === profile?.username)
+
+  const addSong = async (song: Song): Promise<boolean> => {
+    if (!data) return false
+    try {
+      await getClient().updatePlaylist({ playlistId: id, songIdToAdd: [song.id] })
+      const entry = [...songs, song]
+      setAdded((list) => [...list, song])
+      await putPlaylist({
+        ...data,
+        entry,
+        songCount: entry.length,
+        duration: entry.reduce((sum, item) => sum + (item.duration ?? 0), 0),
+      }).catch(() => {})
+      useToast.getState().show(t("Added to “%@”", data.name), 'success')
+      return true
+    } catch (err) {
+      useToast.getState().show(describeError(err), 'error')
+      return false
+    }
+  }
 
   const remove = async (_song: Song, index: number) => {
     try {
@@ -190,7 +221,7 @@ export function PlaylistPage() {
           {data.comment ? <p style={{ color: 'var(--ink-2)' }}>{data.comment}</p> : null}
           <div className="hero__meta">
             <span>{formatCount(songs.length, 'track')}</span>
-            <span className="sep">{formatDuration(data.duration)}</span>
+            <span className="sep">{formatDuration((data.duration ?? 0) + addedDuration)}</span>
             {data.owner ? <span className="sep">{t("by %@", data.owner)}</span> : null}
             {data.public ? <span className="badge">{t("Public")}</span> : null}
           </div>
@@ -226,8 +257,13 @@ export function PlaylistPage() {
           source={data.name}
           numbering="index"
           onRemove={(song, index) => void remove(song, index)}
-          emptyMessage={t("This playlist is empty. Add tracks from any track menu.")}
+          emptyMessage={
+            canEdit
+              ? t("This playlist is empty. Add songs from the suggestions below, or from any track menu.")
+              : t("This playlist is empty. Add tracks from any track menu.")
+          }
         />
+        {canEdit ? <PlaylistSuggestions key={id} songs={songs} onAdd={addSong} /> : null}
       </div>
 
       <Modal
